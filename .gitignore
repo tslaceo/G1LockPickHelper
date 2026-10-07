@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+out/
+*.log
+mod/G1LockPickHelper/settings.ini
