@@ -9,9 +9,12 @@ moves that cannot strain the pick.
 - **Autosolve.** F3 in the minigame solves the lock with the moves the hint shows - only moves that cannot strain
   the pick. F3 right after using a chest (while the hero sits down) solves the minigame that opens next.
   Any key you press yourself takes over. "Auto-pick" in the settings solves every lock as it opens.
+- **Gamepad.** With a gamepad the hint shows the game's own button icons - PlayStation, Xbox or Switch, as the
+  game's "Button icons" option says. Press reset twice (Triangle / Y) and the mod picks the lock.
 - **Exact locks.** The lock layouts come from the game files; the connections your lockpicking skill removes are
   removed from the hint too.
 - **English and Russian**, following the game's language by default.
+- **Shared Mod Menu fix.** F2 opened during the minigame no longer leaves the hero unable to walk after it.
 
 ## Requirements
 
@@ -36,6 +39,7 @@ Uninstall: delete `G1R\Binaries\Win64\ue4ss\Mods\G1LockPickHelper\`.
 |---|---|
 | F4 | Show / hide the hint |
 | F3 | In the minigame: solve the lock / stop. Outside it: solve the minigame that opens within 5 s (with "Auto-pick" on: skip it) |
+| Reset twice (gamepad Triangle / Y, keyboard R R) | In the minigame: solve the lock, like F3 (`[solve] double_reset = false` turns it off) |
 | F2 | Shared Mod Menu, if installed: the mod's tab "LockPick Helper" |
 
 The keys are set in `settings.ini` (`[keys]`, UE4SS key names) and change after a game restart.
@@ -47,9 +51,10 @@ its tab "LockPick Helper" (not `debug`; the keys are shown read-only). A change 
 your own comments in it are lost.
 
 - `[general]` - `language` (`auto`: the game's language; `en`; `ru`), `debug` (detailed log, see below).
-- `[hint]` - tape or lines, simple or gothic style, size, position, counter, shake on a miss.
+- `[hint]` - tape or lines, simple or gothic style, letters or gamepad icons (`icons`: auto, keys, gamepad;
+  `gamepad`: auto - as the game - or playstation, xbox, switch), size, position, counter, shake on a miss.
 - `[tape]`, `[lines]` - how many keys are shown and how.
-- `[solve]` - `auto`: solve each lock by itself ("Auto-pick").
+- `[solve]` - `auto`: solve each lock by itself ("Auto-pick"); `double_reset`: reset twice to solve.
 - `[keys]` - the keys above and the key labels of the minigame.
 
 After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
@@ -69,6 +74,11 @@ After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
 - The autosolver needs the input hooks (the log says "input hooks yes"); without them F3 says "Autosolve
   unavailable" and the hint still works.
 - LockpickSettings by Tautellini also changes the lockpicking minigame; using both at once is not tested.
+- A DualSense through Steam Input looks like an Xbox pad to the game: with "Button icons: Auto" the game and the
+  hint show Xbox icons. Turn Steam Input off for the game (Steam → the game's Properties → Controller) or choose
+  "PlayStation 5" in the game's "Button icons".
+- In the minigame the game passes only the moves, reset and leave to mods, so the gamepad has no button of its own
+  for the mod: the autosolver starts on a double reset; the hint is shown or hidden with F4 or in Shared Mod Menu.
 
 ## Build from source
 

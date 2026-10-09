@@ -16,8 +16,9 @@ $readme = Get-Content (Join-Path $mod "README.txt") -Raw -Encoding UTF8
 if ($readme -notmatch [regex]::Escape("G1LockPickHelper $version ")) { throw "README.txt does not name version $version" }
 
 $expected = @(
-    "autosolve.lua", "config.lua", "i18n.lua", "lang\en.lua", "lang\ru.lua", "lock_reader.lua", "lockdb.lua",
-    "lockgraphs.lua", "main.lua", "menu.lua", "overlay.lua", "settings.lua", "solver.lua", "tracker.lua", "view.lua"
+    "autosolve.lua", "config.lua", "i18n.lua", "input_fix.lua", "lang\en.lua", "lang\ru.lua",
+    "lock_reader.lua", "lockdb.lua", "lockgraphs.lua", "main.lua", "menu.lua", "overlay.lua", "pad.lua",
+    "settings.lua", "solver.lua", "tracker.lua", "view.lua"
 ) | Sort-Object
 $actual = @(Get-ChildItem $scripts -Recurse -File | ForEach-Object { $_.FullName.Substring($scripts.Length + 1) }) |
     Sort-Object

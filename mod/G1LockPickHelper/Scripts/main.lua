@@ -23,7 +23,7 @@ local pad = require("pad")
 local input_fix = require("input_fix")
 
 local TAG = "[G1LockPickHelper] "
-local VERSION = "1.0.0" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
+local VERSION = "1.1.0" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
 
 local function log(fmt, ...)
     print(TAG .. string.format(fmt, ...) .. "\n")

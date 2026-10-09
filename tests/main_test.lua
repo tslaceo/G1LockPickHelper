@@ -207,7 +207,7 @@ local function load_main(ini, opts)
         init = function() end,
         configure = function(v) env.configured[#env.configured + 1] = v end,
         set_icons = function(mode) env.icons[#env.icons + 1] = mode end,
-        show =function(model, now) env.calls[#env.calls + 1] = { "show", model = model, now = now } end,
+        show = function(model, now) env.calls[#env.calls + 1] = { "show", model = model, now = now } end,
         message = function(text) env.calls[#env.calls + 1] = { "message", text = text } end,
         hide = function() env.calls[#env.calls + 1] = { "hide" } end,
         animate = function() env.frames = env.frames + 1 end,
@@ -1157,13 +1157,13 @@ end)
 test("the start line tells the version, the game, the language, the hooks and UE4SS", function()
     load_main(nil, { culture = "ru", ue4ss = true })
     run(FRAME_MS)
-    eq(logged(string.format("G1LockPickHelper 1.0.0: game unknown (lock db %s), language ru (auto, culture ru), "
+    eq(logged(string.format("G1LockPickHelper 1.1.0: game unknown (lock db %s), language ru (auto, culture ru), "
         .. "input hooks yes, UE4SS 3.0.1", db.build)), true, "start line")
     load_main(nil, { hooks = false })
     run(FRAME_MS)
     eq(logged("language en (auto, culture unknown), input hooks no, UE4SS unknown"), true, "without them")
     run(5000)
-    eq(count_logged("G1LockPickHelper 1.0.0:"), 1, "once")
+    eq(count_logged("G1LockPickHelper 1.1.0:"), 1, "once")
 end)
 
 test("the hint waits for ready_frames frames even when the clock jumps (a loading freeze)", function()

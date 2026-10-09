@@ -14,6 +14,8 @@ is pure Lua with offline tests.
 | `solver.lua` | safe key sequence with the fewest A/D moves (one breadth-first search from the goal over plate positions; W/S travel chosen greedily) |
 | `tracker.lua` | follows the player's presses against the plate readings, replans on a mismatch |
 | `view.lua` | the hint's model: a tape or lines of keys |
+| `pad.lua` | letters or the game's gamepad icons for the hint, and the icon textures |
+| `input_fix.lua` | when to hand the input back to the game after a minigame (the Shared Mod Menu fix) |
 | `overlay.lua` | the UMG widget next to the lock |
 | `autosolve.lua` | the autosolver: which key to press and when |
 | `settings.lua` | `settings.ini`: schema, parsing, writing |
@@ -90,6 +92,30 @@ The player's presses come from hooks on the task's input functions: `UpPressed` 
 `LeftPressed` (A), `RightPressed` (D), `ResetPressed` (R) of `/Script/G1R.AbilityTask_LockPick`. They see the
 keyboard and the gamepad. If a hook cannot be registered, the mod listens to the keys from `settings.ini`
 through key binds instead (no gamepad, and the autosolver stays off).
+
+No other gamepad button reaches a mod in the minigame: its widget (`W_LockPickUI_C`, a Blueprint of the C++
+`LockPickUIWidget`) turns key events into the task's input functions in C++, and
+`PlayerController:WasInputKeyJustPressed` sees no key while the minigame is open. So two resets of the player
+within 500 ms (`[solve] double_reset`) start the autosolver like F3; a reset while the autosolver runs only stops
+it.
+
+## Gamepad icons
+
+`CommonInputSubsystem:GetCurrentInputType()` (0 keyboard and mouse, 1 gamepad) tells the device of the last input;
+the mod reads it every frame. The icon set follows the game's "Button icons" option,
+`GothicGameUserSettings.ButtonGraphics` (0 do not use, 1 auto, 2 Xbox, 3 PlayStation 5, 4 Switch); with "auto" the
+game names the pad in `CommonInputSubsystem:GetCurrentGamepadName()` (`PS5`, `XSX`, `SWITCH`). The icons are the
+game's textures `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox:
+`T_Icon_Xbox_Dpad…`, Switch: `T_Icon_Switch_<Up|Down|Left|Right>`), drawn in a UMG `Image` and tinted like the
+letters: the icon's dark circle stays dark, its symbol takes the colour.
+
+## Shared Mod Menu input fix
+
+Shared Mod Menu, closed over the minigame, leaves the input on its UI (the minigame owns the mouse cursor then), and
+the game does not switch it back when the minigame ends: the hero cannot walk. With Shared Mod Menu installed the mod
+waits after each minigame until the game hides the cursor (200 ms and 5 frames in a row, within 10 s) and calls
+`WidgetBlueprintLibrary.SetInputMode_GameOnly(PlayerController, false)` once. A cursor that stays shown (a chest
+window) is left alone.
 
 ## Tracker and autosolver
 
