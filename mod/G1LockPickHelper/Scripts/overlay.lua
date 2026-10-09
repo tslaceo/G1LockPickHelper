@@ -1,7 +1,8 @@
 -- G1LockPickHelper overlay: the hint drawn with UMG widgets built at runtime (UE4SS).
 -- Call every function on the game thread. What to draw comes from view.lua, the shape and placement from
--- the player's settings (configure). A new shape rebuilds the widget: a font can only be set before a text
--- is first shown (SetFont on a shown text changes only the size; measured in game).
+-- the player's settings (configure), letters or the game's gamepad icons from set_icons. A new shape rebuilds the
+-- widget: a font can only be set before a text is first shown (SetFont on a shown text changes only the size;
+-- measured in game). Letters and icons switch without a rebuild.
 local M = {}
 
 -- ESlateVisibility: HitTestInvisible (drawn, never takes input), Collapsed, Hidden (invisible, keeps its space)
@@ -21,6 +22,9 @@ local fonts = {}               -- font path -> font object, or false when the ga
 local frame_warned = false
 local plate_warned = false
 local anim = { pressed = 0, misses = 0 } -- counts seen last; slide/shake: start times of running animations
+local key_texture = require("pad").key_texture
+local icon_set = "keys"        -- "keys" (letters) or the icon set the keys are drawn with, see set_icons
+local textures = {}            -- texture path -> texture object, or false when the game has no such texture
 
 local function log(fmt, ...)
     print("[G1LockPickHelper] " .. string.format(fmt, ...) .. "\n")
@@ -64,6 +68,30 @@ local function find_font(spec)
         log("font not found, using the engine font: %s", path)
     else
         log("font not found, using the engine font: %s (%s)", path, tostring(found))
+    end
+    return nil
+end
+
+-- The game's icon texture at path, or nil: the letter is drawn then. Looked up under pcall (LoadAsset may raise);
+-- a failure is cached and logged once per path.
+local function find_texture(path)
+    local tex = textures[path]
+    if tex == false then return nil end
+    if tex and tex:IsValid() then return tex end
+    local ok, found = pcall(function()
+        local obj = StaticFindObject(path)
+        if not (obj and obj:IsValid()) and LoadAsset then obj = LoadAsset(path) end
+        if obj and obj:IsValid() then return obj end
+    end)
+    if ok and found then
+        textures[path] = found
+        return found
+    end
+    textures[path] = false
+    if ok then
+        log("icon not found, using the letter: %s", path)
+    else
+        log("icon not found, using the letter: %s (%s)", path, tostring(found))
     end
     return nil
 end
@@ -114,8 +142,10 @@ local function new_frame(tree, style)
     return frame
 end
 
--- One key: a UMG Overlay with the frame (shown for the current key only) under the text.
-local function new_token(tree, style, font, size, pad)
+-- One key: a UMG Overlay with the frame (shown for the current key only) under the letter, and in the letter's
+-- place the icon row: a square Image of icon_px and, for a run in lines, the "×N" after it. The row stays
+-- collapsed until the hint draws icons (set_icons).
+local function new_token(tree, style, font, size, pad, icon_px)
     local box = construct("/Script/UMG.Overlay", tree, "Token")
     local frame = new_frame(tree, style)
     local frame_slot = box:AddChildToOverlay(frame)
@@ -127,8 +157,23 @@ local function new_token(tree, style, font, size, pad)
     text_slot:SetHorizontalAlignment(CENTER)
     text_slot:SetVerticalAlignment(CENTER)
     text_slot:SetPadding(pad)
+    local icon_row = construct("/Script/UMG.HorizontalBox", tree, "IconRow")
+    local icon_box = construct("/Script/UMG.SizeBox", tree, "IconBox")
+    icon_box:SetWidthOverride(icon_px)
+    icon_box:SetHeightOverride(icon_px)
+    local image = construct("/Script/UMG.Image", tree, "Icon")
+    icon_box:SetContent(image)
+    icon_row:AddChildToHorizontalBox(icon_box):SetVerticalAlignment(CENTER)
+    local tail = new_text(tree, font, size, style.next)
+    icon_row:AddChildToHorizontalBox(tail):SetVerticalAlignment(CENTER)
+    local row_slot = box:AddChildToOverlay(icon_row)
+    row_slot:SetHorizontalAlignment(CENTER)
+    row_slot:SetVerticalAlignment(CENTER)
+    row_slot:SetPadding(pad)
     frame:SetVisibility(COLLAPSED)
-    return { box = box, frame = frame, text = text, framed = false }
+    icon_row:SetVisibility(COLLAPSED)
+    tail:SetVisibility(COLLAPSED)
+    return { box = box, frame = frame, text = text, icon_row = icon_row, image = image, tail = tail, framed = false }
 end
 
 -- A cell of the tape with a fixed width, known without measuring (GetCachedGeometry gives zeros); the tape
@@ -188,7 +233,8 @@ local function build()
         built.step_px = w
         for i = 1, opts.done + 1 + opts.next do
             local current = i == opts.done + 1
-            local tok = new_token(tree, style, letters, current and round(f * 1.3) or f, NO_PAD)
+            local size = current and round(f * 1.3) or f
+            local tok = new_token(tree, style, letters, size, NO_PAD, round(size * cfg.icon_scale))
             tok.keep_space = true -- empty tape cells stay hidden to keep their width; lines tokens stay collapsed
             built.body:AddChildToHorizontalBox(new_cell(tree, tok.box, current and round(f * 2.0) or w, h))
             built.cells[i] = tok
@@ -200,7 +246,7 @@ local function build()
             local row = { box = construct("/Script/UMG.HorizontalBox", tree, "Row"), tokens = {} }
             built.body:AddChildToVerticalBox(row.box)
             for c = 1, opts.per_line do
-                local tok = new_token(tree, style, letters, f, pad)
+                local tok = new_token(tree, style, letters, f, pad, round(f * cfg.icon_scale))
                 local s = row.box:AddChildToHorizontalBox(tok.box)
                 s:SetPadding({ Left = 0, Top = 0, Right = round(f * 0.15), Bottom = 0 })
                 row.tokens[c] = tok
@@ -251,6 +297,7 @@ end
 function M.init(overlay_cfg)
     cfg, ui, opts = overlay_cfg, nil, nil
     anim = { pressed = 0, misses = 0 }
+    icon_set, textures = "keys", {}
     stale_pending = true
 end
 
@@ -279,6 +326,11 @@ function M.configure(values)
     end
 end
 
+-- mode: "keys" (letters) or an icon set of pad.lua ("ps", "xbox", "switch"). The next show draws it; no rebuild.
+function M.set_icons(mode)
+    icon_set = mode or "keys"
+end
+
 -- A counter/message text: SetText only when it changed; the FText stays referenced from Lua.
 local function set_text(key, block, s)
     local shown = ui.texts[key]
@@ -294,8 +346,10 @@ local function color_of(role, alpha)
     return { R = c.R, G = c.G, B = c.B, A = c.A * alpha }
 end
 
--- One key of the model; UE is called only for what changed.
-local function set_token(tok, text, role, alpha)
+-- One key of the model; UE is called only for what changed. key: the model key ("W", ...; nil in an empty cell);
+-- count: the run length of a lines token. With an icon set the key's icon replaces the letter ("×N" after it for a
+-- run) and takes the letter's colour; a missing texture leaves the letter.
+local function set_token(tok, text, role, alpha, key, count)
     local shown = text ~= ""
     if tok.shown ~= shown then
         if shown then
@@ -308,15 +362,45 @@ local function set_token(tok, text, role, alpha)
         tok.shown = shown
     end
     if not shown then return end
-    if tok.s ~= text then
+    local path = icon_set ~= "keys" and key and key_texture(icon_set, key) or nil
+    local tex = path and find_texture(path)
+    local iconic = tex ~= nil
+    if tok.iconic ~= iconic then
+        tok.text:SetVisibility(iconic and COLLAPSED or SHOWN)
+        tok.icon_row:SetVisibility(iconic and SHOWN or COLLAPSED)
+        tok.iconic = iconic
+    end
+    if iconic then
+        if tok.brush ~= path then
+            tok.image:SetBrushFromTexture(tex, false)
+            tok.brush = path
+        end
+        local tail = count and ("×" .. count) or ""
+        if tok.tail_s ~= tail then
+            if tail == "" then
+                tok.tail:SetVisibility(COLLAPSED)
+            else
+                local t = to_text(tail)
+                tok.tail:SetText(t)
+                tok.tail:SetVisibility(SHOWN)
+                tok.tail_ftext = t
+            end
+            tok.tail_s = tail
+        end
+    elseif tok.s ~= text then
         local t = to_text(text)
         tok.text:SetText(t)
         tok.s, tok.ftext = text, t
     end
     local c = color_of(role, alpha)
-    local sig = string.format("%.3f %.3f %.3f %.3f", c.R, c.G, c.B, c.A)
+    local sig = string.format("%s %.3f %.3f %.3f %.3f", iconic and "icon" or "text", c.R, c.G, c.B, c.A)
     if tok.color ~= sig then
-        tok.text:SetColorAndOpacity({ SpecifiedColor = c, ColorUseRule = 0 })
+        if iconic then
+            tok.image:SetColorAndOpacity(c)
+            tok.tail:SetColorAndOpacity({ SpecifiedColor = c, ColorUseRule = 0 })
+        else
+            tok.text:SetColorAndOpacity({ SpecifiedColor = c, ColorUseRule = 0 })
+        end
         tok.color = sig
     end
     local framed = role == "current"
@@ -338,7 +422,7 @@ function M.show(model, now_ms)
     if model.kind == "tape" then
         for i, tok in ipairs(ui.cells) do
             local c = model.cells[i]
-            if c then set_token(tok, c.text, c.role, c.alpha) else set_token(tok, "", "empty", 0) end
+            if c then set_token(tok, c.text, c.role, c.alpha, c.key) else set_token(tok, "", "empty", 0) end
         end
     else
         for r, row in ipairs(ui.rows) do
@@ -346,7 +430,11 @@ function M.show(model, now_ms)
             row.box:SetVisibility(line and SHOWN or COLLAPSED)
             for c, tok in ipairs(row.tokens) do
                 local token = line and line[c]
-                if token then set_token(tok, token.text, token.role, 1) else set_token(tok, "", "empty", 0) end
+                if token then
+                    set_token(tok, token.text, token.role, 1, token.key, token.count)
+                else
+                    set_token(tok, "", "empty", 0)
+                end
             end
         end
     end

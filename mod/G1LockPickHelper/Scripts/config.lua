@@ -24,6 +24,7 @@ return {
         pivot = { X = 1.0, Y = 0.5 },
         z_order = 100,
         base_font_size = 26, -- letter size at scale 100 %
+        icon_scale = 1.15,   -- a gamepad icon is a square of the letter size times this (pad.lua, [hint] icons)
         plate_alpha = 0.45,  -- the dark plate under the tape (settings.ini [tape] plate)
         slide_ms = 120,      -- tape slide after a press
         shake_ms = 300,      -- shake after a miss

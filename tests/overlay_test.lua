@@ -6,9 +6,10 @@ local test, eq = t.test, t.eq
 local config = require("config")
 local settings = require("settings")
 local view = require("view")
+local pad = require("pad")
 
 local objects, logs, find_all_of_calls = {}, {}, 0
-local no_brush, missing_fonts = false, false
+local no_brush, missing_fonts, missing_textures = false, false, false
 local real_print = print
 
 -- Fake UObject: records method calls; AddChildTo*/SetContent return a fake slot; keeps texts, visibility,
@@ -45,7 +46,9 @@ local function fake(class, name)
                 elseif method == "GetFName" then
                     return { ToString = function() return self.name end }
                 elseif method == "SetColorAndOpacity" then
-                    self.color = args[1].SpecifiedColor
+                    self.color = args[1].SpecifiedColor or args[1] -- a TextBlock takes an FSlateColor, an Image a colour
+                elseif method == "SetBrushFromTexture" then
+                    self.brush = args[1]
                 elseif method == "SetBrushColor" then
                     self.brush_color = args[1]
                 elseif method == "SetRenderTranslation" then
@@ -58,12 +61,13 @@ end
 
 local function setup(find_all_of_result)
     objects, logs, find_all_of_calls = {}, {}, 0
-    no_brush, missing_fonts = false, false
+    no_brush, missing_fonts, missing_textures = false, false, false
     FText = function(s) return s end
     FName = function(s) return s end
     LoadAsset = nil
     StaticFindObject = function(path)
-        if missing_fonts and path:find("^/Game/") then return nil end
+        if missing_textures and path:find("HotkeysIcons", 1, true) then return nil end
+        if missing_fonts and path:find("^/Game/UI/Fonts/") then return nil end
         return fake("Class", path)
     end
     StaticConstructObject = function(class, _, name) return fake(class.name, name) end
@@ -111,13 +115,25 @@ local function named(kind)
     return out
 end
 
--- Keys in build order: { box, frame, text } of every UMG Overlay (one per key).
+-- Keys in build order: { box, frame, text, icon_row, image, tail } of every UMG Overlay (one per key).
 local function tokens()
     local out = {}
     for _, o in ipairs(built("Overlay")) do
-        out[#out + 1] = { box = o, frame = o.children[1], text = o.children[2] }
+        local row = o.children[3]
+        out[#out + 1] = { box = o, frame = o.children[1], text = o.children[2], icon_row = row,
+            image = row and row.children[1] and row.children[1].children[1], tail = row and row.children[2] }
     end
     return out
+end
+
+local function calls_of(method)
+    local n = 0
+    for _, o in ipairs(objects) do
+        for _, c in ipairs(o.calls) do
+            if c[1] == method then n = n + 1 end
+        end
+    end
+    return n
 end
 
 local function count_logs(text)
@@ -157,7 +173,7 @@ test("tape: one cell per position, texts and frames from the model", function()
     eq(#built("UserWidget"), 1, "user widgets")
     eq(built("UserWidget")[1].in_viewport, true, "in viewport")
     eq(built("UserWidget")[1].visibility, 3, "shown (HitTestInvisible)")
-    eq(#built("SizeBox"), 9, "cells")
+    eq(#named("Cell"), 9, "cells")
     local tk = tokens()
     local texts = {}
     for i, k in ipairs(tk) do texts[i] = k.text.text end
@@ -235,7 +251,7 @@ test("lines: max_lines rows of per_line keys; unused rows and keys collapsed", f
     local overlay = setup()
     overlay.configure(values({ ["hint.layout"] = "lines", ["lines.per_line"] = 4, ["lines.max_lines"] = 3 }))
     overlay.show(lines(nil, { per_line = 4, max_lines = 3, collapse_min = 0 }), 0)
-    local rows, tk = built("HorizontalBox"), tokens()
+    local rows, tk = named("Row"), tokens()
     eq(#rows, 3, "rows")
     eq(#tk, 12, "keys")
     eq(tk[1].text.text, "D", "first key")
@@ -305,7 +321,7 @@ test("tape cells set a minimum height, not a fixed one: a tall font grows the ce
     local overlay = setup()
     overlay.configure(values({ ["hint.style"] = "gothic" }))
     overlay.show(tape(), 0)
-    local boxes = built("SizeBox")
+    local boxes = named("Cell")
     eq(#boxes, 9, "cells")
     for i, box in ipairs(boxes) do
         local min_height, height_override, width_override = 0, 0, 0
@@ -475,6 +491,93 @@ test("tape: empty cells keep their width (hidden, not collapsed)", function()
     eq(tk[4].box.visibility, 3, "current shown")
     overlay.show(tape({ keys = { "W" }, index = 1, history = {}, pressed = 0, misses = 0 }), 0)
     eq(tk[5].box.visibility, 2, "empty next cell hidden")
+end)
+
+test("icons: set_icons draws the game's icon in place of the letter, tinted like the letter", function()
+    local overlay = setup()
+    overlay.configure(values())
+    overlay.set_icons("ps")
+    overlay.show(tape(), 0)
+    local tk, c = tokens(), config.overlay.colors
+    eq(#built("UserWidget"), 1, "no rebuild")
+    eq(tk[4].icon_row.visibility, 3, "current: icon shown")
+    eq(tk[4].text.visibility, 1, "current: letter collapsed")
+    eq(tk[4].image.brush.name, pad.key_texture("ps", "A"), "current: the A icon")
+    eq(tk[2].image.brush.name, pad.key_texture("ps", "W"), "done: the W icon")
+    eq(tk[4].image.color.R, c.simple.current.R, "current colour")
+    eq(tk[1].image.color.R, c.miss.R, "miss red")
+    eq(tk[2].image.color.G, c.done.G, "done green")
+    eq(string.format("%.3f", tk[9].image.color.A), "0.150", "last next alpha")
+    eq(tk[4].frame.visibility, 3, "the current icon keeps the frame")
+    eq(tk[4].tail.visibility, 1, "no tail on the tape")
+end)
+
+test("icons: back to letters without a rebuild; a brush is set only when the key changes", function()
+    local overlay = setup()
+    overlay.configure(values())
+    overlay.set_icons("xbox")
+    overlay.show(tape(), 0)
+    eq(calls_of("SetBrushFromTexture"), 9, "one brush per shown key")
+    overlay.show(tape(), 0)
+    eq(calls_of("SetBrushFromTexture"), 9, "an identical show sets none")
+    overlay.set_icons("keys")
+    overlay.show(tape(), 0)
+    local tk = tokens()
+    eq(#built("UserWidget"), 1, "no rebuild")
+    eq(tk[4].text.visibility, 3, "letter shown")
+    eq(tk[4].icon_row.visibility, 1, "icon collapsed")
+    eq(tk[4].text.text, "A", "the letter")
+    eq(tk[4].text.color.R, config.overlay.colors.simple.current.R, "the letter's colour")
+end)
+
+test("icons in lines: a run is the icon and its count", function()
+    local overlay = setup()
+    overlay.configure(values({ ["hint.layout"] = "lines" }))
+    overlay.set_icons("switch")
+    local v = { keys = { "D", "A", "A", "A", "A", "A", "W" }, index = 2, history = { { key = "D", ok = true } }, pressed = 1, misses = 0 }
+    overlay.show(lines(v), 0)
+    local tk = tokens()
+    eq(tk[2].image.brush.name, pad.key_texture("switch", "A"), "the run's icon")
+    eq(tk[2].tail.text, "×5", "count")
+    eq(tk[2].tail.visibility, 3, "tail shown")
+    eq(tk[1].tail.visibility, 1, "a single key has no tail")
+    eq(tk[2].frame.visibility, 3, "the run is current")
+end)
+
+test("a missing icon texture leaves the letter, logged once per texture", function()
+    local overlay = setup()
+    missing_textures = true
+    overlay.configure(values())
+    overlay.set_icons("ps")
+    overlay.show(tape(), 0)
+    local tk = tokens()
+    eq(tk[4].text.visibility, 3, "letter shown")
+    eq(tk[4].icon_row.visibility, 1, "no icon")
+    eq(tk[4].text.text, "A", "the letter")
+    eq(count_logs("icon not found"), 4, "A, W, S, D")
+    overlay.show(tape(V1), 0)
+    eq(count_logs("icon not found"), 4, "still once per texture")
+end)
+
+test("the icon is a square of the token's letter size times icon_scale", function()
+    local overlay = setup()
+    overlay.configure(values())
+    overlay.show(tape(), 0)
+    local function width(box)
+        for _, c in ipairs(box.calls) do
+            if c[1] == "SetWidthOverride" then return c[2][1] end
+        end
+    end
+    local function height(box)
+        for _, c in ipairs(box.calls) do
+            if c[1] == "SetHeightOverride" then return c[2][1] end
+        end
+    end
+    local boxes, scale = named("IconBox"), config.overlay.icon_scale
+    eq(#boxes, 9, "one per cell")
+    eq(width(boxes[4]), math.floor(34 * scale + 0.5), "current: 1.3 x letter size")
+    eq(height(boxes[4]), math.floor(34 * scale + 0.5), "square")
+    eq(width(boxes[1]), math.floor(26 * scale + 0.5), "other cells")
 end)
 
 print = real_print
