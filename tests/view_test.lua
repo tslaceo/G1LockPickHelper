@@ -131,4 +131,28 @@ test("the menu's example renders in both layouts", function()
     eq(l.counter, "2/20", "counter")
 end)
 
+test("tape cells carry the model key; empty cells have none", function()
+    local labels = { W = "UP", S = "DN", A = "LT", D = "RT" }
+    local m = view.tape(V("WSADDAWSA", 3, "D+ A- W+ S+"), { next = 5, done = 3, labels = labels })
+    local keys = {}
+    for i, c in ipairs(m.cells) do keys[i] = c.key or "_" end
+    eq(table.concat(keys, " "), "A W S A D D A W S", "keys")
+    eq(m.cells[4].text, "LT", "the text is still the label")
+    local e = view.tape(V("WS", 1), TAPE)
+    eq(e.cells[1].key, nil, "empty done cell")
+    eq(e.cells[6].key, nil, "empty next cell")
+end)
+
+test("lines tokens carry the key and, for a run, its count", function()
+    local function kc(m)
+        local out = {}
+        for _, tok in ipairs(m.lines[1]) do out[#out + 1] = tok.key .. ":" .. tostring(tok.count) end
+        return table.concat(out, " ")
+    end
+    eq(kc(view.lines(V("DAAAAAW", 2, "D+"), RUNS)), "D:nil A:5 W:nil", "a run in the plan")
+    eq(kc(view.lines(V("DAAAAAW", 4, "D+ A+ A+"), RUNS)), "D:nil A:3 W:nil", "the current run counts down")
+    eq(kc(view.lines(V("DAAAAAW", 2, "D+"), FLAT)), "D:nil A:nil A:nil A:nil A:nil A:nil W:nil", "no folding")
+    eq(kc(view.lines(V("WWWWD", 5, "W+ W+ W+ W+"), RUNS)), "W:4 D:nil", "a pressed run")
+end)
+
 t.finish()
