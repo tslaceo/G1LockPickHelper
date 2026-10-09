@@ -16,6 +16,9 @@ M.SECTIONS = {
     { id = "view", items = {
         { id = "tape", section = "hint", key = "layout", kind = "bool", on = "tape", off = "lines" },
         { id = "gothic", section = "hint", key = "style", kind = "bool", on = "gothic", off = "simple" },
+        { id = "icons", section = "hint", key = "icons", kind = "num", choices = { "auto", "keys", "gamepad" } },
+        { id = "gamepad", section = "hint", key = "gamepad", kind = "num",
+            choices = { "auto", "playstation", "xbox", "switch" } },
         { id = "scale", section = "hint", key = "scale", kind = "num", step = 10 },
         { id = "offset_x", section = "hint", key = "offset_x", kind = "num", step = 20 },
         { id = "offset_y", section = "hint", key = "offset_y", kind = "num", step = 20 },
@@ -37,6 +40,7 @@ M.SECTIONS = {
     } },
     { id = "solve", items = {
         { id = "solve_auto", section = "solve", key = "auto", kind = "bool" },
+        { id = "double_reset", section = "solve", key = "double_reset", kind = "bool" },
     } },
 }
 
@@ -74,21 +78,23 @@ local function menu_item(it, opts)
 end
 
 -- The keys tab: the binds as action items (the bridge has switches, numbers and actions only) whose set
--- does nothing. opts.keys holds the configured names, opts.missing_keys marks the ones UE4SS did not know.
+-- does nothing. opts.keys holds the configured names, opts.missing_keys marks the ones UE4SS did not know. The last
+-- item tells about the double reset (two resets in a row start the autosolver; the gamepad's way).
 local function keys_section(opts)
     local function K(id)
         local name = opts.keys[id]
         if opts.missing_keys and opts.missing_keys[id] then return string.format(opts.text.key_missing, name) end
         return name
     end
-    local function key_item(name)
-        return { name = name, kind = "action", desc = opts.text.desc.keys, set = function() end }
+    local function key_item(name, desc)
+        return { name = name, kind = "action", desc = desc or opts.text.desc.keys, set = function() end }
     end
     return { title = opts.text.sections.keys, items = {
         key_item(string.format(opts.text.items.key_toggle, K("toggle"))),
         key_item(string.format(opts.text.items.key_solve, K("solve"))),
         key_item(string.format(opts.text.items.key_select, K("W"), K("S"))),
         key_item(string.format(opts.text.items.key_shift, K("A"), K("D"))),
+        key_item(opts.text.items.key_double_reset, opts.text.desc.key_double_reset),
     } }
 end
 

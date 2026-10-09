@@ -44,10 +44,10 @@ test("spec has five sections with their items", function()
     eq(spec[3].title, M.sections.tape, "tape title")
     eq(spec[5].title, M.sections.solve, "solve title")
     eq(#spec[1].items, 1, "general items")
-    eq(#spec[2].items, 9, "view items")
+    eq(#spec[2].items, 11, "view items")
     eq(#spec[3].items, 4, "tape items")
     eq(#spec[4].items, 3, "lines items")
-    eq(#spec[5].items, 1, "solve items")
+    eq(#spec[5].items, 2, "solve items")
     eq(item(spec, I.collapse_min).desc, M.desc.collapse_min, "item hint")
     eq(item(spec, I.solve_auto).desc, M.desc.solve_auto, "auto hint")
 end)
@@ -90,7 +90,7 @@ test("with opts.keys the spec gets a read-only Keys section", function()
     local spec = menu.spec(o)
     eq(#spec, 6, "sections")
     eq(spec[6].title, M.sections.keys, "keys title")
-    eq(#spec[6].items, 4, "key items")
+    eq(#spec[6].items, 5, "key items")
     local names = {
         string.format(I.key_toggle, "F5"), string.format(I.key_solve, "F3"),
         string.format(I.key_select, "UP", "S"), string.format(I.key_shift, "A", "D"),
@@ -102,6 +102,11 @@ test("with opts.keys the spec gets a read-only Keys section", function()
         eq(it.desc, M.desc.keys, "desc " .. i)
         it.set(true)
     end
+    local double = spec[6].items[5]
+    eq(double.name, I.key_double_reset, "double reset name")
+    eq(double.kind, "action", "double reset kind")
+    eq(double.desc, M.desc.key_double_reset, "double reset hint")
+    double.set(true)
     eq(#changes, 0, "no setting changed")
     eq(#called, 0, "no action handler called")
 end)
@@ -216,6 +221,45 @@ test("a broken bridge is skipped with a log line", function()
     o.loadfile = function() return function() return { register = function() error("boom") end } end end
     eq(menu.attach(o), false, "failing register")
     eq(o.logs[#o.logs]:find("boom", 1, true) ~= nil, true, "error logged")
+end)
+
+test("the button icons and icon set sliders map to their choices", function()
+    local changes = {}
+    local o = opts(changes)
+    local spec = menu.spec(o)
+    local icons, gamepad = item(spec, I.icons), item(spec, I.gamepad)
+    eq(icons.kind .. " " .. icons.min .. " " .. icons.max .. " " .. icons.step, "num 0 2 1", "icons slider")
+    eq(gamepad.kind .. " " .. gamepad.min .. " " .. gamepad.max .. " " .. gamepad.step, "num 0 3 1", "set slider")
+    eq(icons.desc, M.desc.icons, "icons hint")
+    eq(gamepad.desc, M.desc.gamepad, "set hint")
+    eq(icons.get(), 0, "icons auto by default")
+    o.values.hint.gamepad = "switch"
+    eq(gamepad.get(), 3, "switch")
+    icons.set(1)
+    gamepad.set(1)
+    icons.set(2)
+    local got = {}
+    for i, c in ipairs(changes) do got[i] = c[1] .. "." .. c[2] .. "=" .. c[3] end
+    eq(table.concat(got, " "), "hint.icons=keys hint.gamepad=playstation hint.icons=gamepad", "changes")
+end)
+
+test("the double reset switch sets [solve] double_reset", function()
+    local changes = {}
+    local sw = item(menu.spec(opts(changes)), I.double_reset)
+    eq(sw.kind, "bool", "kind")
+    eq(sw.get(), true, "on by default")
+    eq(sw.desc, M.desc.double_reset, "hint")
+    sw.set(false)
+    eq(changes[1][1] .. "." .. changes[1][2] .. "=" .. tostring(changes[1][3]), "solve.double_reset=false", "change")
+end)
+
+test("the new item names fit Shared Mod Menu (21 characters)", function()
+    for _, lang in ipairs({ "en", "ru" }) do
+        local items = require("lang." .. lang).text.menu.items
+        for _, id in ipairs({ "icons", "gamepad", "double_reset", "key_double_reset" }) do
+            eq(utf8.len(items[id]) <= 21, true, lang .. " " .. id .. ": " .. tostring(items[id]))
+        end
+    end
 end)
 
 t.finish()

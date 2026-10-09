@@ -15,9 +15,10 @@ return {
         -- F3 with nothing to solve or without input hooks; also a minigame that opens without them (auto-pick on)
         solve_unavailable = "Autosolve unavailable",
         -- F3 while the hint is hidden; also F3 outside a minigame with auto-pick on, hint shown or not. %s is the
-        -- key name
+        -- key name, or double_reset when two resets started the autosolver
         solve_on = "Autosolve on (%s)",
         solve_off = "Autosolve off (%s)",
+        double_reset = "double reset",
         -- Shared Mod Menu (F2): mod tab, sections, item names and hints (menu.lua). The menu cuts item names after
         -- about 21 characters.
         menu = {
@@ -29,25 +30,32 @@ return {
             items = {
                 language = "Language",
                 tape = "Tape", gothic = "Gothic style", scale = "Size, %", offset_x = "Offset X",
+                icons = "Button icons", gamepad = "Gamepad icon set",
                 offset_y = "Offset Y", counter = "Counter", shake = "Shake on a miss",
                 preview = "Show an example", reset_position = "Reset position",
                 next = "Keys ahead", done = "Pressed keys shown", slide = "Slide", plate = "Plate",
                 per_line = "Keys per line", max_lines = "Lines", collapse_min = "Collapse from",
                 solve_auto = "Auto-pick",
+                double_reset = "Double reset",
                 key_toggle = "%s: show/hide",
                 key_solve = "%s: autosolve",
                 key_select = "%s / %s: select plate",
                 key_shift = "%s / %s: move plate",
+                key_double_reset = "△△/YY: autosolve",
             },
             desc = {
                 language = "0 auto (game), 1 English, 2 Русский",
                 keys = "change in settings.ini [keys], then restart the game",
                 tape = "off: the whole sequence in lines",
                 gothic = "off: simple",
+                icons = "0 auto (letters or icons by the device), 1 letters, 2 gamepad icons",
+                gamepad = "0 as the game's Button icons, 1 PlayStation, 2 Xbox, 3 Switch",
                 preview = "an example hint for 5 s",
                 reset_position = "default size and offsets",
                 collapse_min = "0: never collapse",
                 solve_auto = "solve each lock as it opens",
+                double_reset = "reset twice in the minigame to autosolve",
+                key_double_reset = "reset twice in the minigame (gamepad Triangle / Y, keyboard R R); on/off: Auto tab",
             },
         },
     },
@@ -66,6 +74,8 @@ return {
             ["general.debug"] = "detailed log in UE4SS.log (for a bug report)",
             ["hint.layout"] = "tape: the current key and the next ones; lines: the whole sequence in lines",
             ["hint.style"] = "simple: a key like in the game's menu; gothic: a golden letter in a frame",
+            ["hint.icons"] = "auto: gamepad icons while you play with a gamepad, letters otherwise; keys: letters; gamepad: icons",
+            ["hint.gamepad"] = "gamepad icons: auto (as the game's \"Button icons\" option), playstation, xbox, switch",
             ["hint.scale"] = "size, %",
             ["hint.offset_x"] = "X offset from the anchor at the right screen edge, UI units",
             ["hint.offset_y"] = "Y offset",
@@ -79,6 +89,7 @@ return {
             ["lines.max_lines"] = "lines on screen",
             ["lines.collapse_min"] = "a run of N same keys shows as \"A×N\"; 0 or 1: never collapse",
             ["solve.auto"] = "solve each lock by itself as it opens",
+            ["solve.double_reset"] = "reset twice in the minigame (gamepad Triangle / Y, keyboard R R) to autosolve",
             ["keys.toggle"] = "show/hide the hint",
             ["keys.solve"] = "autosolve: solve the lock / stop",
             ["keys.W"] = "key labels in the hint and the keys of the fallback input path (UE4SS key names)",
