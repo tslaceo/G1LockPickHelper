@@ -109,11 +109,14 @@ end
 -- opts.hooks == false: this UE4SS build has no RegisterHook; opts.failing_hook: the input function RegisterHook
 -- cannot find; opts.precision: the player's LockpickPrecision (nil: no attribute set; env.precision changes it).
 -- opts.culture: the game's culture ("ru", "en", ...; nil: unreadable); opts.ue4ss: UE4SS.GetVersion exists.
+-- opts.pad: { input_type, button_graphics, gamepad_name } of CommonInputSubsystem and the game's settings (nil: no
+-- such objects; env.pad changes them); opts.cursor: a player controller with this bShowMouseCursor (env.cursor).
 local function load_main(ini, opts)
     opts = opts or {}
     env = {
         now = 0, binds = {}, calls = {}, logs = {}, configured = {}, frames = 0, reads = 0, files = {}, opened = {},
-        hooks = {}, precision = opts.precision,
+        hooks = {}, precision = opts.precision, icons = {}, game_only = {}, pad = opts.pad, pad_reads = 0,
+        has_pc = opts.cursor ~= nil, cursor = opts.cursor,
     }
     if ini == nil then ini = LINES_INI end
     if ini then env.files[SETTINGS_PATH] = ini end
@@ -162,10 +165,36 @@ local function load_main(ini, opts)
         if name == "AttributeSet_Lockpicking" and env.precision then
             return object({ LockpickPrecision = { BaseValue = env.precision, CurrentValue = env.precision } })
         end
+        if name == "CommonInputSubsystem" and env.pad then
+            return object({
+                GetCurrentInputType = function()
+                    env.pad_reads = env.pad_reads + 1
+                    return env.pad.input_type
+                end,
+                GetCurrentGamepadName = function()
+                    return { ToString = function() return env.pad.gamepad_name end }
+                end,
+            })
+        end
+        if name == "GothicGameUserSettings" and env.pad then
+            return setmetatable(object({}), { __index = function(_, k)
+                if k == "ButtonGraphics" then return env.pad.button_graphics end
+            end })
+        end
+        if name == "PlayerController" and env.has_pc then
+            return setmetatable(object({ name = "pc" }), { __index = function(_, k)
+                if k == "bShowMouseCursor" then return env.cursor end
+            end })
+        end
     end
     -- The game's culture (KismetInternationalizationLibrary); env.culture changes it, nil: unreadable.
     env.culture, env.culture_reads = opts.culture, 0
     StaticFindObject = function(path)
+        if path == "/Script/UMG.Default__WidgetBlueprintLibrary" then
+            return object({ SetInputMode_GameOnly = function(_, pc, flush)
+                env.game_only[#env.game_only + 1] = { pc = pc, flush = flush }
+            end })
+        end
         if path ~= "/Script/Engine.Default__KismetInternationalizationLibrary" or not env.culture then return nil end
         return object({ GetCurrentCulture = function()
             env.culture_reads = env.culture_reads + 1
@@ -177,7 +206,8 @@ local function load_main(ini, opts)
     package.loaded["overlay"] = {
         init = function() end,
         configure = function(v) env.configured[#env.configured + 1] = v end,
-        show = function(model, now) env.calls[#env.calls + 1] = { "show", model = model, now = now } end,
+        set_icons = function(mode) env.icons[#env.icons + 1] = mode end,
+        show =function(model, now) env.calls[#env.calls + 1] = { "show", model = model, now = now } end,
         message = function(text) env.calls[#env.calls + 1] = { "message", text = text } end,
         hide = function() env.calls[#env.calls + 1] = { "hide" } end,
         animate = function() env.frames = env.frames + 1 end,
@@ -1217,6 +1247,201 @@ test("with [solve] auto F3 outside a minigame skips the next one; F3 twice goes 
     game = open(DIGGER, DIGGER_START)
     run_until_open(game, 60000)
     eq(str(game.pos), "4 4 4 4 4", "solved, as set")
+end)
+
+local function shows()
+    local n = 0
+    for _, c in ipairs(env.calls) do
+        if c[1] == "show" then n = n + 1 end
+    end
+    return n
+end
+
+test("the hint draws the gamepad icons the game shows, letters on the keyboard", function()
+    load_main(nil, { pad = { input_type = 0, button_graphics = 1, gamepad_name = "Generic" } })
+    run(FRAME_MS)
+    eq(#env.icons, 0, "keyboard: letters, nothing to change")
+    env.pad.input_type = 1
+    run(FRAME_MS)
+    eq(env.icons[#env.icons], "xbox", "a gamepad, the game's Auto with a generic pad")
+    env.pad.gamepad_name = "PS5"
+    run(config.language_poll_ms + FRAME_MS)
+    eq(env.icons[#env.icons], "ps", "Auto with a PS5 pad")
+    env.pad.button_graphics = 4
+    run(config.language_poll_ms + FRAME_MS)
+    eq(env.icons[#env.icons], "switch", "the game's Switch option")
+    env.pad.button_graphics = 0
+    run(config.language_poll_ms + FRAME_MS)
+    eq(env.icons[#env.icons], "keys", "'do not use': letters")
+    env.pad.button_graphics = 2
+    run(config.language_poll_ms + FRAME_MS)
+    eq(env.icons[#env.icons], "xbox", "the Xbox option")
+    env.pad.input_type = 0
+    run(FRAME_MS)
+    eq(env.icons[#env.icons], "keys", "back on the keyboard")
+end)
+
+test("[hint] icons = keys reads nothing and keeps the letters", function()
+    load_main(LINES_INI .. "[hint]\nicons = keys\n", { pad = { input_type = 1, button_graphics = 3 } })
+    run(3000)
+    eq(#env.icons, 0, "letters")
+    eq(env.pad_reads, 0, "the input type is not read")
+end)
+
+test("[hint] icons = gamepad and gamepad = playstation: PS icons on the keyboard too", function()
+    load_main(LINES_INI .. "[hint]\nicons = gamepad\ngamepad = playstation\n",
+        { pad = { input_type = 0, button_graphics = 2 } })
+    run(FRAME_MS)
+    eq(env.icons[#env.icons], "ps", "ps")
+end)
+
+test("without CommonInputSubsystem the hint keeps the letters", function()
+    load_main()
+    open(DIGGER, DIGGER_START)
+    run(3200)
+    eq(last()[1], "show", "hint")
+    eq(#env.icons, 0, "letters")
+end)
+
+test("a switch of the device redraws the shown hint", function()
+    load_main(nil, { pad = { input_type = 0, button_graphics = 3 } })
+    open(DIGGER, DIGGER_START)
+    run(3200)
+    local before = shows()
+    env.pad.input_type = 1
+    run(FRAME_MS)
+    eq(env.icons[#env.icons], "ps", "icons")
+    eq(shows(), before + 1, "shown again")
+end)
+
+test("two resets within double_reset_ms start the autosolver; it opens the lock", function()
+    load_main()
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    press("R")
+    run(200)
+    press("R")
+    run(FRAME_MS * 2)
+    eq(last().model.counter, EN.solving, "the autosolver runs")
+    eq(logged("autosolve: double reset"), true, "logged")
+    run_until_open(game, 60000)
+    eq(str(game.pos), "4 4 4 4 4", "plates")
+    eq(game.strains, 0, "strains")
+end)
+
+test("resets further apart do not start the autosolver", function()
+    load_main()
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    press("R")
+    run(config.double_reset_ms + 100)
+    press("R")
+    local inputs = #game.inputs
+    run(2000)
+    eq(#game.inputs, inputs, "the autosolver presses nothing")
+    eq(logged("autosolve: double reset"), false, "not logged")
+end)
+
+test("[solve] double_reset = false turns the double reset off", function()
+    load_main(LINES_INI .. "[solve]\ndouble_reset = false\n")
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    press("R")
+    run(100)
+    press("R")
+    local inputs = #game.inputs
+    run(2000)
+    eq(#game.inputs, inputs, "the autosolver presses nothing")
+    eq(logged("autosolve: double reset"), false, "not logged")
+end)
+
+test("a reset that stops the autosolver starts no pair", function()
+    load_main()
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    env.binds["KEY_F3"]()
+    run(1000)
+    press("R")
+    run(100)
+    press("R")
+    local inputs = #game.inputs
+    run(2000)
+    eq(logged("autosolve: cancelled by a player press (R)"), true, "the first reset stopped it")
+    eq(logged("autosolve: double reset"), false, "the second did not start it")
+    eq(#game.inputs, inputs, "the autosolver presses nothing")
+end)
+
+test("a double reset with the hint hidden notes it", function()
+    load_main()
+    open(DIGGER, DIGGER_START)
+    run(3200)
+    env.binds["KEY_F4"]()
+    run(config.toggle_note_ms + 50)
+    press("R")
+    run(100)
+    press("R")
+    run(FRAME_MS)
+    eq(last().text, string.format(EN.solve_on, EN.double_reset), "the note")
+end)
+
+test("with Shared Mod Menu the input goes back to the game once the cursor hides after a minigame", function()
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(1200)
+    eq(#env.game_only, 0, "not while the cursor is shown")
+    env.cursor = false
+    run(150)
+    eq(#env.game_only, 0, "not before settle_ms")
+    run(100)
+    eq(#env.game_only, 1, "handed back")
+    eq(env.game_only[1].flush, false, "held keys are not flushed")
+    eq(env.game_only[1].pc.name, "pc", "the player controller")
+    run(5000)
+    eq(#env.game_only, 1, "once")
+end)
+
+test("without Shared Mod Menu the input is left alone", function()
+    load_main(nil, { cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    env.cursor = false
+    run(2000)
+    eq(#env.game_only, 0, "no call")
+end)
+
+test("a cursor shown after the minigame through window_ms (a chest window) gets no call", function()
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(config.smm_fix.window_ms + 200)
+    env.cursor = false
+    run(1000)
+    eq(#env.game_only, 0, "no call")
+end)
+
+test("config.fix_smm_input = false turns the fix off", function()
+    config.fix_smm_input = false
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    env.cursor = false
+    run(2000)
+    config.fix_smm_input = true
+    eq(#env.game_only, 0, "no call")
+end)
+
+test("the start line tells the icons and the Shared Mod Menu input fix", function()
+    load_main(nil, { menu = true })
+    run(FRAME_MS)
+    eq(logged("UE4SS unknown, icons auto/auto, SMM input fix on"), true, "with Shared Mod Menu")
+    load_main(LINES_INI .. "[hint]\nicons = gamepad\ngamepad = xbox\n")
+    run(FRAME_MS)
+    eq(logged("icons gamepad/xbox, SMM input fix off"), true, "without it")
 end)
 
 io, loadfile = real_io, real_loadfile

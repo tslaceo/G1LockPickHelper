@@ -19,6 +19,8 @@ local solver = require("solver")
 local tracker = require("tracker")
 local autosolve = require("autosolve")
 local i18n = require("i18n")
+local pad = require("pad")
+local input_fix = require("input_fix")
 
 local TAG = "[G1LockPickHelper] "
 local VERSION = "1.0.0" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
@@ -98,6 +100,8 @@ local SOLVE_OPTS = { ws_gap_ms = config.solve_ws_gap_ms, timeout_ms = config.sol
 local hooked = false   -- the input functions are hooked; otherwise the keys from settings.ini are bound
 local own_call = false -- true while the autosolver calls an input function
 local own_seen = false -- a hook saw that call
+local menu_bridge             -- Shared Mod Menu's bridge once the settings are registered there (set at load, below)
+local icon_mode = "keys"      -- what the hint draws: "keys" (letters) or an icon set (pad.lua)
 
 local function guarded(what, fn)
     local ok, err = pcall(fn)
@@ -156,8 +160,8 @@ local function render(now)
     -- replans), the settings version (a settings change redraws) and whether the autosolver runs.
     local sig = HIDDEN
     if kind == "hint" then
-        sig = string.format("hint|%s|%d|%d|%d|%d|%d|%s", tostring(a.keys), a.index, #a.history, a.pressed, a.misses,
-            applied, tostring(running))
+        sig = string.format("hint|%s|%d|%d|%d|%d|%d|%s|%s", tostring(a.keys), a.index, #a.history, a.pressed,
+            a.misses, applied, tostring(running), icon_mode)
     elseif kind == "message" then
         sig = "message|" .. a .. "|" .. applied
     end
@@ -212,6 +216,94 @@ local function drop_auto(s, reason)
     s.auto:stop()
 end
 
+-- A game object found with FindFirstOf and kept; a missing one is looked for again at most once a second
+-- (FindFirstOf walks all objects).
+local function finder(class)
+    local obj, next_try = nil, 0
+    return function(now)
+        if obj and obj:IsValid() then return obj end
+        obj = nil
+        if now < next_try then return nil end
+        next_try = now + 1000
+        local ok, found = pcall(FindFirstOf, class)
+        if ok and found and found:IsValid() then obj = found end
+        return obj
+    end
+end
+local input_subsystem = finder("CommonInputSubsystem")
+local game_settings = finder("GothicGameUserSettings")
+local player_controller = finder("PlayerController")
+
+-- Letters or the game's gamepad icons (pad.lua). The input type is read every frame (the player switches devices
+-- any time), the game's "Button icons" option and the gamepad name every language_poll_ms; with [hint] icons =
+-- keys nothing is read. A change reaches the overlay at once and redraws the hint (render's signature).
+local pad_state = {} -- { input_type, button_graphics, gamepad_name } for pad.resolve
+local next_pad_read = 0
+
+local function read_pad(now)
+    if values.hint.icons ~= "keys" then
+        local cis = input_subsystem(now)
+        local input_type
+        if cis then
+            local ok, v = pcall(function() return cis:GetCurrentInputType() end)
+            if ok then input_type = v end
+        end
+        pad_state.input_type = input_type
+        if now >= next_pad_read then
+            next_pad_read = now + config.language_poll_ms
+            local gs = game_settings(now)
+            local graphics, name
+            if gs then
+                local ok, v = pcall(function() return gs.ButtonGraphics end)
+                if ok then graphics = v end
+            end
+            if cis then
+                local ok, v = pcall(function() return cis:GetCurrentGamepadName():ToString() end)
+                if ok then name = v end
+            end
+            pad_state.button_graphics, pad_state.gamepad_name = graphics, name
+        end
+    end
+    local mode = pad.resolve(values.hint.icons, values.hint.gamepad, pad_state)
+    if mode ~= icon_mode then
+        icon_mode = mode
+        overlay.set_icons(mode)
+        trace("icons: %s", mode)
+    end
+end
+
+-- Shared Mod Menu closed over the minigame leaves the input on its UI; after the minigame the game hides the cursor
+-- but does not take the input back (the hero cannot walk). With Shared Mod Menu installed, once the cursor stays
+-- hidden after a minigame (input_fix.lua) the input goes back to the game: SetInputMode_GameOnly, held keys kept.
+local fixer = input_fix.new(config.smm_fix)
+local widget_lib -- WidgetBlueprintLibrary's default object, found once
+
+local function smm_fix_on()
+    return menu_bridge ~= nil and config.fix_smm_input
+end
+
+local function step_fix(now)
+    if not (smm_fix_on() and fixer:waiting()) then return end
+    local pc = player_controller(now)
+    local visible
+    if pc then
+        local ok, v = pcall(function() return pc.bShowMouseCursor end)
+        if ok then visible = v == true end
+    end
+    if not fixer:frame(now, visible) then return end
+    local ok, err = pcall(function()
+        if not (widget_lib and widget_lib:IsValid()) then
+            widget_lib = StaticFindObject("/Script/UMG.Default__WidgetBlueprintLibrary")
+        end
+        widget_lib:SetInputMode_GameOnly(pc, false)
+    end)
+    if ok then
+        trace("input handed back to the game after the minigame (Shared Mod Menu fix)")
+    else
+        log("input fix failed: %s", tostring(err))
+    end
+end
+
 local function tick()
     local s = session
     if not s then return end
@@ -220,6 +312,7 @@ local function tick()
         if s.phase == "name" and now - s.started < 2000 then return end -- ability not attached yet
         trace("minigame closed")
         session = nil
+        if smm_fix_on() then fixer:ended(now) end
         return
     end
     if s.phase == "name" then
@@ -286,12 +379,30 @@ local function on_key(key)
     end
 end
 
--- A press of the player: it stops the autosolver, then the tracker takes it.
+local toggle_solve -- F3's action, defined below; two resets in a row call it too
+
+-- Two resets of the player in a row (within double_reset_ms) start the autosolver like F3: the gamepad has no
+-- button of its own in the minigame. A reset while the autosolver runs only stops it and starts no pair.
+local function double_reset(s, was_off)
+    if not values.solve.double_reset then return end
+    local now = now_ms()
+    if was_off and s.reset_at and now - s.reset_at <= config.double_reset_ms then
+        s.reset_at = nil
+        log("autosolve: double reset")
+        toggle_solve(T.double_reset)
+    else
+        s.reset_at = was_off and now or nil
+    end
+end
+
+-- A press of the player: it stops the autosolver, then the tracker takes it; a reset may be half of a double reset.
 local function player_key(key)
     local s = session
     if not s then return end
+    local was_off = s.auto.state == "off"
     if s.auto:player_pressed() then log("autosolve: cancelled by a player press (%s)", key) end
     on_key(key)
+    if key == "R" then double_reset(s, was_off) end
 end
 
 -- Hook on one of the minigame's input functions (game thread): a press of the player (keyboard or gamepad)
@@ -316,16 +427,17 @@ local function auto_stopped(reason)
     note, note_until = T.solve_stopped, now_ms() + config.toggle_note_ms
 end
 
--- A short note on what F3 did, whatever the hint's state.
-local function solve_note_always(on)
-    note = string.format(on and T.solve_on or T.solve_off, tostring(values.keys.solve))
+-- A short note on what F3 (or a double reset) did, whatever the hint's state. source: the key name for the note
+-- (nil: the F3 key).
+local function solve_note_always(on, source)
+    note = string.format(on and T.solve_on or T.solve_off, tostring(source or values.keys.solve))
     note_until = now_ms() + config.toggle_note_ms
 end
 
 -- F3 while the hint is hidden: a short note says what the key did (a shown hint tells it by itself).
-local function solve_note(on)
+local function solve_note(on, source)
     if enabled then return end
-    solve_note_always(on)
+    solve_note_always(on, source)
 end
 
 -- F3 with nothing the autosolver could do: a short note (shown with the hint hidden too), the reason in the log.
@@ -368,7 +480,8 @@ end
 
 -- F3: starts (or arms, before the minigame is ready) or stops the autosolver of the open minigame; outside a
 -- minigame see toggle_early. Nothing to solve (no hint, the lock already open) or no input hooks: a note.
-local function toggle_solve()
+-- source: the note's key name (nil: the F3 key; T.double_reset for two resets).
+toggle_solve = function(source)
     if not hooked then return no_hooks() end
     local s = session
     if not s then return toggle_early() end
@@ -380,7 +493,7 @@ local function toggle_solve()
     end
     local state = s.auto:toggle(s.tracker ~= nil)
     log("autosolve: %s", state)
-    solve_note(state ~= "off")
+    solve_note(state ~= "off", source)
 end
 
 -- One autosolver step: the key it wants goes to the game through the task's input function. The hook inside
@@ -500,6 +613,7 @@ NotifyOnNewObject("/Script/G1R.AbilityTask_LockPick", function(task)
     guarded("minigame start", function()
         reader.reset()
         preview_until = nil
+        fixer:cancel()
         local now = now_ms()
         local solve = values.solve.auto
         if early and now < early.until_ms then solve = early.solve end
@@ -553,7 +667,6 @@ else
 end
 
 -- The menu is optional: a failure while attaching it must not stop the mod from loading. It needs the Mods folder.
-local menu_bridge -- Shared Mod Menu's bridge once the settings are registered there
 local function menu_opts()
     return {
         mods_dir = mods_dir, values = values, schema = settings.entry, text = T.menu, on_change = on_setting,
@@ -632,9 +745,11 @@ end
 
 -- One line that answers the first questions of a bug report.
 local function log_start()
-    log("G1LockPickHelper %s: game %s (lock db %s), language %s (%s, culture %s), input hooks %s, UE4SS %s",
+    log("G1LockPickHelper %s: game %s (lock db %s), language %s (%s, culture %s), input hooks %s, UE4SS %s, "
+        .. "icons %s/%s, SMM input fix %s",
         VERSION, game_build or "unknown", tostring(db.build), lang, values.general.language, culture or "unknown",
-        hooked and "yes" or "no", ue4ss_version())
+        hooked and "yes" or "no", ue4ss_version(), values.hint.icons, values.hint.gamepad,
+        smm_fix_on() and "on" or "off")
 end
 
 -- The first frame reads the game's culture and logs the start line; while [general] language = auto the culture
@@ -654,11 +769,11 @@ end
 
 local next_tick = 0
 
--- One game-thread frame: the language, presses at once, the settings, the plates every poll_ms, the autosolver,
--- the hint, the animations.
+-- One game-thread frame: the language, the icons, presses at once, the settings, the plates every poll_ms, the autosolver, the input fix, the hint, the animations.
 local function frame()
     local now = now_ms()
     follow_language(now)
+    read_pad(now)
     drain_keys()
     if session then session.frames = session.frames + 1 end
     if applied ~= version then
@@ -674,6 +789,7 @@ local function frame()
         tick()
     end
     step_auto(now)
+    step_fix(now)
     render(now)
     overlay.animate(now)
 end

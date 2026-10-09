@@ -15,6 +15,10 @@ return {
     solve_timeout_ms = 2500, -- autosolver: stops when its A/D does not show on the plates in this time
     solve_max_replans = 3,   -- autosolver: stops after this many hint replans in a row (model and game disagree)
     solve_early_ms = 5000,   -- autosolver: F3 outside a minigame arms the one that opens within this time (the hero sits down first)
+    double_reset_ms = 500,   -- two resets of the player within this time start the autosolver ([solve] double_reset)
+    fix_smm_input = true,    -- after a minigame hand the input back to the game (Shared Mod Menu leaves it on its UI)
+    smm_fix = { settle_ms = 200, settle_frames = 5, window_ms = 10000 }, -- input_fix.lua: the cursor hidden this long
+                             -- and this many frames in a row, within window_ms after the minigame closed
     overlay = {
         -- Placement in fractions of the screen, so it works on any aspect ratio (16:9, 21:9 ultrawide):
         -- the hint's `pivot` point (fractions of the hint box) sits at `anchor` (fractions of the screen),
