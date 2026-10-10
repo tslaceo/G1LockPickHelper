@@ -74,7 +74,7 @@ return {
             ["general.debug"] = "detailed log in UE4SS.log (for a bug report)",
             ["hint.layout"] = "tape: the current key and the next ones; lines: the whole sequence in lines",
             ["hint.style"] = "simple: a key like in the game's menu; gothic: a golden letter in a frame",
-            ["hint.icons"] = "auto: gamepad icons while you play with a gamepad, letters otherwise; keys: letters; gamepad: icons",
+            ["hint.icons"] = "auto: gamepad icons while you play with a gamepad, letters otherwise and when the game's \"Button icons\" is \"Do not use\"; keys: letters; gamepad: icons",
             ["hint.gamepad"] = "gamepad icons: auto (as the game's \"Button icons\" option), playstation, xbox, switch",
             ["hint.scale"] = "size, %",
             ["hint.offset_x"] = "X offset from the anchor at the right screen edge, UI units",

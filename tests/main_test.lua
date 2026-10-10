@@ -1556,6 +1556,24 @@ test("a minigame that opens within the window cancels the pending fix; its own c
     eq(#env.game_only, 1, "once")
 end)
 
+test("a settings.ini from 1.0 keeps working and stays as it is until a menu change rewrites it with the new keys", function()
+    local old = "[general]\ndebug = true\n[hint]\nlayout = lines\n[solve]\nauto = false\n"
+    load_main(old, { menu = true })
+    run(config.save_delay_ms * 3)
+    eq(env.files[SETTINGS_PATH], old, "not rewritten by the start")
+    eq(env.configured[1].hint.icons, "auto", "icons: the default")
+    eq(env.configured[1].hint.gamepad, "auto", "gamepad: the default")
+    eq(env.configured[1].solve.double_reset, true, "double_reset: the default")
+    menu_item(ITEMS.reset_position).set(true)
+    run(config.save_delay_ms + FRAME_MS)
+    local file = env.files[SETTINGS_PATH]
+    for _, key in ipairs({ "hint.icons", "hint.gamepad", "solve.double_reset" }) do
+        local name = key:match("%.(.+)$")
+        eq(file:find(name .. " = ", 1, true) ~= nil, true, key .. " written")
+        eq(file:find(EN_INI.comments[key], 1, true) ~= nil, true, key .. " with its comment")
+    end
+end)
+
 test("the start line tells the icons and the Shared Mod Menu input fix", function()
     load_main(nil, { menu = true })
     run(FRAME_MS)

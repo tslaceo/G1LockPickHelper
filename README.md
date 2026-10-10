@@ -10,7 +10,8 @@ moves that cannot strain the pick.
   the pick. F3 right after using a chest (while the hero sits down) solves the minigame that opens next.
   Any key you press yourself takes over. "Auto-pick" in the settings solves every lock as it opens.
 - **Gamepad.** With a gamepad the hint shows the game's own button icons - PlayStation, Xbox or Switch, as the
-  game's "Button icons" option says. Press reset twice (Triangle / Y) and the mod picks the lock.
+  game's "Button icons" option says (with "Do not use" it shows letters, unless `[hint] icons = gamepad`).
+  Press reset twice (Triangle / Y) and the mod picks the lock.
 - **Exact locks.** The lock layouts come from the game files; the connections your lockpicking skill removes are
   removed from the hint too.
 - **English and Russian**, following the game's language by default.
@@ -42,7 +43,8 @@ Uninstall: delete `G1R\Binaries\Win64\ue4ss\Mods\G1LockPickHelper\`.
 | Reset twice (gamepad Triangle / Y, keyboard R R) | In the minigame: solve the lock, like F3 (`[solve] double_reset = false` turns it off) |
 | F2 | Shared Mod Menu, if installed: the mod's tab "LockPick Helper" |
 
-The keys are set in `settings.ini` (`[keys]`, UE4SS key names) and change after a game restart.
+F3 and F4 are set in `settings.ini` (`[keys]`, UE4SS key names) and change after a game restart. The double reset
+is turned off with `[solve] double_reset`.
 
 ## Settings
 
@@ -65,7 +67,8 @@ After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
 2. Repeat what went wrong.
 3. Open an issue on GitHub (or a bug report on the Nexus page) and attach
    `G1R\Binaries\Win64\ue4ss\UE4SS.log`. The line that contains `[G1LockPickHelper] G1LockPickHelper <version>:`
-   tells the mod's version, the game build, the language and whether the input hooks are on.
+   tells the mod's version, the game build, the language, whether the input hooks are on, the icon settings and
+   whether the Shared Mod Menu fix is on.
 
 ## Known limits
 

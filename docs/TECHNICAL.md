@@ -103,19 +103,23 @@ it.
 
 `CommonInputSubsystem:GetCurrentInputType()` (0 keyboard and mouse, 1 gamepad) tells the device of the last input;
 the mod reads it every frame. The icon set follows the game's "Button icons" option,
-`GothicGameUserSettings.ButtonGraphics` (0 do not use, 1 auto, 2 Xbox, 3 PlayStation 5, 4 Switch); with "auto" the
-game names the pad in `CommonInputSubsystem:GetCurrentGamepadName()` (`PS5`, `XSX`, `SWITCH`). The icons are the
-game's textures `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox:
-`T_Icon_Xbox_Dpad…`, Switch: `T_Icon_Switch_<Up|Down|Left|Right>`), drawn in a UMG `Image` and tinted like the
-letters: the icon's dark circle stays dark, its symbol takes the colour.
+`GothicGameUserSettings.ButtonGraphics` (0 do not use, 1 auto, 2 Xbox, 3 PlayStation 5, 4 Switch; "do not use" keeps
+the letters unless `[hint] icons = gamepad`); with "auto" the game names the pad in
+`CommonInputSubsystem:GetCurrentGamepadName()` (`PS5`, `XSX`, `SWITCH`). The option and the name are read every 2 s
+and at once when the input type changes. If `CommonInputSubsystem` is not found within 10 s of the start, the letters
+stay and one log line says so. The icons are the game's textures
+`/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox: `T_Icon_Xbox_Dpad…`, Switch:
+`T_Icon_Switch_<Up|Down|Left|Right>`), drawn in a UMG `Image` and tinted like the letters: the icon's dark circle
+stays dark, its symbol takes the colour.
 
 ## Shared Mod Menu input fix
 
 Shared Mod Menu, closed over the minigame, leaves the input on its UI (the minigame owns the mouse cursor then), and
 the game does not switch it back when the minigame ends: the hero cannot walk. With Shared Mod Menu installed the mod
 waits after each minigame until the game hides the cursor (200 ms and 5 frames in a row, within 10 s) and calls
-`WidgetBlueprintLibrary.SetInputMode_GameOnly(PlayerController, false)` once. A cursor that stays shown (a chest
-window) is left alone.
+`WidgetBlueprintLibrary.SetInputMode_GameOnly(PlayerController, false)` once, for the player controller found when
+the minigame closed (a different one - a level loaded - ends the wait). A cursor that stays shown (a chest window) is
+left alone, and so is one that cannot be read.
 
 ## Tracker and autosolver
 
