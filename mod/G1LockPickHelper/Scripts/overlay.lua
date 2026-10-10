@@ -326,6 +326,17 @@ function M.configure(values)
     end
 end
 
+-- A save loaded: the engine dropped the widget and frees it soon, and the fonts and icons found may go too. They are
+-- forgotten without a call into them (IsValid() cannot always tell a freed object); the next show builds a new widget
+-- and first removes any of ours still in the viewport.
+function M.forget()
+    ui = nil
+    anim = { pressed = 0, misses = 0 }
+    for path, f in pairs(fonts) do if f then fonts[path] = nil end end
+    for path, tex in pairs(textures) do if tex then textures[path] = nil end end
+    stale_pending = true
+end
+
 -- mode: "keys" (letters) or an icon set of pad.lua ("ps", "xbox", "switch"). The next show draws it; no rebuild.
 function M.set_icons(mode)
     icon_set = mode or "keys"

@@ -2,9 +2,10 @@
 
 ## 1.1.2
 
-- Fixed a rare crash a few seconds after loading a save (F9) during the lockpicking minigame, seen with auto-pick
-  running: the mod kept reading the old world's minigame until the game freed it. Now it lets go of the old world as
-  soon as the game makes the new player controller.
+- Fixed rare crashes after loading a save (F9): a few seconds after a load during the lockpicking minigame (seen with
+  auto-pick running), or at a change in Shared Mod Menu after a load. The mod kept the old world's minigame and its
+  own hint widget until the game freed them. Now it lets go of the old world as soon as the game makes the new player
+  controller.
 
 ## 1.1.1
 

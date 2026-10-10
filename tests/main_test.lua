@@ -225,6 +225,7 @@ local function load_main(ini, opts)
         message = function(text) env.calls[#env.calls + 1] = { "message", text = text } end,
         hide = function() env.calls[#env.calls + 1] = { "hide" } end,
         animate = function() env.frames = env.frames + 1 end,
+        forget = function() env.forgot = (env.forgot or 0) + 1 end,
     }
     -- Timings the assertions below rely on, independent of the shipped defaults.
     config.poll_ms, config.ready_delay_ms, config.grace_ms, config.ready_frames = 50, 3000, 1200, 30
@@ -1117,6 +1118,7 @@ test("a save loaded during an autosolve drops the minigame at the new controller
     eq(last()[1], "hide", "the hint is gone")
     eq(logged("autosolve stopped"), false, "a load is not a stop of its own")
     eq(logged("new player controller: minigame dropped"), true, "traced")
+    eq(env.forgot, 1, "the hint's widget is forgotten too")
     game = open(DIGGER, DIGGER_START)
     run(3200)
     eq(last()[1], "show", "the next minigame gets its hint")
@@ -1127,7 +1129,10 @@ test("a new controller outside a minigame changes nothing visible", function()
     run(FRAME_MS)
     restart(object({ name = "new pc" }))
     run(500)
-    eq(#env.calls, 0, "no overlay calls")
+    local shown = 0
+    for _, c in ipairs(env.calls) do if c[1] ~= "hide" then shown = shown + 1 end end
+    eq(shown, 0, "nothing shown")
+    eq(env.forgot, 1, "the old widget is forgotten")
     eq(logged("minigame dropped"), false, "nothing to drop")
     eq(logged("failed"), false, "no errors")
 end)

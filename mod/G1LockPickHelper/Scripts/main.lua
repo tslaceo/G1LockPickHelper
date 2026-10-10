@@ -228,7 +228,11 @@ local function finder(class)
         if now < f.next_try then return nil end
         f.next_try = now + 1000
         local ok, found = pcall(FindFirstOf, class)
-        if ok and found and found:IsValid() then f.obj = found end
+        if ok and found and found:IsValid() then
+            f.obj = found
+            local got, address = pcall(function() return found:GetAddress() end)
+            trace("found %s%s", class, got and type(address) == "number" and string.format(" at 0x%X", address) or "")
+        end
         return f.obj
     end, f
 end
@@ -381,17 +385,25 @@ end
 
 -- A save loads (F9) or the game leaves the world: the game restarts a new player controller. The old world's objects
 -- stay readable a few seconds more, then the game frees them, and UE4SS's IsValid() cannot always tell a freed
--- object (a crash after F9 during an autosolve). So everything found in the old world is forgotten at once, without
--- reading it: the minigame and its autosolver, the lock scene, the input fix's wait, the objects the finders kept.
--- The new controller comes with the call.
+-- object (crashes after F9: in the autosolver, at a settings change). So everything found in the old world is
+-- forgotten at once, without reading it: the minigame and its autosolver, the lock scene, the hint's widget, the input
+-- fix's wait, the objects the finders kept. The new controller comes with the call.
 local function new_world(pc)
     if session then trace("new player controller: minigame dropped") end
     session = nil
+    overlay.forget()
+    last_sig = nil -- the next frame draws into a new widget
     reader.reset()
     fixer:cancel()
     fix_pc, fix_held, hold_until = nil, nil, 0
     for _, f in ipairs(finders) do f.obj, f.next_try = nil, 0 end
     controller_found.obj = pc
+    if values.general.debug then -- do these live on across a load? (an old one found first would be read later)
+        for _, class in ipairs({ "CommonInputSubsystem", "LockPickSubsystem" }) do
+            local ok, list = pcall(FindAllOf, class)
+            trace("new player controller: %s x%s", class, ok and type(list) == "table" and #list or "?")
+        end
+    end
 end
 
 local function tick()

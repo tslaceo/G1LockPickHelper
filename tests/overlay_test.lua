@@ -580,5 +580,36 @@ test("the icon is a square of the token's letter size times icon_scale", functio
     eq(width(boxes[1]), math.floor(26 * scale + 0.5), "other cells")
 end)
 
+test("forget (a save loaded) drops the widget, fonts and icons without touching them; the next show builds anew", function()
+    local overlay = setup({})
+    overlay.configure(values({ ["hint.style"] = "gothic", ["hint.icons"] = "gamepad" }))
+    overlay.set_icons("ps")
+    overlay.show(view.tape({ keys = { "W" }, index = 1, history = {}, pressed = 0, misses = 1, status = "ok" },
+        { next = 2, done = 1, labels = {} }), 0)
+    eq(#named("Overlay"), 1, "built")
+    -- Everything built or found so far belongs to the old world: the game frees it soon.
+    for _, o in ipairs(objects) do
+        setmetatable(o, { __index = function(_, m) error("old " .. tostring(o.name) .. " touched (" .. m .. ")") end })
+    end
+    local old = #objects
+    overlay.forget()
+    overlay.configure(values({ ["hint.style"] = "gothic", ["hint.icons"] = "gamepad", ["hint.offset_x"] = 0.5 }))
+    overlay.animate(100)
+    overlay.hide()
+    overlay.message("again")
+    eq(#named("Overlay"), 2, "a new widget")
+    eq(named("Overlay")[2].in_viewport, true, "on screen")
+    eq(find_all_of_calls, 2, "our widgets left in the viewport are looked for again")
+    overlay.show(view.tape({ keys = { "W" }, index = 1, history = {}, pressed = 0, misses = 1, status = "ok" },
+        { next = 2, done = 1, labels = {} }), 200)
+    local found_again = 0
+    for i = old + 1, #objects do
+        if type(objects[i].name) == "string" and objects[i].name:find("HotkeysIcons", 1, true) then
+            found_again = found_again + 1
+        end
+    end
+    eq(found_again > 0, true, "the icon is looked up again")
+end)
+
 print = real_print
 t.finish()

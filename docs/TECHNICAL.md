@@ -132,9 +132,10 @@ up to 60 s after the minigame (then one log line, "input fix gave up"). Two scan
 Each load (F9, a saved game, back to the main menu) makes a new player controller, and the game calls its
 `PlayerController:ClientRestart` (the hook UE4SS's CheatManagerEnabler uses too). The old world's objects stay
 readable a few seconds more, then the game frees them, and UE4SS's `IsValid()` cannot always tell a freed object:
-reading the old minigame's task crashed the game after F9 during an autosolve. So at that hook the mod forgets every
-object of the old world without reading it - the minigame and its autosolver, the lock scene, the input fix's wait,
-the objects found with `FindFirstOf` - and keeps the new controller. Without the hook (one log line) the minigame
+reading the old minigame's task crashed the game after F9 during an autosolve, and so did moving the hint's dropped
+widget at a settings change after F9. So at that hook the mod forgets every object of the old world without reading
+it - the minigame and its autosolver, the lock scene, the hint's widget and the fonts and icons it found, the input
+fix's wait, the objects found with `FindFirstOf` - and keeps the new controller. The next hint builds a new widget. Without the hook (one log line) the minigame
 ends when the game frees it, as before 1.1.2.
 
 ## Tracker and autosolver
