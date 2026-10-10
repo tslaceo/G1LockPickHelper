@@ -106,8 +106,8 @@ the mod reads it every frame. The icon set follows the game's "Button icons" opt
 `GothicGameUserSettings.ButtonGraphics` (0 do not use, 1 auto, 2 Xbox, 3 PlayStation 5, 4 Switch; "do not use" keeps
 the letters unless `[hint] icons = gamepad`); with "auto" the game names the pad in
 `CommonInputSubsystem:GetCurrentGamepadName()` (`PS5`, `XSX`, `SWITCH`). The option and the name are read every 2 s
-and at once when the input type changes. If `CommonInputSubsystem` is not found within 10 s of the start, the letters
-stay and one log line says so. The icons are the game's textures
+and at once when the input type changes. If `CommonInputSubsystem` is not found within 10 s of the start, one log
+line says so; with `[hint] icons = auto` the letters stay. The icons are the game's textures
 `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox: `T_Icon_Xbox_Dpad…`, Switch:
 `T_Icon_Switch_<Up|Down|Left|Right>`), drawn in a UMG `Image` and tinted like the letters: the icon's dark circle
 stays dark, its symbol takes the colour.
