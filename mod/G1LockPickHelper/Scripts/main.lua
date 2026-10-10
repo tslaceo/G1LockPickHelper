@@ -268,7 +268,8 @@ local function read_pad(now)
     if mode ~= icon_mode then
         icon_mode = mode
         overlay.set_icons(mode)
-        trace("icons: %s", mode)
+        trace("icons: %s (input %s, option %s, pad %s)", mode, tostring(pad_state.input_type),
+            tostring(pad_state.button_graphics), tostring(pad_state.gamepad_name))
     end
 end
 

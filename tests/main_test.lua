@@ -1314,6 +1314,12 @@ test("a switch of the device redraws the shown hint", function()
     eq(shows(), before + 1, "shown again")
 end)
 
+test("a switch of the icons logs what it was decided from", function()
+    load_main(nil, { pad = { input_type = 1, button_graphics = 1, gamepad_name = "PS5" } })
+    run(FRAME_MS)
+    eq(logged("icons: ps (input 1, option 1, pad PS5)"), true, "logged")
+end)
+
 test("two resets within double_reset_ms start the autosolver; it opens the lock", function()
     load_main()
     local game = open(DIGGER, DIGGER_START)
