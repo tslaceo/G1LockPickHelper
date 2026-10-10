@@ -253,9 +253,11 @@ test("the double reset switch sets [solve] double_reset", function()
     eq(changes[1][1] .. "." .. changes[1][2] .. "=" .. tostring(changes[1][3]), "solve.double_reset=false", "change")
 end)
 
--- Shared Mod Menu cuts an item name after about 21 characters (utf8.len counts characters, not bytes). Every
--- item of the spec is checked in both languages: the settings' names and, with the default keys, the Keys tab.
-test("every item name fits Shared Mod Menu (21 characters)", function()
+-- Shared Mod Menu cuts an item name after about 21 characters, and it counts bytes, not characters: its name
+-- column is at most 300 px at 8.5 px per byte, 35 bytes, so a Cyrillic name (2 bytes a letter) fits about 17
+-- letters. Every item of the spec is checked in both languages: the settings' names and, with the default keys,
+-- the Keys tab.
+test("every item name fits Shared Mod Menu (21 characters, 35 bytes)", function()
     local keys = { toggle = "F4", solve = "F3", W = "W", S = "S", A = "A", D = "D" }
     for _, lang in ipairs({ "en", "ru" }) do
         local o = opts({})
@@ -265,15 +267,17 @@ test("every item name fits Shared Mod Menu (21 characters)", function()
             for _, it in ipairs(section.items) do
                 count = count + 1
                 eq((utf8.len(it.name) or 99) <= 21, true, lang .. " " .. section.title .. ": " .. tostring(it.name))
+                eq(#it.name <= 35, true, lang .. " bytes " .. #it.name .. ": " .. tostring(it.name))
             end
         end
         eq(count, 22 + 5, lang .. " items checked: 22 settings and 5 keys")
     end
 end)
 
--- The hints are kept within 60 characters, one line of the menu. Each hint belongs to a menu item (or to the Keys
--- tab) and is picked up by the item on its own: a missing one leaves the item without a hint.
-test("every hint fits Shared Mod Menu (60 characters), belongs to an item and reaches it", function()
+-- Shared Mod Menu cuts a hint by bytes (a Cyrillic letter is 2): measured in game, a tab cut it after 49-55 bytes,
+-- so a hint is at most 48 bytes, one line of the menu. Each hint belongs to a menu item (or to the Keys tab) and is
+-- picked up by the item on its own: a missing one leaves the item without a hint.
+test("every hint fits Shared Mod Menu (48 bytes), belongs to an item and reaches it", function()
     local known = { keys = true, key_double_reset = true }
     for _, section in ipairs(menu.SECTIONS) do
         for _, it in ipairs(section.items) do known[it.id] = true end
@@ -283,7 +287,7 @@ test("every hint fits Shared Mod Menu (60 characters), belongs to an item and re
         o.text = require("lang." .. lang).text.menu
         for id, text in pairs(o.text.desc) do
             eq(known[id], true, lang .. " hint of an unknown item " .. id)
-            eq((utf8.len(text) or 99) <= 60, true, lang .. " " .. id .. ": " .. text)
+            eq(#text <= 48, true, lang .. " " .. id .. " (" .. #text .. " bytes): " .. text)
         end
         local spec = menu.spec(o)
         for s, section in ipairs(menu.SECTIONS) do
