@@ -12,6 +12,7 @@ local M = {}
 M.SECTIONS = {
     { id = "general", items = {
         { id = "language", section = "general", key = "language", kind = "num", choices = { "auto", "en", "ru" } },
+        { id = "smm_fix", section = "general", key = "smm_fix", kind = "bool" },
     } },
     { id = "view", items = {
         { id = "tape", section = "hint", key = "layout", kind = "bool", on = "tape", off = "lines" },

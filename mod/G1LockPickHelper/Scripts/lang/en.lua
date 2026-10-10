@@ -28,7 +28,7 @@ return {
             },
             key_missing = "%s (unknown)", -- a configured key name UE4SS does not know
             items = {
-                language = "Language",
+                language = "Language", smm_fix = "SMM input fix",
                 tape = "Tape", gothic = "Gothic style", scale = "Size, %", offset_x = "Offset X",
                 icons = "Button icons", gamepad = "Gamepad icon set",
                 offset_y = "Offset Y", counter = "Counter", shake = "Shake on a miss",
@@ -45,6 +45,7 @@ return {
             },
             desc = {
                 language = "0 auto (game), 1 English, 2 Русский",
+                smm_fix = "give the controls back after a minigame if this menu kept them; off if it breaks another mod",
                 keys = "change in settings.ini [keys], then restart the game",
                 tape = "off: the whole sequence in lines",
                 gothic = "off: simple",
@@ -72,6 +73,7 @@ return {
         comments = {
             ["general.language"] = "auto: the game's language; en: English; ru: Russian",
             ["general.debug"] = "detailed log in UE4SS.log (for a bug report)",
+            ["general.smm_fix"] = "after a minigame give the controls back to the game if Shared Mod Menu kept them; false: off",
             ["hint.layout"] = "tape: the current key and the next ones; lines: the whole sequence in lines",
             ["hint.style"] = "simple: a key like in the game's menu; gothic: a golden letter in a frame",
             ["hint.icons"] = "auto: gamepad icons while you play with a gamepad, letters otherwise and when the game's \"Button icons\" is \"Do not use\"; keys: letters; gamepad: icons",

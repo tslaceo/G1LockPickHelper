@@ -1540,16 +1540,15 @@ test("a cursor shown after the minigame through window_ms (a chest window) gets 
     eq(#env.game_only, 0, "no call")
 end)
 
-test("config.fix_smm_input = false turns the fix off", function()
-    config.fix_smm_input = false
-    load_main(nil, { menu = true, cursor = true })
+test("[general] smm_fix = false turns the fix off", function()
+    load_main(LINES_INI .. "[general]\nsmm_fix = false\n", { menu = true, cursor = true })
     local game = open(DIGGER, DIGGER_START)
     run(3200)
     game.task.Ability.dead = true
     env.cursor = false
     run(2000)
-    config.fix_smm_input = true
     eq(#env.game_only, 0, "no call")
+    eq(logged("SMM input fix off"), true, "the start line says so")
 end)
 
 -- With Shared Mod Menu installed the minigame closes with the controller's cursor reading `opts` (load_main's

@@ -7,6 +7,7 @@ local M = {}
 M.SCHEMA = {
     { section = "general", key = "language", kind = "choice", default = "auto", choices = { "auto", "en", "ru" } },
     { section = "general", key = "debug", kind = "bool", default = false },
+    { section = "general", key = "smm_fix", kind = "bool", default = true },
     { section = "hint", key = "layout", kind = "choice", default = "tape", choices = { "tape", "lines" } },
     { section = "hint", key = "style", kind = "choice", default = "simple", choices = { "simple", "gothic" } },
     { section = "hint", key = "icons", kind = "choice", default = "auto", choices = { "auto", "keys", "gamepad" } },

@@ -293,7 +293,7 @@ local fix_ended_at -- when the minigame closed: a wait held by an open menu goes
 local fix_held     -- an open menu held this wait (traced once)
 
 local function smm_fix_on()
-    return menu_bridge ~= nil and config.fix_smm_input
+    return menu_bridge ~= nil and values.general.smm_fix
 end
 
 -- Shared Mod Menu open: its window is a plain UMG UserWidget in the viewport (ours is named G1LPH_…, the game's

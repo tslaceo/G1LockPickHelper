@@ -43,7 +43,7 @@ test("spec has five sections with their items", function()
     eq(spec[2].title, M.sections.view, "view title")
     eq(spec[3].title, M.sections.tape, "tape title")
     eq(spec[5].title, M.sections.solve, "solve title")
-    eq(#spec[1].items, 1, "general items")
+    eq(#spec[1].items, 2, "general items")
     eq(#spec[2].items, 11, "view items")
     eq(#spec[3].items, 4, "tape items")
     eq(#spec[4].items, 3, "lines items")
@@ -256,10 +256,20 @@ end)
 test("the new item names fit Shared Mod Menu (21 characters)", function()
     for _, lang in ipairs({ "en", "ru" }) do
         local items = require("lang." .. lang).text.menu.items
-        for _, id in ipairs({ "icons", "gamepad", "double_reset", "key_double_reset" }) do
+        for _, id in ipairs({ "icons", "gamepad", "double_reset", "key_double_reset", "smm_fix" }) do
             eq(utf8.len(items[id]) <= 21, true, lang .. " " .. id .. ": " .. tostring(items[id]))
         end
     end
+end)
+
+test("the SMM input fix switch sets [general] smm_fix", function()
+    local changes = {}
+    local sw = item(menu.spec(opts(changes)), I.smm_fix)
+    eq(sw.kind, "bool", "kind")
+    eq(sw.get(), true, "on by default")
+    eq(sw.desc, M.desc.smm_fix, "hint")
+    sw.set(false)
+    eq(changes[1][1] .. "." .. changes[1][2] .. "=" .. tostring(changes[1][3]), "general.smm_fix=false", "change")
 end)
 
 t.finish()
