@@ -110,13 +110,15 @@ end
 -- cannot find; opts.precision: the player's LockpickPrecision (nil: no attribute set; env.precision changes it).
 -- opts.culture: the game's culture ("ru", "en", ...; nil: unreadable); opts.ue4ss: UE4SS.GetVersion exists.
 -- opts.pad: { input_type, button_graphics, gamepad_name } of CommonInputSubsystem and the game's settings (nil: no
--- such objects; env.pad changes them); opts.cursor: a player controller with this bShowMouseCursor (env.cursor).
+-- such objects; env.pad changes them); opts.cursor: a player controller with this bShowMouseCursor (env.cursor);
+-- opts.pc: a player controller even when cursor is nil (its bShowMouseCursor reads nil); env.finds[class]: how
+-- many times FindFirstOf looked for it.
 local function load_main(ini, opts)
     opts = opts or {}
     env = {
         now = 0, binds = {}, calls = {}, logs = {}, configured = {}, frames = 0, reads = 0, files = {}, opened = {},
         hooks = {}, precision = opts.precision, icons = {}, game_only = {}, pad = opts.pad, pad_reads = 0,
-        has_pc = opts.cursor ~= nil, cursor = opts.cursor,
+        has_pc = opts.cursor ~= nil or opts.pc, cursor = opts.cursor, finds = {},
     }
     if ini == nil then ini = LINES_INI end
     if ini then env.files[SETTINGS_PATH] = ini end
@@ -161,6 +163,7 @@ local function load_main(ini, opts)
     end
     NotifyOnNewObject = function(_, fn) env.notify = fn end
     FindFirstOf = function(name)
+        env.finds[name] = (env.finds[name] or 0) + 1
         if name == "LockPickSubsystem" then return env.subsystem end
         if name == "AttributeSet_Lockpicking" and env.precision then
             return object({ LockpickPrecision = { BaseValue = env.precision, CurrentValue = env.precision } })
@@ -182,9 +185,11 @@ local function load_main(ini, opts)
             end })
         end
         if name == "PlayerController" and env.has_pc then
-            return setmetatable(object({ name = "pc" }), { __index = function(_, k)
+            -- One controller until a test drops it (env.pc = nil; mark it dead first): the next find makes a new one.
+            env.pc = env.pc or setmetatable(object({ name = "pc" }), { __index = function(_, k)
                 if k == "bShowMouseCursor" then return env.cursor end
             end })
+            return env.pc
         end
     end
     -- The game's culture (KismetInternationalizationLibrary); env.culture changes it, nil: unreadable.
@@ -1320,6 +1325,43 @@ test("a switch of the icons logs what it was decided from", function()
     eq(logged("icons: ps (input 1, option 1, pad PS5)"), true, "logged")
 end)
 
+test("a switch of the device reads the game's option and the pad name in the same frame", function()
+    load_main(nil, { pad = { input_type = 0, button_graphics = 1, gamepad_name = "Generic" } })
+    run(FRAME_MS * 3) -- the first poll is done; the next one is language_poll_ms away
+    eq(#env.icons, 0, "keyboard: letters")
+    env.pad.input_type, env.pad.gamepad_name = 1, "PS5"
+    run(FRAME_MS)
+    eq(#env.icons, 1, "one change, no stale set before it")
+    eq(env.icons[1], "ps", "the new pad's set at once")
+end)
+
+test("a missing CommonInputSubsystem logs one line, 10 s after the first frame (config.pad_missing_log_ms)", function()
+    load_main("[general]\ndebug = false\n")
+    local text = "CommonInputSubsystem not found: the hint keeps the letters"
+    run(9500)
+    eq(count_logged(text), 0, "not yet")
+    run(1000)
+    eq(count_logged(text), 1, "logged (not only traced)")
+    run(5000)
+    eq(count_logged(text), 1, "once per load")
+end)
+
+test("no line about CommonInputSubsystem with [hint] icons = keys or when it is there", function()
+    load_main("[general]\ndebug = false\n[hint]\nicons = keys\n")
+    run(15000)
+    eq(count_logged("CommonInputSubsystem"), 0, "icons = keys")
+    load_main("[general]\ndebug = false\n", { pad = { input_type = 0, button_graphics = 1 } })
+    run(15000)
+    eq(count_logged("CommonInputSubsystem"), 0, "found")
+end)
+
+test("CommonInputSubsystem is looked for at most once a second", function()
+    load_main()
+    run(3500)
+    local n = env.finds.CommonInputSubsystem
+    eq(n ~= nil and n >= 1 and n <= 4, true, "FindFirstOf calls in 3.5 s: " .. tostring(n))
+end)
+
 test("two resets within double_reset_ms start the autosolver; it opens the lock", function()
     load_main()
     local game = open(DIGGER, DIGGER_START)
@@ -1439,6 +1481,79 @@ test("config.fix_smm_input = false turns the fix off", function()
     run(2000)
     config.fix_smm_input = true
     eq(#env.game_only, 0, "no call")
+end)
+
+-- With Shared Mod Menu installed the minigame closes with the controller's cursor reading `opts` (load_main's
+-- opts.cursor / opts.pc); 2 s later.
+local function close_with_cursor(opts)
+    opts.menu = true
+    load_main(nil, opts)
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(2000)
+end
+
+test("a cursor that does not read as a boolean counts as shown: no call", function()
+    close_with_cursor({ pc = true })
+    eq(#env.game_only, 0, "nil")
+    close_with_cursor({ cursor = 1 })
+    eq(#env.game_only, 0, "1")
+    close_with_cursor({ cursor = 0 })
+    eq(#env.game_only, 0, "0")
+end)
+
+test("the input fix belongs to the controller of the close: a new one gets no call", function()
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(1200)
+    eq(#env.game_only, 0, "the cursor is shown")
+    env.pc.dead = true -- a level loads: the old controller is gone, the new one has its cursor hidden
+    env.pc = nil
+    env.cursor = false
+    run(2000)
+    eq(#env.game_only, 0, "no call for the new controller")
+end)
+
+test("no controller found at the close: the first one found is kept", function()
+    load_main(nil, { menu = true, cursor = true })
+    env.has_pc = false
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(1500)
+    env.has_pc = true
+    run(1500)
+    eq(#env.game_only, 0, "found, the cursor is shown")
+    env.cursor = false
+    run(500)
+    eq(#env.game_only, 1, "handed back through the one found")
+    eq(env.game_only[1].pc, env.pc, "the controller")
+end)
+
+test("a minigame that opens within the window cancels the pending fix; its own close starts a new one", function()
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(500) -- closed, the cursor is still shown
+    game = open(DIGGER, DIGGER_START)
+    run(1000)
+    env.cursor = false -- the first close's wait would hand the input back now
+    run(500)
+    eq(#env.game_only, 0, "not while the second minigame is open")
+    env.cursor = true
+    run(2200)
+    game.task.Ability.dead = true
+    run(1200)
+    eq(#env.game_only, 0, "the second close: the cursor is shown")
+    env.cursor = false
+    run(400)
+    eq(#env.game_only, 1, "one call, after the second close")
+    run(5000)
+    eq(#env.game_only, 1, "once")
 end)
 
 test("the start line tells the icons and the Shared Mod Menu input fix", function()

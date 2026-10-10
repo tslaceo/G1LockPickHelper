@@ -235,19 +235,29 @@ local game_settings = finder("GothicGameUserSettings")
 local player_controller = finder("PlayerController")
 
 -- Letters or the game's gamepad icons (pad.lua). The input type is read every frame (the player switches devices
--- any time), the game's "Button icons" option and the gamepad name every language_poll_ms; with [hint] icons =
--- keys nothing is read. A change reaches the overlay at once and redraws the hint (render's signature).
+-- any time), the game's "Button icons" option and the gamepad name every language_poll_ms and at once when the
+-- input type changes; with [hint] icons = keys nothing is read. A change reaches the overlay at once and redraws
+-- the hint (render's signature). No CommonInputSubsystem for pad_missing_log_ms from the first frame: the hint
+-- keeps the letters, one log line.
 local pad_state = {} -- { input_type, button_graphics, gamepad_name } for pad.resolve
 local next_pad_read = 0
+local pad_since            -- when read_pad first ran with the icons on (ms)
+local pad_seen, pad_missing_logged = false, false
 
 local function read_pad(now)
     if values.hint.icons ~= "keys" then
+        pad_since = pad_since or now
         local cis = input_subsystem(now)
         local input_type
         if cis then
+            pad_seen = true
             local ok, v = pcall(function() return cis:GetCurrentInputType() end)
             if ok then input_type = v end
+        elseif not (pad_seen or pad_missing_logged) and now - pad_since >= config.pad_missing_log_ms then
+            pad_missing_logged = true
+            log("CommonInputSubsystem not found: the hint keeps the letters")
         end
+        if input_type ~= pad_state.input_type then next_pad_read = now end -- another device: its pad name now
         pad_state.input_type = input_type
         if now >= next_pad_read then
             next_pad_read = now + config.language_poll_ms
@@ -278,6 +288,7 @@ end
 -- hidden after a minigame (input_fix.lua) the input goes back to the game: SetInputMode_GameOnly, held keys kept.
 local fixer = input_fix.new(config.smm_fix)
 local widget_lib -- WidgetBlueprintLibrary's default object, found once
+local fix_pc     -- the player controller of the close (nil: none found yet); the fix is for this one only
 
 local function smm_fix_on()
     return menu_bridge ~= nil and config.fix_smm_input
@@ -286,10 +297,16 @@ end
 local function step_fix(now)
     if not (smm_fix_on() and fixer:waiting()) then return end
     local pc = player_controller(now)
-    local visible
+    if fix_pc == nil then fix_pc = pc end
+    if pc ~= fix_pc then -- the controller of the close is gone (a level loaded, back to the menu): not for the new one
+        fixer:cancel()
+        fix_pc = nil
+        return
+    end
+    local visible -- anything but a boolean reads as shown, like in input_fix
     if pc then
         local ok, v = pcall(function() return pc.bShowMouseCursor end)
-        if ok then visible = v == true end
+        if ok and type(v) == "boolean" then visible = v end
     end
     if not fixer:frame(now, visible) then return end
     local ok, err = pcall(function()
@@ -313,7 +330,10 @@ local function tick()
         if s.phase == "name" and now - s.started < 2000 then return end -- ability not attached yet
         trace("minigame closed")
         session = nil
-        if smm_fix_on() then fixer:ended(now) end
+        if smm_fix_on() then
+            fixer:ended(now)
+            fix_pc = player_controller(now)
+        end
         return
     end
     if s.phase == "name" then
@@ -770,7 +790,8 @@ end
 
 local next_tick = 0
 
--- One game-thread frame: the language, the icons, presses at once, the settings, the plates every poll_ms, the autosolver, the input fix, the hint, the animations.
+-- One game-thread frame: the language, the icons, presses at once, the settings, the plates every poll_ms, the
+-- autosolver, the input fix, the hint, the animations.
 local function frame()
     local now = now_ms()
     follow_language(now)
