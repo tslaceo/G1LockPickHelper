@@ -85,8 +85,8 @@ After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
   for the mod: the autosolver starts on a double reset; the hint is shown or hidden with F4 or in Shared Mod Menu.
 - After switching the game's "Button icons" from a set (Xbox, PlayStation 5, Switch) back to "Auto" the game keeps
   the old set until a restart, and so does the hint. Restart the game or choose the set itself.
-- Shared Mod Menu opened in the first second after leaving a lock: the game hides the mouse cursor over it. Press F2
-  twice to get it back.
+- Shared Mod Menu opened right after leaving a lock: the game hides the mouse cursor over it a moment later. Press
+  F2 twice to get it back.
 
 ## Build from source
 

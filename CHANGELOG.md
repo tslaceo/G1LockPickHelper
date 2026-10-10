@@ -6,7 +6,7 @@
   leaving a lock used to let Esc open the game's pause menu behind the menu, and closing the menu over the pause
   left the hero unable to walk.
 - `[general] smm_fix` (Shared Mod Menu: "SMM input fix") turns the Shared Mod Menu fix off, in case it gets in the
-  way of another mod.
+  way of another mod. A `settings.ini` from 1.1.0 keeps working; the fix stays on.
 
 ## 1.1.0
 

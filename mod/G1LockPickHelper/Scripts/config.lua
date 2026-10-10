@@ -18,9 +18,10 @@ return {
     double_reset_ms = 500,   -- two resets of the player within this time start the autosolver ([solve] double_reset)
     pad_missing_log_ms = 10000, -- CommonInputSubsystem not found this long after the start ([hint] icons other than
                              -- keys): one log line, the hint keeps the letters
-    smm_fix = { settle_ms = 200, settle_frames = 5, window_ms = 10000, menu_check_ms = 250 }, -- input_fix.lua: the
-                             -- cursor hidden this long
-                             -- and this many frames in a row, within window_ms after the minigame closed
+    -- After a minigame, with Shared Mod Menu installed and [general] smm_fix on: the cursor hidden settle_ms and
+    -- settle_frames frames in a row within window_ms of the close hands the input back (input_fix.lua). A menu on
+    -- screen at that moment holds the call for menu_hold_ms, again and again, up to hold_max_ms after the close.
+    smm_fix = { settle_ms = 200, settle_frames = 5, window_ms = 10000, menu_hold_ms = 250, hold_max_ms = 60000 },
     overlay = {
         -- Placement in fractions of the screen, so it works on any aspect ratio (16:9, 21:9 ultrawide):
         -- the hint's `pivot` point (fractions of the hint box) sits at `anchor` (fractions of the screen),

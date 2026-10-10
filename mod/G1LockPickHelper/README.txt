@@ -20,7 +20,8 @@ folder, written on the first start (language: auto, en or ru).
 A DualSense shows Xbox icons? Steam Input makes it look like an Xbox pad: turn Steam
 Input off for the game, or choose "PlayStation 5" in the game's "Button icons" option.
 After switching "Button icons" from a set back to "Auto" the game keeps the old set
-until a restart.
+until a restart. Shared Mod Menu opened right after leaving a lock loses its mouse
+cursor: press F2 twice.
 
 Source code, bug reports, technical notes: https://github.com/tslaceo/G1LockPickHelper
 License: MIT (LICENSE.txt). The lock data extracted from the game is not covered.

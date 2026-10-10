@@ -119,10 +119,13 @@ the game does not switch it back when the minigame ends: the hero cannot walk. W
 waits after each minigame until the game hides the cursor (200 ms and 5 frames in a row, within 10 s) and calls
 `WidgetBlueprintLibrary.SetInputMode_GameOnly(PlayerController, false)` once, for the player controller found when
 the minigame closed (a different one - a level loaded - ends the wait). A cursor that stays shown (a chest window) is
-left alone, and so is one that cannot be read. While Shared Mod Menu is open - a plain `UserWidget` that is not the
-mod's own is in the viewport (`FindAllOf("UserWidget")`, at most every 250 ms and once more right before the call) -
-the fix waits: the open menu owns the input and hands it back itself when it closes; the call under it would let Esc
-through to the game's pause menu. `[general] smm_fix = false` turns the fix off.
+left alone, and so is one that cannot be read. Right before the call the mod checks for an open menu: a plain
+`UserWidget` in the viewport (`FindAllOf("UserWidget")`) that is not the mod's own and was not on screen when the
+minigame opened - Shared Mod Menu's window is one; another mod's HUD that was already there is not. An open menu owns
+the input; the call under it would let Esc through to the game's pause menu, and closing the menu over the pause
+leaves the input on its UI. So the call waits for it: the check repeats about every 0.5 s while the menu stays open,
+up to 60 s after the minigame (then one log line, "input fix gave up"). Two scans per minigame when no menu is open.
+`[general] smm_fix = false` turns the fix off.
 
 ## Tracker and autosolver
 

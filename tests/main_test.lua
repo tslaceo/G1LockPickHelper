@@ -1470,7 +1470,8 @@ local function user_widget(name, shown, class)
     return w
 end
 
--- A minigame with Shared Mod Menu installed that closes with the cursor hidden at once.
+-- A minigame with Shared Mod Menu installed that closes with the cursor hidden at once. widgets: what
+-- FindAllOf("UserWidget") returns, from the minigame's start on.
 local function close_hidden(widgets)
     load_main(nil, { menu = true, cursor = true, widgets = widgets })
     local game = open(DIGGER, DIGGER_START)
@@ -1479,37 +1480,80 @@ local function close_hidden(widgets)
     env.cursor = false
 end
 
-test("Shared Mod Menu open after the minigame holds the input fix until it closes", function()
-    local smm = user_widget("UserWidget_7", true)
+local HOLD = config.smm_fix.menu_hold_ms + 300 -- a closed menu: the hold runs out, then settle_ms
+
+test("Shared Mod Menu opened after the minigame holds the input fix until it closes", function()
+    local smm = user_widget("UserWidget_7", false)
     close_hidden({ smm })
+    smm.shown = true
     run(3000)
     eq(#env.game_only, 0, "not under the open menu")
-    eq(count_logged("input fix waits: Shared Mod Menu is open"), 1, "traced once")
-    eq(env.widget_scans <= 3000 / 250 + 3, true, "checked at most every 250 ms: " .. env.widget_scans)
+    eq(count_logged("input fix waits: UserWidget_7 is on screen"), 1, "traced once, with its name")
+    eq(env.widget_scans <= 3000 / 400 + 2, true, "a check about every menu_hold_ms + settle_ms: " .. env.widget_scans)
     smm.shown = false
-    run(config.smm_fix.menu_check_ms + 250) -- the next check, then settle_ms
+    run(HOLD)
     eq(#env.game_only, 1, "after it closed")
 end)
 
-test("our overlay and the game's widgets do not hold the input fix", function()
-    close_hidden({ user_widget("G1LPH_Overlay_1_1", true), user_widget("W_HUD_C_3", true, "W_HUD_C"),
-        user_widget("UserWidget_7", false) })
+test("no menu: one check when the minigame opens, one before the call", function()
+    close_hidden({ user_widget("UserWidget_7", false) })
+    run(300)
+    eq(#env.game_only, 1, "handed back")
+    eq(env.widget_scans, 2, "two checks")
+end)
+
+test("widgets on screen when the minigame opened, ours and the game's do not hold the input fix", function()
+    close_hidden({ user_widget("UserWidget_2", true), user_widget("G1LPH_Overlay_1_1", true),
+        user_widget("W_HUD_C_3", true, "W_HUD_C") })
     run(300)
     eq(#env.game_only, 1, "handed back")
 end)
 
-test("Shared Mod Menu opened right before the call still holds it", function()
+test("a menu opened right before the call holds it", function()
     local smm = user_widget("UserWidget_7", false)
     close_hidden({ smm })
     run(150)
-    smm.shown = true -- opened after the last check, before settle_ms passed
+    smm.shown = true
     run(100)
-    eq(#env.game_only, 0, "checked again right before the call")
-    run(1000)
-    eq(#env.game_only, 0, "still open")
+    eq(#env.game_only, 0, "checked right before the call")
     smm.shown = false
-    run(config.smm_fix.menu_check_ms + 250) -- the next check, then settle_ms
+    run(HOLD)
     eq(#env.game_only, 1, "after it closed")
+end)
+
+test("a menu open longer than window_ms still gets the call after it closes", function()
+    local smm = user_widget("UserWidget_7", false)
+    close_hidden({ smm })
+    smm.shown = true
+    run(config.smm_fix.window_ms + 5000)
+    eq(#env.game_only, 0, "held")
+    smm.shown = false
+    run(HOLD)
+    eq(#env.game_only, 1, "after it closed")
+end)
+
+test("a menu open past hold_max_ms: the fix gives up, logged once with its name", function()
+    local smm = user_widget("UserWidget_7", false)
+    close_hidden({ smm })
+    smm.shown = true
+    run(config.smm_fix.hold_max_ms + 1000)
+    smm.shown = false
+    run(HOLD)
+    eq(#env.game_only, 0, "no call")
+    eq(count_logged("input fix gave up: UserWidget_7 stayed on screen"), 1, "logged once")
+end)
+
+test("a widget that cannot be read is skipped", function()
+    local broken = user_widget("UserWidget_3", true)
+    broken.IsValid = function() error("stale object") end
+    local smm = user_widget("UserWidget_7", false)
+    close_hidden({ broken, smm })
+    smm.shown = true
+    run(1000)
+    eq(#env.game_only, 0, "the open menu still holds the fix")
+    smm.shown = false
+    run(HOLD)
+    eq(#env.game_only, 1, "the unreadable widget does not")
 end)
 
 test("a failing widget check hands the input back as before, logged once", function()

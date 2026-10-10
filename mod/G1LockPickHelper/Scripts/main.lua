@@ -289,37 +289,48 @@ end
 local fixer = input_fix.new(config.smm_fix)
 local widget_lib -- WidgetBlueprintLibrary's default object, found once
 local fix_pc     -- the player controller of the close (nil: none found yet); the fix is for this one only
-local fix_ended_at -- when the minigame closed: a wait held by an open menu goes on within the same window
-local fix_held     -- an open menu held this wait (traced once)
+local fix_closed_at  -- when the minigame closed
+local fix_held       -- the window that held this wait (traced once), or nil
+local hold_until = 0 -- a menu was on screen: the cursor counts as shown until then
+local widgets_before = {} -- names of the plain widgets on screen when the minigame opened: not a menu
+local widget_check_failed = false
 
 local function smm_fix_on()
     return menu_bridge ~= nil and values.general.smm_fix
 end
 
--- Shared Mod Menu open: its window is a plain UMG UserWidget in the viewport (ours is named G1LPH_…, the game's
--- widgets are Blueprint subclasses). An open menu owns the input and hands it back itself when it closes; the fix
--- under it would let Esc through to the game's pause menu, and closing the menu over the pause leaves the input on
--- its UI. FindAllOf walks all objects: at most every menu_check_ms, or now (fresh) right before the call.
-local menu_check_at, menu_seen, menu_check_failed = 0, false, false
-
-local function menu_open(now, fresh)
-    if not fresh and now < menu_check_at then return menu_seen end
-    menu_check_at = now + config.smm_fix.menu_check_ms
-    local ok, found = pcall(function()
-        for _, w in ipairs(FindAllOf("UserWidget") or {}) do
-            if w:IsValid() and w:GetClass():GetFName():ToString() == "UserWidget"
-                and not w:GetFName():ToString():find("^G1LPH_") and w:IsInViewport() then
-                return true
-            end
+-- Names of the plain UMG UserWidgets in the viewport that are not ours (G1LPH_…): mods without Blueprints build their
+-- windows from them - Shared Mod Menu too; the game's widgets are Blueprint subclasses. A widget that cannot be read
+-- is skipped. nil: FindAllOf failed (logged once). FindAllOf walks all objects: called at a minigame's start and when
+-- the fix is about to hand the input back.
+local function plain_widgets()
+    local ok, list = pcall(FindAllOf, "UserWidget")
+    if not ok then
+        if not widget_check_failed then
+            widget_check_failed = true
+            log("cannot check for Shared Mod Menu, the input fix does not wait for it: %s", tostring(list))
         end
-        return false
-    end)
-    if not ok and not menu_check_failed then
-        menu_check_failed = true
-        log("cannot check for Shared Mod Menu, the input fix does not wait for it: %s", tostring(found))
+        return nil
     end
-    menu_seen = ok and found or false
-    return menu_seen
+    local names = {}
+    for _, w in ipairs(list or {}) do
+        pcall(function()
+            if w:IsValid() and w:GetClass():GetFName():ToString() == "UserWidget" then
+                local name = w:GetFName():ToString()
+                if not name:find("^G1LPH_") and w:IsInViewport() == true then names[#names + 1] = name end
+            end
+        end)
+    end
+    return names
+end
+
+-- An open menu: a plain widget on screen that was not there when the minigame opened (another mod's HUD is), or nil.
+-- It owns the input now; the fix under it would let Esc through to the game's pause menu, and closing the menu over
+-- the pause leaves the input on its UI.
+local function open_menu()
+    for _, name in ipairs(plain_widgets() or {}) do
+        if not widgets_before[name] then return name end
+    end
 end
 
 local function step_fix(now)
@@ -336,16 +347,18 @@ local function step_fix(now)
         local ok, v = pcall(function() return pc.bShowMouseCursor end)
         if ok and type(v) == "boolean" then visible = v end
     end
-    if visible == false and menu_open(now) then -- an open menu counts as a shown cursor
-        visible = true
-        if not fix_held then
-            fix_held = true
-            trace("input fix waits: Shared Mod Menu is open")
-        end
-    end
+    if visible == false and now < hold_until then visible = true end
     if not fixer:frame(now, visible) then return end
-    if menu_open(now, true) then -- opened since the last check: go on waiting
-        fixer:ended(fix_ended_at)
+    local menu = open_menu()
+    if menu then -- wait until it closes, up to hold_max_ms after the minigame
+        if not fix_held then trace("input fix waits: %s is on screen (Shared Mod Menu?)", menu) end
+        fix_held = menu
+        if now - fix_closed_at < config.smm_fix.hold_max_ms then
+            hold_until = now + config.smm_fix.menu_hold_ms
+            fixer:ended(now)
+        else
+            log("input fix gave up: %s stayed on screen", menu)
+        end
         return
     end
     local ok, err = pcall(function()
@@ -371,7 +384,7 @@ local function tick()
         session = nil
         if smm_fix_on() then
             fixer:ended(now)
-            fix_pc, fix_ended_at, fix_held = player_controller(now), now, false
+            fix_pc, fix_closed_at, fix_held = player_controller(now), now, nil
         end
         return
     end
@@ -674,6 +687,10 @@ NotifyOnNewObject("/Script/G1R.AbilityTask_LockPick", function(task)
         reader.reset()
         preview_until = nil
         fixer:cancel()
+        if smm_fix_on() then -- what is on screen now is not a menu opened after the minigame
+            widgets_before = {}
+            for _, name in ipairs(plain_widgets() or {}) do widgets_before[name] = true end
+        end
         local now = now_ms()
         local solve = values.solve.auto
         if early and now < early.until_ms then solve = early.solve end
