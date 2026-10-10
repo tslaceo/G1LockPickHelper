@@ -6,9 +6,10 @@ moves that cannot strain the pick.
 
 - **Hint.** The current key and the next ones on a tape (or the whole sequence in lines), next to the lock. It
   follows your presses, keyboard or gamepad, and replans when the lock does not do what was expected.
-- **Autosolve.** F3 in the minigame solves the lock with the moves the hint shows - only moves that cannot strain
-  the pick. F3 right after using a chest (while the hero sits down) solves the minigame that opens next.
-  Any key you press yourself takes over. "Auto-pick" in the settings solves every lock as it opens.
+- **Auto-pick.** F3 in the minigame picks the lock with the moves the hint shows - only moves that cannot strain
+  the pick. F3 right after using a chest (while the hero sits down) auto-picks the minigame that opens next.
+  Any key you press yourself takes over. "Always auto-pick" in the settings picks every lock as soon as its
+  minigame starts.
 - **Gamepad.** With a gamepad the hint shows the game's own button icons - PlayStation, Xbox or Switch, as the
   game's "Button icons" option says (with "Do not use" it shows letters, unless `[hint] icons = gamepad`).
   Press reset twice (Triangle / Y) and the mod picks the lock.
@@ -39,8 +40,8 @@ Uninstall: delete `G1R\Binaries\Win64\ue4ss\Mods\G1LockPickHelper\`.
 | Key | What it does |
 |---|---|
 | F4 | Show / hide the hint |
-| F3 | In the minigame: solve the lock / stop. Outside it: solve the minigame that opens within 5 s (with "Auto-pick" on: skip it) |
-| Reset twice (gamepad Triangle / Y, keyboard R R) | In the minigame: solve the lock, like F3 (`[solve] double_reset = false` turns it off) |
+| F3 | In the minigame: auto-pick the lock / stop. Outside it: auto-pick the minigame that opens within 5 s (with "Always auto-pick" on: skip it) |
+| Reset twice (gamepad Triangle / Y, keyboard R R) | In the minigame: auto-pick the lock, like F3 (`[solve] double_reset = false` turns it off) |
 | F2 | Shared Mod Menu, if installed: the mod's tab "LockPick Helper" |
 
 F3 and F4 are set in `settings.ini` (`[keys]`, UE4SS key names) and change after a game restart. The double reset
@@ -53,11 +54,11 @@ its tab "LockPick Helper" (not `debug`; the keys are shown read-only). A change 
 your own comments in it are lost.
 
 - `[general]` - `language` (`auto`: the game's language; `en`; `ru`), `debug` (detailed log, see below),
-  `smm_fix` (the Shared Mod Menu fix; `false` turns it off).
+  `smm_fix` (the Shared Mod Menu fix, "Fix stuck controls" in the menu; `false` turns it off).
 - `[hint]` - tape or lines, simple or gothic style, letters or gamepad icons (`icons`: auto, keys, gamepad;
   `gamepad`: auto - as the game - or playstation, xbox, switch), size, position, counter, shake on a miss.
 - `[tape]`, `[lines]` - how many keys are shown and how.
-- `[solve]` - `auto`: solve each lock by itself ("Auto-pick"); `double_reset`: reset twice to solve.
+- `[solve]` - `auto`: auto-pick each lock by itself ("Always auto-pick"); `double_reset`: reset twice to auto-pick.
 - `[keys]` - the keys above and the key labels of the minigame.
 
 After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
@@ -75,14 +76,14 @@ After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
 
 - The hint needs the lock in the mod's database (416 locks of build `Build83_CL174209`). A game update may add
   or change locks; the log then warns that the database is for another build.
-- The autosolver needs the input hooks (the log says "input hooks yes"); without them F3 says "Autosolve
+- Auto-pick needs the input hooks (the log says "input hooks yes"); without them F3 says "Auto-pick
   unavailable" and the hint still works.
 - LockpickSettings by Tautellini also changes the lockpicking minigame; using both at once is not tested.
 - A DualSense through Steam Input looks like an Xbox pad to the game: with "Button icons: Auto" the game and the
   hint show Xbox icons. Turn Steam Input off for the game (Steam → the game's Properties → Controller) or choose
   "PlayStation 5" in the game's "Button icons".
 - In the minigame the game passes only the moves, reset and leave to mods, so the gamepad has no button of its own
-  for the mod: the autosolver starts on a double reset; the hint is shown or hidden with F4 or in Shared Mod Menu.
+  for the mod: auto-pick starts on a double reset; the hint is shown or hidden with F4 or in Shared Mod Menu.
 - After switching the game's "Button icons" from a set (Xbox, PlayStation 5, Switch) back to "Auto" the game keeps
   the old set until a restart, and so does the hint. Restart the game or choose the set itself.
 - Shared Mod Menu opened right after leaving a lock: the game hides the mouse cursor over it a moment later. Press

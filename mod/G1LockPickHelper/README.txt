@@ -12,9 +12,9 @@ Install: extract this archive into the game folder (the one that contains the G1
 folder), so that G1R\Binaries\Win64\ue4ss\Mods\G1LockPickHelper\ exists.
 Uninstall: delete that folder.
 
-Keys: F4 shows/hides the hint; F3 solves the open lock (or the one you open within
-5 seconds) and stops the autosolver. Gamepad: the hint shows the game's button icons;
-press reset twice (Triangle / Y) to solve the lock. Settings: settings.ini in the mod
+Keys: F4 shows/hides the hint; F3 auto-picks the open lock (or the one you open within
+5 seconds) and stops auto-pick. Gamepad: the hint shows the game's button icons;
+press reset twice (Triangle / Y) to auto-pick the lock. Settings: settings.ini in the mod
 folder, written on the first start (language: auto, en or ru).
 
 A DualSense shows Xbox icons? Steam Input makes it look like an Xbox pad: turn Steam

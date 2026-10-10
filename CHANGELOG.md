@@ -5,8 +5,10 @@
 - Shared Mod Menu fix: it no longer hands the controls back under an open Shared Mod Menu. F2 pressed right after
   leaving a lock used to let Esc open the game's pause menu behind the menu, and closing the menu over the pause
   left the hero unable to walk.
-- `[general] smm_fix` (Shared Mod Menu: "SMM input fix") turns the Shared Mod Menu fix off, in case it gets in the
-  way of another mod. A `settings.ini` from 1.1.0 keeps working; the fix stays on.
+- `[general] smm_fix` (Shared Mod Menu: "Fix stuck controls") turns the Shared Mod Menu fix off, in case it gets in
+  the way of another mod. A `settings.ini` from 1.1.0 keeps working; the fix stays on.
+- Clearer texts in the hint, Shared Mod Menu and `settings.ini`; the autosolver is called auto-pick everywhere. An
+  existing `settings.ini` keeps its old comments until a change in Shared Mod Menu rewrites it.
 
 ## 1.1.0
 

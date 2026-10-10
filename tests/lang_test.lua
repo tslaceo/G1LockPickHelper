@@ -50,6 +50,20 @@ test("the settings.ini header is a list of comment lines", function()
     end
 end)
 
+-- One word for the autosolver wherever the player reads it: "auto-pick" / "автовзлом". The log lines and the code
+-- keep "autosolve"; the menu has no "SMM" (the fix is "Fix stuck controls" / "Возврат управления").
+test("no old names of the autosolver or the Shared Mod Menu fix in the texts", function()
+    for name, L in pairs({ en = EN, ru = RU }) do
+        for path, v in pairs(leaves(L)) do
+            local s = type(v) == "table" and table.concat(v, "\n") or v
+            eq(s:lower():find("autosolv", 1, true), nil, name .. " " .. path .. " says autosolve")
+            eq(s:find("вторешен", 1, true), nil, name .. " " .. path .. " says авторешение")
+            eq(s:find("вто-взлом", 1, true), nil, name .. " " .. path .. " says авто-взлом")
+            eq(s:find("SMM", 1, true), nil, name .. " " .. path .. " says SMM")
+        end
+    end
+end)
+
 test("resolve: en/ru as set; auto follows a Russian culture; everything else is English", function()
     eq(i18n.resolve("en", "ru"), "en", "en")
     eq(i18n.resolve("ru", "en-US"), "ru", "ru")

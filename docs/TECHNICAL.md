@@ -125,9 +125,12 @@ minigame opened - Shared Mod Menu's window is one; another mod's HUD that was al
 the input; the call under it would let Esc through to the game's pause menu, and closing the menu over the pause
 leaves the input on its UI. So the call waits for it: the check repeats about every 0.5 s while the menu stays open,
 up to 60 s after the minigame (then one log line, "input fix gave up"). Two scans per minigame when no menu is open.
-`[general] smm_fix = false` turns the fix off.
+`[general] smm_fix = false` (the switch "Fix stuck controls" in Shared Mod Menu) turns the fix off.
 
 ## Tracker and autosolver
+
+The player reads the autosolver as "auto-pick" (the hint's notes, Shared Mod Menu, `settings.ini`); the code and
+`UE4SS.log` keep "autosolve".
 
 - The tracker applies each press to the expected positions at once and checks them against the settled plate
   readings; a move that does not show within `grace_ms` (1200) or a reading that disagrees makes it re-read the

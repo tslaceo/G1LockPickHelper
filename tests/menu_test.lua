@@ -253,16 +253,51 @@ test("the double reset switch sets [solve] double_reset", function()
     eq(changes[1][1] .. "." .. changes[1][2] .. "=" .. tostring(changes[1][3]), "solve.double_reset=false", "change")
 end)
 
-test("the new item names fit Shared Mod Menu (21 characters)", function()
+-- Shared Mod Menu cuts an item name after about 21 characters (utf8.len counts characters, not bytes). Every
+-- item of the spec is checked in both languages: the settings' names and, with the default keys, the Keys tab.
+test("every item name fits Shared Mod Menu (21 characters)", function()
+    local keys = { toggle = "F4", solve = "F3", W = "W", S = "S", A = "A", D = "D" }
     for _, lang in ipairs({ "en", "ru" }) do
-        local items = require("lang." .. lang).text.menu.items
-        for _, id in ipairs({ "icons", "gamepad", "double_reset", "key_double_reset", "smm_fix" }) do
-            eq(utf8.len(items[id]) <= 21, true, lang .. " " .. id .. ": " .. tostring(items[id]))
+        local o = opts({})
+        o.text, o.keys = require("lang." .. lang).text.menu, keys
+        local spec, count = menu.spec(o), 0
+        for _, section in ipairs(spec) do
+            for _, it in ipairs(section.items) do
+                count = count + 1
+                eq((utf8.len(it.name) or 99) <= 21, true, lang .. " " .. section.title .. ": " .. tostring(it.name))
+            end
+        end
+        eq(count, 22 + 5, lang .. " items checked: 22 settings and 5 keys")
+    end
+end)
+
+-- The hints are kept within 60 characters, one line of the menu. Each hint belongs to a menu item (or to the Keys
+-- tab) and is picked up by the item on its own: a missing one leaves the item without a hint.
+test("every hint fits Shared Mod Menu (60 characters), belongs to an item and reaches it", function()
+    local known = { keys = true, key_double_reset = true }
+    for _, section in ipairs(menu.SECTIONS) do
+        for _, it in ipairs(section.items) do known[it.id] = true end
+    end
+    for _, lang in ipairs({ "en", "ru" }) do
+        local o = opts({})
+        o.text = require("lang." .. lang).text.menu
+        for id, text in pairs(o.text.desc) do
+            eq(known[id], true, lang .. " hint of an unknown item " .. id)
+            eq((utf8.len(text) or 99) <= 60, true, lang .. " " .. id .. ": " .. text)
+        end
+        local spec = menu.spec(o)
+        for s, section in ipairs(menu.SECTIONS) do
+            for i, it in ipairs(section.items) do
+                eq(spec[s].items[i].desc, o.text.desc[it.id], lang .. " hint of " .. it.id)
+            end
+        end
+        for _, id in ipairs({ "offset_x", "offset_y", "counter", "next", "done", "slide" }) do
+            eq(type(o.text.desc[id]), "string", lang .. " has a hint for " .. id)
         end
     end
 end)
 
-test("the SMM input fix switch sets [general] smm_fix", function()
+test("the Fix stuck controls switch sets [general] smm_fix", function()
     local changes = {}
     local sw = item(menu.spec(opts(changes)), I.smm_fix)
     eq(sw.kind, "bool", "kind")
