@@ -348,6 +348,9 @@ local function step_fix(now)
         if ok and type(v) == "boolean" then visible = v end
     end
     if visible == false and now < hold_until then visible = true end
+    if fix_held and visible ~= false and now - fix_closed_at < config.smm_fix.hold_max_ms then
+        fixer:ended(now) -- a menu held the wait: its cursor (F2 twice) does not end it before hold_max_ms
+    end
     if not fixer:frame(now, visible) then return end
     local menu = open_menu()
     if menu then -- wait until it closes, up to hold_max_ms after the minigame
@@ -384,7 +387,7 @@ local function tick()
         session = nil
         if smm_fix_on() then
             fixer:ended(now)
-            fix_pc, fix_closed_at, fix_held = player_controller(now), now, nil
+            fix_pc, fix_closed_at, fix_held, hold_until = player_controller(now), now, nil, 0
         end
         return
     end
@@ -687,7 +690,8 @@ NotifyOnNewObject("/Script/G1R.AbilityTask_LockPick", function(task)
         reader.reset()
         preview_until = nil
         fixer:cancel()
-        if smm_fix_on() then -- what is on screen now is not a menu opened after the minigame
+        if menu_bridge ~= nil then -- what is on screen now is not a menu (noted even with the fix off: it may be
+            -- switched on in the menu during the minigame)
             widgets_before = {}
             for _, name in ipairs(plain_widgets() or {}) do widgets_before[name] = true end
         end

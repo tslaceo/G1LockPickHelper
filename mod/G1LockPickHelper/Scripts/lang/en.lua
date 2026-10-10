@@ -60,7 +60,7 @@ return {
                 next = "how many keys show after the current one",
                 done = "how many pressed keys stay on the left",
                 slide = "the tape slides after each press",
-                collapse_min = "fold N or more same keys in a row; 0: never",
+                collapse_min = "fold N or more same keys in a row; 0 or 1: never",
                 solve_auto = "picks every lock for you; F3 cancels",
                 double_reset = "two quick resets (△/Y or R) start auto-pick",
                 key_double_reset = "R R on the keyboard; on/off in the Auto-pick tab",

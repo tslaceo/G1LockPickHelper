@@ -1502,11 +1502,43 @@ test("no menu: one check when the minigame opens, one before the call", function
     eq(env.widget_scans, 2, "two checks")
 end)
 
-test("widgets on screen when the minigame opened, ours and the game's do not hold the input fix", function()
-    close_hidden({ user_widget("UserWidget_2", true), user_widget("G1LPH_Overlay_1_1", true),
-        user_widget("W_HUD_C_3", true, "W_HUD_C") })
+test("widgets on screen when the minigame opened do not hold the input fix", function()
+    close_hidden({ user_widget("UserWidget_2", true) })
     run(300)
     eq(#env.game_only, 1, "handed back")
+end)
+
+test("our overlay and the game's widgets shown after the minigame opened do not hold the input fix", function()
+    local ours, hud = user_widget("G1LPH_Overlay_1_1", false), user_widget("W_HUD_C_3", false, "W_HUD_C")
+    close_hidden({ ours, hud })
+    ours.shown, hud.shown = true, true
+    run(300)
+    eq(#env.game_only, 1, "handed back")
+end)
+
+test("the fix switched on during a minigame still knows what was on screen at its start", function()
+    load_main(LINES_INI .. "[general]\nsmm_fix = false\n",
+        { menu = true, cursor = true, widgets = { user_widget("UserWidget_2", true) } })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    menu_item(ITEMS.smm_fix).set(true)
+    run(FRAME_MS)
+    game.task.Ability.dead = true
+    env.cursor = false
+    run(300)
+    eq(#env.game_only, 1, "another mod's HUD does not hold it")
+end)
+
+test("once a menu held the wait, a shown cursor does not end it before hold_max_ms", function()
+    local smm = user_widget("UserWidget_7", false)
+    close_hidden({ smm })
+    smm.shown = true
+    run(1000)
+    env.cursor = true -- Shared Mod Menu shows its cursor again (F2 twice)
+    run(config.smm_fix.window_ms + 3000)
+    smm.shown, env.cursor = false, false
+    run(HOLD)
+    eq(#env.game_only, 1, "after it closed")
 end)
 
 test("a menu opened right before the call holds it", function()
