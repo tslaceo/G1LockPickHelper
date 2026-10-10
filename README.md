@@ -52,7 +52,8 @@ is turned off with `[solve] double_reset`.
 its tab "LockPick Helper" (not `debug`; the keys are shown read-only). A change there rewrites the whole file, so
 your own comments in it are lost.
 
-- `[general]` - `language` (`auto`: the game's language; `en`; `ru`), `debug` (detailed log, see below).
+- `[general]` - `language` (`auto`: the game's language; `en`; `ru`), `debug` (detailed log, see below),
+  `smm_fix` (the Shared Mod Menu fix; `false` turns it off).
 - `[hint]` - tape or lines, simple or gothic style, letters or gamepad icons (`icons`: auto, keys, gamepad;
   `gamepad`: auto - as the game - or playstation, xbox, switch), size, position, counter, shake on a miss.
 - `[tape]`, `[lines]` - how many keys are shown and how.
@@ -82,6 +83,10 @@ After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.
   "PlayStation 5" in the game's "Button icons".
 - In the minigame the game passes only the moves, reset and leave to mods, so the gamepad has no button of its own
   for the mod: the autosolver starts on a double reset; the hint is shown or hidden with F4 or in Shared Mod Menu.
+- After switching the game's "Button icons" from a set (Xbox, PlayStation 5, Switch) back to "Auto" the game keeps
+  the old set until a restart, and so does the hint. Restart the game or choose the set itself.
+- Shared Mod Menu opened in the first second after leaving a lock: the game hides the mouse cursor over it. Press F2
+  twice to get it back.
 
 ## Build from source
 

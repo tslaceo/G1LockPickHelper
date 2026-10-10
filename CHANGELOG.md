@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+- Shared Mod Menu fix: it no longer hands the controls back under an open Shared Mod Menu. F2 pressed right after
+  leaving a lock used to let Esc open the game's pause menu behind the menu, and closing the menu over the pause
+  left the hero unable to walk.
+- `[general] smm_fix` (Shared Mod Menu: "SMM input fix") turns the Shared Mod Menu fix off, in case it gets in the
+  way of another mod.
+
 ## 1.1.0
 
 - Gamepad: the hint shows the game's own button icons (PlayStation, Xbox, Switch, as the game's "Button icons"
