@@ -289,9 +289,37 @@ end
 local fixer = input_fix.new(config.smm_fix)
 local widget_lib -- WidgetBlueprintLibrary's default object, found once
 local fix_pc     -- the player controller of the close (nil: none found yet); the fix is for this one only
+local fix_ended_at -- when the minigame closed: a wait held by an open menu goes on within the same window
+local fix_held     -- an open menu held this wait (traced once)
 
 local function smm_fix_on()
     return menu_bridge ~= nil and config.fix_smm_input
+end
+
+-- Shared Mod Menu open: its window is a plain UMG UserWidget in the viewport (ours is named G1LPH_…, the game's
+-- widgets are Blueprint subclasses). An open menu owns the input and hands it back itself when it closes; the fix
+-- under it would let Esc through to the game's pause menu, and closing the menu over the pause leaves the input on
+-- its UI. FindAllOf walks all objects: at most every menu_check_ms, or now (fresh) right before the call.
+local menu_check_at, menu_seen, menu_check_failed = 0, false, false
+
+local function menu_open(now, fresh)
+    if not fresh and now < menu_check_at then return menu_seen end
+    menu_check_at = now + config.smm_fix.menu_check_ms
+    local ok, found = pcall(function()
+        for _, w in ipairs(FindAllOf("UserWidget") or {}) do
+            if w:IsValid() and w:GetClass():GetFName():ToString() == "UserWidget"
+                and not w:GetFName():ToString():find("^G1LPH_") and w:IsInViewport() then
+                return true
+            end
+        end
+        return false
+    end)
+    if not ok and not menu_check_failed then
+        menu_check_failed = true
+        log("cannot check for Shared Mod Menu, the input fix does not wait for it: %s", tostring(found))
+    end
+    menu_seen = ok and found or false
+    return menu_seen
 end
 
 local function step_fix(now)
@@ -308,7 +336,18 @@ local function step_fix(now)
         local ok, v = pcall(function() return pc.bShowMouseCursor end)
         if ok and type(v) == "boolean" then visible = v end
     end
+    if visible == false and menu_open(now) then -- an open menu counts as a shown cursor
+        visible = true
+        if not fix_held then
+            fix_held = true
+            trace("input fix waits: Shared Mod Menu is open")
+        end
+    end
     if not fixer:frame(now, visible) then return end
+    if menu_open(now, true) then -- opened since the last check: go on waiting
+        fixer:ended(fix_ended_at)
+        return
+    end
     local ok, err = pcall(function()
         if not (widget_lib and widget_lib:IsValid()) then
             widget_lib = StaticFindObject("/Script/UMG.Default__WidgetBlueprintLibrary")
@@ -332,7 +371,7 @@ local function tick()
         session = nil
         if smm_fix_on() then
             fixer:ended(now)
-            fix_pc = player_controller(now)
+            fix_pc, fix_ended_at, fix_held = player_controller(now), now, false
         end
         return
     end

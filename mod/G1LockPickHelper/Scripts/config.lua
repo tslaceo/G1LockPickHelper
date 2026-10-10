@@ -19,7 +19,8 @@ return {
     pad_missing_log_ms = 10000, -- CommonInputSubsystem not found this long after the start ([hint] icons other than
                              -- keys): one log line, the hint keeps the letters
     fix_smm_input = true,    -- after a minigame hand the input back to the game (Shared Mod Menu leaves it on its UI)
-    smm_fix = { settle_ms = 200, settle_frames = 5, window_ms = 10000 }, -- input_fix.lua: the cursor hidden this long
+    smm_fix = { settle_ms = 200, settle_frames = 5, window_ms = 10000, menu_check_ms = 250 }, -- input_fix.lua: the
+                             -- cursor hidden this long
                              -- and this many frames in a row, within window_ms after the minigame closed
     overlay = {
         -- Placement in fractions of the screen, so it works on any aspect ratio (16:9, 21:9 ultrawide):

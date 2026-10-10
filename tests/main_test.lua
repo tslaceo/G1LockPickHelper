@@ -112,13 +112,15 @@ end
 -- opts.pad: { input_type, button_graphics, gamepad_name } of CommonInputSubsystem and the game's settings (nil: no
 -- such objects; env.pad changes them); opts.cursor: a player controller with this bShowMouseCursor (env.cursor);
 -- opts.pc: a player controller even when cursor is nil (its bShowMouseCursor reads nil); env.finds[class]: how
--- many times FindFirstOf looked for it.
+-- many times FindFirstOf looked for it. opts.widgets: what FindAllOf("UserWidget") returns (user_widget below;
+-- "error": it raises); env.widget_scans counts the calls.
 local function load_main(ini, opts)
     opts = opts or {}
     env = {
         now = 0, binds = {}, calls = {}, logs = {}, configured = {}, frames = 0, reads = 0, files = {}, opened = {},
         hooks = {}, precision = opts.precision, icons = {}, game_only = {}, pad = opts.pad, pad_reads = 0,
-        has_pc = opts.cursor ~= nil or opts.pc, cursor = opts.cursor, finds = {},
+        has_pc = opts.cursor ~= nil or opts.pc, cursor = opts.cursor, finds = {}, widgets = opts.widgets,
+        widget_scans = 0,
     }
     if ini == nil then ini = LINES_INI end
     if ini then env.files[SETTINGS_PATH] = ini end
@@ -191,6 +193,12 @@ local function load_main(ini, opts)
             end })
             return env.pc
         end
+    end
+    FindAllOf = function(name)
+        if name ~= "UserWidget" then return nil end
+        env.widget_scans = env.widget_scans + 1
+        if env.widgets == "error" then error("FindAllOf failed") end
+        return env.widgets
     end
     -- The game's culture (KismetInternationalizationLibrary); env.culture changes it, nil: unreadable.
     env.culture, env.culture_reads = opts.culture, 0
@@ -1448,6 +1456,67 @@ test("with Shared Mod Menu the input goes back to the game once the cursor hides
     eq(env.game_only[1].pc.name, "pc", "the player controller")
     run(5000)
     eq(#env.game_only, 1, "once")
+end)
+
+-- A UMG widget for FindAllOf("UserWidget"): its name ("UserWidget_7": Shared Mod Menu's plain UserWidget,
+-- "G1LPH_Overlay_…": ours), on screen or not (w.shown), and its class (default "UserWidget").
+local function user_widget(name, shown, class)
+    local w = object({ shown = shown })
+    w.IsInViewport = function(self) return self.shown end
+    w.GetFName = function() return { ToString = function() return name end } end
+    w.GetClass = function()
+        return { GetFName = function() return { ToString = function() return class or "UserWidget" end } end }
+    end
+    return w
+end
+
+-- A minigame with Shared Mod Menu installed that closes with the cursor hidden at once.
+local function close_hidden(widgets)
+    load_main(nil, { menu = true, cursor = true, widgets = widgets })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    env.cursor = false
+end
+
+test("Shared Mod Menu open after the minigame holds the input fix until it closes", function()
+    local smm = user_widget("UserWidget_7", true)
+    close_hidden({ smm })
+    run(3000)
+    eq(#env.game_only, 0, "not under the open menu")
+    eq(count_logged("input fix waits: Shared Mod Menu is open"), 1, "traced once")
+    eq(env.widget_scans <= 3000 / 250 + 3, true, "checked at most every 250 ms: " .. env.widget_scans)
+    smm.shown = false
+    run(config.smm_fix.menu_check_ms + 250) -- the next check, then settle_ms
+    eq(#env.game_only, 1, "after it closed")
+end)
+
+test("our overlay and the game's widgets do not hold the input fix", function()
+    close_hidden({ user_widget("G1LPH_Overlay_1_1", true), user_widget("W_HUD_C_3", true, "W_HUD_C"),
+        user_widget("UserWidget_7", false) })
+    run(300)
+    eq(#env.game_only, 1, "handed back")
+end)
+
+test("Shared Mod Menu opened right before the call still holds it", function()
+    local smm = user_widget("UserWidget_7", false)
+    close_hidden({ smm })
+    run(150)
+    smm.shown = true -- opened after the last check, before settle_ms passed
+    run(100)
+    eq(#env.game_only, 0, "checked again right before the call")
+    run(1000)
+    eq(#env.game_only, 0, "still open")
+    smm.shown = false
+    run(config.smm_fix.menu_check_ms + 250) -- the next check, then settle_ms
+    eq(#env.game_only, 1, "after it closed")
+end)
+
+test("a failing widget check hands the input back as before, logged once", function()
+    close_hidden("error")
+    run(300)
+    eq(#env.game_only, 1, "handed back")
+    eq(count_logged("cannot check for Shared Mod Menu"), 1, "logged once")
 end)
 
 test("without Shared Mod Menu the input is left alone", function()
