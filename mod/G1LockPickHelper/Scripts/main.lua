@@ -398,12 +398,6 @@ local function new_world(pc)
     fix_pc, fix_held, hold_until = nil, nil, 0
     for _, f in ipairs(finders) do f.obj, f.next_try = nil, 0 end
     controller_found.obj = pc
-    if values.general.debug then -- do these live on across a load? (an old one found first would be read later)
-        for _, class in ipairs({ "CommonInputSubsystem", "LockPickSubsystem" }) do
-            local ok, list = pcall(FindAllOf, class)
-            trace("new player controller: %s x%s", class, ok and type(list) == "table" and #list or "?")
-        end
-    end
 end
 
 local function tick()
