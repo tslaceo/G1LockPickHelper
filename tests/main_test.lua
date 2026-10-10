@@ -107,7 +107,7 @@ end
 -- opts.chunkname: load main.lua under that chunk name (one without a file path: it cannot find its folder);
 -- opts.unknown_keys: { name = true } for key names missing from the fake Key table;
 -- opts.hooks == false: this UE4SS build has no RegisterHook; opts.failing_hook: the input function RegisterHook
--- cannot find; opts.precision: the player's LockpickPrecision (nil: no attribute set; env.precision changes it).
+-- cannot find; opts.failing_path: another function it cannot find (a full path); opts.precision: the player's LockpickPrecision (nil: no attribute set; env.precision changes it).
 -- opts.culture: the game's culture ("ru", "en", ...; nil: unreadable); opts.ue4ss: UE4SS.GetVersion exists.
 -- opts.pad: { input_type, button_graphics, gamepad_name } of CommonInputSubsystem and the game's settings (nil: no
 -- such objects; env.pad changes them); opts.cursor: a player controller with this bShowMouseCursor (env.cursor);
@@ -152,6 +152,7 @@ local function load_main(ini, opts)
     else
         RegisterHook = function(path, fn)
             if opts.failing_hook and path == HOOK .. opts.failing_hook then error("no UFunction " .. path) end
+            if path == opts.failing_path then error("no UFunction " .. path) end
             env.hooks[path] = fn
             return 1, 2
         end
@@ -262,6 +263,21 @@ end
 
 local function last()
     return env.calls[#env.calls] or {}
+end
+
+local RESTART = "/Script/Engine.PlayerController:ClientRestart"
+
+-- A save loads (F9): the game restarts a new player controller (UE4SS passes hook parameters as :get() wrappers).
+local function restart(pc)
+    local hook = env.hooks[RESTART]
+    if hook then hook({ get = function() return pc end }, { get = function() return nil end }) end
+end
+
+-- An object of the old world after a load: the game frees it soon, so any read of it (IsValid too) fails the frame,
+-- and guarded logs "<what> touched".
+local function poison(obj, what)
+    for k in pairs(obj) do obj[k] = nil end
+    setmetatable(obj, { __index = function() error(what .. " touched") end })
 end
 
 -- The rest of the plan in a lines model (one token per key): the current key and the keys after it.
@@ -1084,6 +1100,47 @@ test("closing the minigame during an autosolve: no more calls into the task", fu
     eq(logged("autosolve stopped"), false, "closing is not a stop of its own")
 end)
 
+test("a save loaded during an autosolve drops the minigame at the new controller, the old one is never touched", function()
+    load_main()
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    env.binds["KEY_F3"]()
+    run(1500)
+    local pressed = #game.inputs
+    eq(pressed > 0, true, "it pressed")
+    restart(object({ name = "new pc" }))
+    poison(game.task, "the old task")
+    poison(env.subsystem.m_LockSceneActor, "the old lock scene")
+    run(3000)
+    eq(logged("touched"), false, "the old world is not read")
+    eq(#game.inputs, pressed, "no presses after the load")
+    eq(last()[1], "hide", "the hint is gone")
+    eq(logged("autosolve stopped"), false, "a load is not a stop of its own")
+    eq(logged("new player controller: minigame dropped"), true, "traced")
+    game = open(DIGGER, DIGGER_START)
+    run(3200)
+    eq(last()[1], "show", "the next minigame gets its hint")
+end)
+
+test("a new controller outside a minigame changes nothing visible", function()
+    load_main()
+    run(FRAME_MS)
+    restart(object({ name = "new pc" }))
+    run(500)
+    eq(#env.calls, 0, "no overlay calls")
+    eq(logged("minigame dropped"), false, "nothing to drop")
+    eq(logged("failed"), false, "no errors")
+end)
+
+test("without the ClientRestart hook the mod still works; logged", function()
+    load_main(nil, { failing_path = RESTART })
+    eq(logged("PlayerController:ClientRestart"), true, "logged")
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    eq(last()[1], "show", "the hint")
+    eq(#game.inputs, 0, "nothing pressed")
+end)
+
 test("the menu's language switch changes the texts at once; settings.ini follows", function()
     load_main(nil, { menu = true })
     run(FRAME_MS)
@@ -1170,13 +1227,13 @@ end)
 test("the start line tells the version, the game, the language, the hooks and UE4SS", function()
     load_main(nil, { culture = "ru", ue4ss = true })
     run(FRAME_MS)
-    eq(logged(string.format("G1LockPickHelper 1.1.1: game unknown (lock db %s), language ru (auto, culture ru), "
+    eq(logged(string.format("G1LockPickHelper 1.1.2: game unknown (lock db %s), language ru (auto, culture ru), "
         .. "input hooks yes, UE4SS 3.0.1", db.build)), true, "start line")
     load_main(nil, { hooks = false })
     run(FRAME_MS)
     eq(logged("language en (auto, culture unknown), input hooks no, UE4SS unknown"), true, "without them")
     run(5000)
-    eq(count_logged("G1LockPickHelper 1.1.1:"), 1, "once")
+    eq(count_logged("G1LockPickHelper 1.1.2:"), 1, "once")
 end)
 
 test("the hint waits for ready_frames frames even when the clock jumps (a loading freeze)", function()
@@ -1659,6 +1716,33 @@ test("the input fix belongs to the controller of the close: a new one gets no ca
     env.cursor = false
     run(2000)
     eq(#env.game_only, 0, "no call for the new controller")
+end)
+
+test("a save loaded after a minigame cancels the input fix; the next close uses the new controller", function()
+    load_main(nil, { menu = true, cursor = true })
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(500) -- closed, the cursor is still shown: the fix waits
+    local old = env.pc
+    local new = setmetatable(object({ name = "new pc" }), { __index = function(_, k)
+        if k == "bShowMouseCursor" then return env.cursor end
+    end })
+    restart(new)
+    poison(old, "the old controller") -- FindFirstOf still returns it until the game frees it
+    env.cursor = false
+    run(2000)
+    eq(#env.game_only, 0, "no call: the wait belonged to the old world")
+    env.cursor = true
+    game = open(DIGGER, DIGGER_START)
+    run(3200)
+    game.task.Ability.dead = true
+    run(500)
+    env.cursor = false
+    run(600)
+    eq(#env.game_only, 1, "handed back after the next minigame")
+    eq(env.game_only[1].pc, new, "through the new controller")
+    eq(logged("touched"), false, "the old world is not read")
 end)
 
 test("no controller found at the close: the first one found is kept", function()

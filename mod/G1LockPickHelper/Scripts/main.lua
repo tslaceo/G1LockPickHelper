@@ -23,7 +23,7 @@ local pad = require("pad")
 local input_fix = require("input_fix")
 
 local TAG = "[G1LockPickHelper] "
-local VERSION = "1.1.1" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
+local VERSION = "1.1.2" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
 
 local function log(fmt, ...)
     print(TAG .. string.format(fmt, ...) .. "\n")
@@ -217,22 +217,24 @@ local function drop_auto(s, reason)
 end
 
 -- A game object found with FindFirstOf and kept; a missing one is looked for again at most once a second
--- (FindFirstOf walks all objects).
+-- (FindFirstOf walks all objects). Also returns its state { obj, next_try }: new_world forgets it.
+local finders = {}
 local function finder(class)
-    local obj, next_try = nil, 0
+    local f = { obj = nil, next_try = 0 }
+    finders[#finders + 1] = f
     return function(now)
-        if obj and obj:IsValid() then return obj end
-        obj = nil
-        if now < next_try then return nil end
-        next_try = now + 1000
+        if f.obj and f.obj:IsValid() then return f.obj end
+        f.obj = nil
+        if now < f.next_try then return nil end
+        f.next_try = now + 1000
         local ok, found = pcall(FindFirstOf, class)
-        if ok and found and found:IsValid() then obj = found end
-        return obj
-    end
+        if ok and found and found:IsValid() then f.obj = found end
+        return f.obj
+    end, f
 end
 local input_subsystem = finder("CommonInputSubsystem")
 local game_settings = finder("GothicGameUserSettings")
-local player_controller = finder("PlayerController")
+local player_controller, controller_found = finder("PlayerController")
 
 -- Letters or the game's gamepad icons (pad.lua). The input type is read every frame (the player switches devices
 -- any time), the game's "Button icons" option and the gamepad name every language_poll_ms and at once when the
@@ -375,6 +377,21 @@ local function step_fix(now)
     else
         log("input fix failed: %s", tostring(err))
     end
+end
+
+-- A save loads (F9) or the game leaves the world: the game restarts a new player controller. The old world's objects
+-- stay readable a few seconds more, then the game frees them, and UE4SS's IsValid() cannot always tell a freed
+-- object (a crash after F9 during an autosolve). So everything found in the old world is forgotten at once, without
+-- reading it: the minigame and its autosolver, the lock scene, the input fix's wait, the objects the finders kept.
+-- The new controller comes with the call.
+local function new_world(pc)
+    if session then trace("new player controller: minigame dropped") end
+    session = nil
+    reader.reset()
+    fixer:cancel()
+    fix_pc, fix_held, hold_until = nil, nil, 0
+    for _, f in ipairs(finders) do f.obj, f.next_try = nil, 0 end
+    controller_found.obj = pc
 end
 
 local function tick()
@@ -745,6 +762,21 @@ else
     log("minigame input hooks unavailable (%s); listening to the keys from settings.ini", tostring(hook_err))
     for _, key in ipairs({ "W", "S", "A", "D" }) do bind(key, values.keys[key]) end
     bind("R", "R")
+end
+
+-- The new player controller of a load (new_world). Without this hook a load during a minigame is seen only when the
+-- game frees the old one.
+if RegisterHook then
+    local ok, err = pcall(RegisterHook, "/Script/Engine.PlayerController:ClientRestart", function(self)
+        guarded("new player controller", function()
+            local pc = self:get()
+            new_world(pc and pc:IsValid() and pc or nil)
+        end)
+    end)
+    if not ok then
+        log("PlayerController:ClientRestart not hooked (%s): a save loaded during a minigame is noticed late",
+            tostring(err))
+    end
 end
 
 -- The menu is optional: a failure while attaching it must not stop the mod from loading. It needs the Mods folder.

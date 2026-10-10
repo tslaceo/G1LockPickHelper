@@ -118,7 +118,7 @@ Shared Mod Menu, closed over the minigame, leaves the input on its UI (the minig
 the game does not switch it back when the minigame ends: the hero cannot walk. With Shared Mod Menu installed the mod
 waits after each minigame until the game hides the cursor (200 ms and 5 frames in a row, within 10 s) and calls
 `WidgetBlueprintLibrary.SetInputMode_GameOnly(PlayerController, false)` once, for the player controller found when
-the minigame closed (a different one - a level loaded - ends the wait). A cursor that stays shown (a chest window) is
+the minigame closed (a load ends the wait, see "Loading a save"). A cursor that stays shown (a chest window) is
 left alone, and so is one that cannot be read. Right before the call the mod checks for an open menu: a plain
 `UserWidget` in the viewport (`FindAllOf("UserWidget")`) that is not the mod's own and was not on screen when the
 minigame opened - Shared Mod Menu's window is one; another mod's HUD that was already there is not. An open menu owns
@@ -126,6 +126,16 @@ the input; the call under it would let Esc through to the game's pause menu, and
 leaves the input on its UI. So the call waits for it: the check repeats about every 0.5 s while the menu stays open,
 up to 60 s after the minigame (then one log line, "input fix gave up"). Two scans per minigame when no menu is open.
 `[general] smm_fix = false` (the switch "Fix stuck controls" in Shared Mod Menu) turns the fix off.
+
+## Loading a save
+
+Each load (F9, a saved game, back to the main menu) makes a new player controller, and the game calls its
+`PlayerController:ClientRestart` (the hook UE4SS's CheatManagerEnabler uses too). The old world's objects stay
+readable a few seconds more, then the game frees them, and UE4SS's `IsValid()` cannot always tell a freed object:
+reading the old minigame's task crashed the game after F9 during an autosolve. So at that hook the mod forgets every
+object of the old world without reading it - the minigame and its autosolver, the lock scene, the input fix's wait,
+the objects found with `FindFirstOf` - and keeps the new controller. Without the hook (one log line) the minigame
+ends when the game frees it, as before 1.1.2.
 
 ## Tracker and autosolver
 
