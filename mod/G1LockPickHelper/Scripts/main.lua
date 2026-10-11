@@ -23,7 +23,7 @@ local pad = require("pad")
 local input_fix = require("input_fix")
 
 local TAG = "[G1LockPickHelper] "
-local VERSION = "1.1.2" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
+local VERSION = "1.1.3" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
 
 local function log(fmt, ...)
     print(TAG .. string.format(fmt, ...) .. "\n")
@@ -144,7 +144,8 @@ local function render(now)
             elseif v.status ~= "solved" then
                 kind, a = "message", T[v.status] or v.status
             end
-        elseif s.auto.state == "armed" then
+        -- Not before the lock's name: a chest or door that is not locked gets a task too, without a lock.
+        elseif s.auto.state == "armed" and s.phase ~= "name" then
             kind, a = "message", T.solve_armed
         end
     elseif enabled and early and early.solve then

@@ -34,7 +34,10 @@ unavailable) only stores an integer into a preallocated ring buffer; the loop dr
 
 - Start: `NotifyOnNewObject("/Script/G1R.AbilityTask_LockPick", ...)`. The minigame is open while the task and
   its `Ability` are valid.
-- Lock: `task.Ability.m_Lock` (an FName, e.g. `OC_Chest_Shadow316_Lock`).
+- Lock: `task.Ability.m_Lock` (an FName, e.g. `OC_Chest_Shadow316_Lock`). A chest or door that is not locked gets
+  the task too, but its `Ability` never becomes valid; a real lock's name is readable within about 0.1 s. The mod
+  waits 2 s for the name, then drops the session; until the name is known it shows nothing, not even auto-pick's
+  note.
 - Plates: `FindFirstOf("LockPickSubsystem").m_LockSceneActor.m_LockPieceData[1..7]`, front to back; hidden plates
   have `m_Plate.bHidden`. A plate's position is the X of its root component minus the X of its bar: one of seven
   settled values about 6.2 apart (holes 1..7, 4 is the middle); in between, the plate is moving.

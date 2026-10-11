@@ -879,10 +879,24 @@ end)
 test("with [solve] auto every lock is solved as it opens", function()
     load_main(LINES_INI .. "[solve]\nauto = true\n")
     local game = open(DIGGER, DIGGER_START)
-    eq(last().text, EN.solve_armed, "armed at the start")
+    run(FRAME_MS)
+    eq(last().text, EN.solve_armed, "armed once the lock is known")
     run_until_open(game, 60000)
     eq(str(game.pos), "4 4 4 4 4", "plates")
     eq(game.strains, 0, "strains")
+end)
+
+test("with [solve] auto an unlocked chest or door (a task without a lock) shows no note", function()
+    load_main(LINES_INI .. "[solve]\nauto = true\n")
+    local game = new_game(DIGGER, DIGGER_START)
+    game.task.Ability = nil -- the game makes the task but no lock ability for it
+    env.game = game
+    env.notify(game.task)
+    run(2500)
+    eq(logged("minigame closed"), true, "the session ends")
+    for _, call in ipairs(env.calls) do
+        eq(call[1], "hide", "nothing shown: " .. tostring(call.text))
+    end
 end)
 
 test("the menu's auto switch arms the autosolver for the next lock", function()
@@ -1232,13 +1246,13 @@ end)
 test("the start line tells the version, the game, the language, the hooks and UE4SS", function()
     load_main(nil, { culture = "ru", ue4ss = true })
     run(FRAME_MS)
-    eq(logged(string.format("G1LockPickHelper 1.1.2: game unknown (lock db %s), language ru (auto, culture ru), "
+    eq(logged(string.format("G1LockPickHelper 1.1.3: game unknown (lock db %s), language ru (auto, culture ru), "
         .. "input hooks yes, UE4SS 3.0.1", db.build)), true, "start line")
     load_main(nil, { hooks = false })
     run(FRAME_MS)
     eq(logged("language en (auto, culture unknown), input hooks no, UE4SS unknown"), true, "without them")
     run(5000)
-    eq(count_logged("G1LockPickHelper 1.1.2:"), 1, "once")
+    eq(count_logged("G1LockPickHelper 1.1.3:"), 1, "once")
 end)
 
 test("the hint waits for ready_frames frames even when the clock jumps (a loading freeze)", function()
