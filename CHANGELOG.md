@@ -2,7 +2,7 @@
 
 ## 1.1.3
 
-- With auto-pick always on, opening a chest or door that is not locked no longer shows "Auto-pick: waiting for the
+- With "Always auto-pick" on, opening a chest or door that is not locked no longer shows "Auto-pick: waiting for the
   lock" for two seconds. The game starts the lockpicking task for those too, just without a lock; the note now waits
   until the mod knows the lock.
 
