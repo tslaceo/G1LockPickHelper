@@ -833,7 +833,7 @@ end
 -- The seconds the auto-pick text shows (nil: not that text).
 local function solving_seconds(text)
     local n = tonumber(type(text) == "string" and text:match("%d+") or nil)
-    if n and text == string.format(EN.solving, n) then return n end
+    if n and text == string.format(EN.solving_time, n) then return n end
 end
 
 -- The seconds auto-pick needs for keys[from..]: every A/D and W/S at the autosolver's pace, rounded up, at least 1.
@@ -1307,6 +1307,15 @@ test("the autosolver's text shows even with the counter off", function()
     run(FRAME_MS * 2)
     eq(solving_seconds(last().model.counter) ~= nil, true, "text")
     eq(last().model.counter_always, true, "shown whatever the setting")
+end)
+
+test("with [solve] timer = false auto-pick shows no seconds", function()
+    load_main(LINES_INI .. "[solve]\ntimer = false\n")
+    open(DIGGER, DIGGER_START)
+    run(3200)
+    env.binds["KEY_F3"]()
+    run(FRAME_MS * 2)
+    eq(last().model.counter, EN.solving, "text")
 end)
 
 test("the auto-pick time counts down to 1 s as the keys go", function()

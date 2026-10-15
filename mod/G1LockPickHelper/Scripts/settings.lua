@@ -28,6 +28,7 @@ M.SCHEMA = {
     { section = "lines", key = "plate", kind = "bool", default = false },
     { section = "solve", key = "auto", kind = "bool", default = false },
     { section = "solve", key = "double_reset", kind = "bool", default = true },
+    { section = "solve", key = "timer", kind = "bool", default = true },
     { section = "keys", key = "toggle", kind = "key", default = "F4" },
     { section = "keys", key = "solve", kind = "key", default = "F3" },
     { section = "keys", key = "W", kind = "key", default = "W" },

@@ -66,6 +66,7 @@ test("defaults match the spec", function()
     eq(v.hint.icons, "auto", "icons")
     eq(v.hint.gamepad, "auto", "gamepad")
     eq(v.solve.double_reset, true, "double_reset")
+    eq(v.solve.timer, true, "timer")
 end)
 
 test("the schema holds no texts", function()
@@ -144,6 +145,7 @@ test("serialize then parse gives the same values", function()
     v.general.language, v.general.debug = "ru", true
     v.hint.layout, v.hint.style, v.hint.scale, v.hint.offset_x = "lines", "gothic", 130, -900
     v.tape.plate, v.lines.collapse_min, v.lines.plate, v.keys.toggle = true, 0, true, "F6"
+    v.solve.timer = false
     local text = settings.serialize(v, EN_INI)
     local back, problems = settings.parse(text)
     eq(#problems, 0, "problems")

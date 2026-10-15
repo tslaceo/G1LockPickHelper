@@ -2,7 +2,8 @@
 
 ## 1.2.0
 
-- Auto-pick shows how long it still needs: "Auto-picking… 12 s" counts down to the open lock.
+- Auto-pick shows how long it still needs: "Auto-picking… 12 s" counts down to the open lock. `[solve] timer`
+  ("Countdown" on the Auto-pick tab of Shared Mod Menu) turns it off.
 - The lines got a dark background too: `[lines] plate` ("Dark background" on the Lines tab of Shared Mod Menu), off
   by default, like the tape's. A `settings.ini` from 1.1 keeps working.
 

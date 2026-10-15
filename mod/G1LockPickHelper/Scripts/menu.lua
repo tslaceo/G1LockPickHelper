@@ -43,6 +43,7 @@ M.SECTIONS = {
     { id = "solve", items = {
         { id = "solve_auto", section = "solve", key = "auto", kind = "bool" },
         { id = "double_reset", section = "solve", key = "double_reset", kind = "bool" },
+        { id = "solve_timer", section = "solve", key = "timer", kind = "bool" },
     } },
 }
 

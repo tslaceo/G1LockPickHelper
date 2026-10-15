@@ -47,7 +47,7 @@ test("spec has five sections with their items", function()
     eq(#spec[2].items, 11, "view items")
     eq(#spec[3].items, 4, "tape items")
     eq(#spec[4].items, 4, "lines items")
-    eq(#spec[5].items, 2, "solve items")
+    eq(#spec[5].items, 3, "solve items")
     eq(item(spec, I.collapse_min).desc, M.desc.collapse_min, "item hint")
     eq(item(spec, I.solve_auto).desc, M.desc.solve_auto, "auto hint")
 end)
@@ -171,6 +171,17 @@ test("the Lines tab has its own dark background switch: [lines] plate", function
     eq(changes[1][3], true, "value")
 end)
 
+test("the Countdown switch sets [solve] timer", function()
+    local changes = {}
+    local timer = menu.spec(opts(changes))[5].items[3]
+    eq(timer.name, I.solve_timer, "name")
+    eq(timer.desc, M.desc.solve_timer, "hint")
+    eq(timer.get(), true, "on by default")
+    timer.set(false)
+    eq(changes[1][1] .. "." .. changes[1][2], "solve.timer", "setting")
+    eq(changes[1][3], false, "value")
+end)
+
 test("actions call their handlers", function()
     local called = {}
     local spec = menu.spec(opts({}, {
@@ -281,7 +292,7 @@ test("every item name fits Shared Mod Menu (21 characters, 35 bytes)", function(
                 eq(#it.name <= 35, true, lang .. " bytes " .. #it.name .. ": " .. tostring(it.name))
             end
         end
-        eq(count, 23 + 5, lang .. " items checked: 23 settings and 5 keys")
+        eq(count, 24 + 5, lang .. " items checked: 24 settings and 5 keys")
     end
 end)
 

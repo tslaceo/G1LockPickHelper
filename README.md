@@ -58,7 +58,8 @@ your own comments in it are lost.
 - `[hint]` - tape or lines, simple or gothic style, letters or gamepad icons (`icons`: auto, keys, gamepad;
   `gamepad`: auto - as the game - or playstation, xbox, switch), size, position, counter, shake on a miss.
 - `[tape]`, `[lines]` - how many keys are shown and how; `plate`: a dark background under the tape or the lines.
-- `[solve]` - `auto`: auto-pick each lock by itself ("Always auto-pick"); `double_reset`: reset twice to auto-pick.
+- `[solve]` - `auto`: auto-pick each lock by itself ("Always auto-pick"); `double_reset`: reset twice to auto-pick;
+  `timer`: the seconds left while auto-pick works ("Countdown").
 - `[keys]` - the keys above and the key labels of the minigame.
 
 After editing the file press Ctrl+R (UE4SS mod reload) or restart the game.

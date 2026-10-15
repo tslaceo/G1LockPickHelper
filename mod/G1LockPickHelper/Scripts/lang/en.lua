@@ -10,8 +10,8 @@ return {
         bad_state = "Can't read the lock",
         hint_on = "Hint shown (%s)",                     -- after the toggle key; %s is the key name
         hint_off = "Hint hidden (%s)",
-        solving = "Auto-picking… %d s",                  -- instead of the counter while the autosolver presses;
-        -- %d: about how many seconds it still needs
+        solving = "Auto-picking…",                       -- instead of the counter while the autosolver presses
+        solving_time = "Auto-picking… %d s",             -- the same with [solve] timer; %d: about the seconds left
         solve_armed = "Auto-pick: waiting for the lock", -- F3 or auto-pick before the minigame is ready
         solve_stopped = "Auto-pick stopped",             -- the autosolver stopped by itself (reason in UE4SS.log)
         -- F3 with nothing to solve or without input hooks; also a minigame that opens without them (auto-pick on)
@@ -40,6 +40,7 @@ return {
                 lines_plate = "Dark background",
                 solve_auto = "Always auto-pick",
                 double_reset = "Double reset",
+                solve_timer = "Countdown",
                 key_toggle = "%s: show/hide hint",
                 key_solve = "%s: auto-pick",
                 key_select = "%s / %s: select plate",
@@ -65,6 +66,7 @@ return {
                 collapse_min = "fold N or more same keys in a row; 0 or 1: never",
                 solve_auto = "picks every lock for you; F3 cancels",
                 double_reset = "two quick resets (△/Y or R) start auto-pick",
+                solve_timer = "seconds until the lock opens",
                 key_double_reset = "R R on the keyboard; on/off in the Auto-pick tab",
             },
         },
@@ -102,6 +104,7 @@ return {
             ["lines.plate"] = "dark translucent background under the lines",
             ["solve.auto"] = "auto-pick every lock as soon as its minigame starts",
             ["solve.double_reset"] = "two quick resets in a minigame start auto-pick (gamepad Triangle / Y, keyboard R)",
+            ["solve.timer"] = "while auto-pick works, the hint shows the seconds until the lock opens",
             ["keys.toggle"] = "show/hide the hint",
             ["keys.solve"] = "start / stop auto-pick",
             ["keys.W"] = "W, S, A, D: the names the hint shows, and the keys the mod listens to if input hooks are unavailable (UE4SS key names)",

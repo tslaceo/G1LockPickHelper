@@ -174,10 +174,12 @@ local function render(now)
             trace("hint (%d keys): %s", #a.keys, table.concat(a.keys, " "))
         end
         local model = model_of(a)
-        if running then -- the counter's place says the autosolver runs and about how long it needs
-            local ms = autosolve.eta_ms(a.keys, a.index, config.solve_eta_ad_ms, config.solve_eta_ws_ms)
-            model.counter = string.format(T.solving, math.max(1, math.ceil(ms / 1000)))
-            model.counter_always = true
+        if running then -- the counter's place says the autosolver runs (and with [solve] timer, about how long)
+            model.counter, model.counter_always = T.solving, true
+            if values.solve.timer then
+                local ms = autosolve.eta_ms(a.keys, a.index, config.solve_eta_ad_ms, config.solve_eta_ws_ms)
+                model.counter = string.format(T.solving_time, math.max(1, math.ceil(ms / 1000)))
+            end
         end
         overlay.show(model, now)
     elseif kind == "message" then
