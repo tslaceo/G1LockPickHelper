@@ -57,6 +57,7 @@ test("defaults match the spec", function()
     eq(v.lines.per_line, 16, "per_line")
     eq(v.lines.max_lines, 6, "max_lines")
     eq(v.lines.collapse_min, 3, "collapse_min")
+    eq(v.lines.plate, false, "lines plate")
     eq(v.keys.toggle, "F4", "toggle")
     eq(v.keys.W, "W", "W")
     eq(v.keys.D, "D", "D")
@@ -142,7 +143,7 @@ test("serialize then parse gives the same values", function()
     local v = settings.defaults()
     v.general.language, v.general.debug = "ru", true
     v.hint.layout, v.hint.style, v.hint.scale, v.hint.offset_x = "lines", "gothic", 130, -900
-    v.tape.plate, v.lines.collapse_min, v.keys.toggle = true, 0, "F6"
+    v.tape.plate, v.lines.collapse_min, v.lines.plate, v.keys.toggle = true, 0, true, "F6"
     local text = settings.serialize(v, EN_INI)
     local back, problems = settings.parse(text)
     eq(#problems, 0, "problems")

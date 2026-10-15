@@ -14,6 +14,8 @@ return {
     solve_ws_gap_ms = 60,    -- autosolver: pause after its W/S
     solve_timeout_ms = 2500, -- autosolver: stops when its A/D does not show on the plates in this time
     solve_max_replans = 3,   -- autosolver: stops after this many hint replans in a row (model and game disagree)
+    solve_eta_ad_ms = 400,   -- autosolver: the time its text counts for an A/D (measured in game: 370-420 ms)
+    solve_eta_ws_ms = 70,    -- autosolver: the time its text counts for a W/S (measured in game: 60-70 ms)
     solve_early_ms = 5000,   -- autosolver: F3 outside a minigame arms the one that opens within this time (the hero sits down first)
     double_reset_ms = 500,   -- two resets of the player within this time start the autosolver ([solve] double_reset)
     pad_missing_log_ms = 10000, -- CommonInputSubsystem not found this long after the start ([hint] icons other than

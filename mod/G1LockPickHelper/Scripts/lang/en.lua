@@ -10,7 +10,8 @@ return {
         bad_state = "Can't read the lock",
         hint_on = "Hint shown (%s)",                     -- after the toggle key; %s is the key name
         hint_off = "Hint hidden (%s)",
-        solving = "Auto-picking…",                       -- instead of the counter while the autosolver presses
+        solving = "Auto-picking… %d s",                  -- instead of the counter while the autosolver presses;
+        -- %d: about how many seconds it still needs
         solve_armed = "Auto-pick: waiting for the lock", -- F3 or auto-pick before the minigame is ready
         solve_stopped = "Auto-pick stopped",             -- the autosolver stopped by itself (reason in UE4SS.log)
         -- F3 with nothing to solve or without input hooks; also a minigame that opens without them (auto-pick on)
@@ -36,6 +37,7 @@ return {
                 preview = "Show example", reset_position = "Reset position",
                 next = "Upcoming keys", done = "Pressed keys", slide = "Smooth scroll", plate = "Dark background",
                 per_line = "Keys per line", max_lines = "Lines on screen", collapse_min = "Fold repeats from",
+                lines_plate = "Dark background",
                 solve_auto = "Always auto-pick",
                 double_reset = "Double reset",
                 key_toggle = "%s: show/hide hint",
@@ -97,6 +99,7 @@ return {
             ["lines.per_line"] = "keys per line, 4–40",
             ["lines.max_lines"] = "how many lines are shown, 1–12",
             ["lines.collapse_min"] = "N or more same keys in a row show as \"A×N\"; 0 or 1: never",
+            ["lines.plate"] = "dark translucent background under the lines",
             ["solve.auto"] = "auto-pick every lock as soon as its minigame starts",
             ["solve.double_reset"] = "two quick resets in a minigame start auto-pick (gamepad Triangle / Y, keyboard R)",
             ["keys.toggle"] = "show/hide the hint",

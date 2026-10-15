@@ -23,7 +23,7 @@ local pad = require("pad")
 local input_fix = require("input_fix")
 
 local TAG = "[G1LockPickHelper] "
-local VERSION = "1.1.3" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
+local VERSION = "1.2.0" -- also in README.txt and CHANGELOG.md; scripts/package.ps1 names the archive after it
 
 local function log(fmt, ...)
     print(TAG .. string.format(fmt, ...) .. "\n")
@@ -174,7 +174,11 @@ local function render(now)
             trace("hint (%d keys): %s", #a.keys, table.concat(a.keys, " "))
         end
         local model = model_of(a)
-        if running then model.counter, model.counter_always = T.solving, true end
+        if running then -- the counter's place says the autosolver runs and about how long it needs
+            local ms = autosolve.eta_ms(a.keys, a.index, config.solve_eta_ad_ms, config.solve_eta_ws_ms)
+            model.counter = string.format(T.solving, math.max(1, math.ceil(ms / 1000)))
+            model.counter_always = true
+        end
         overlay.show(model, now)
     elseif kind == "message" then
         overlay.message(a)

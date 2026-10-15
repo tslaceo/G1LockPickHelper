@@ -14,6 +14,13 @@ local function view(keys, index, status)
     return { status = status or "ok", keys = keys, index = index or 1 }
 end
 
+test("eta_ms: the keys from `from` on, each A/D at ad_ms and each W/S at ws_ms", function()
+    local keys = { "W", "A", "D", "S" }
+    eq(autosolve.eta_ms(keys, 1, 400, 70), 940, "the whole plan")
+    eq(autosolve.eta_ms(keys, 3, 400, 70), 470, "from the third key")
+    eq(autosolve.eta_ms(keys, 5, 400, 70), 0, "nothing left")
+end)
+
 test("off by default: no key", function()
     local a = autosolve.new(OPTS)
     eq(a.state, "off", "state")

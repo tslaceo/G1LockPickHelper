@@ -38,6 +38,7 @@ M.SECTIONS = {
         { id = "per_line", section = "lines", key = "per_line", kind = "num", step = 1 },
         { id = "max_lines", section = "lines", key = "max_lines", kind = "num", step = 1 },
         { id = "collapse_min", section = "lines", key = "collapse_min", kind = "num", step = 1 },
+        { id = "lines_plate", section = "lines", key = "plate", kind = "bool" },
     } },
     { id = "solve", items = {
         { id = "solve_auto", section = "solve", key = "auto", kind = "bool" },

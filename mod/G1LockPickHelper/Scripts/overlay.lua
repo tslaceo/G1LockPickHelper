@@ -200,7 +200,7 @@ local function build()
     local canvas = construct("/Script/UMG.CanvasPanel", tree, "Canvas")
     tree.RootWidget = canvas
     local plate = construct("/Script/UMG.Border", tree, "Plate")
-    local dark = opts.layout == "tape" and opts.plate
+    local dark = opts.plate
     if dark then
         local fill = { R = 0, G = 0, B = 0, A = cfg.plate_alpha }
         local ok, err = rounded(plate, fill, cfg.colors.plate_frame, 1.5)
@@ -307,7 +307,8 @@ function M.configure(values)
     local h = values.hint
     local new = {
         layout = h.layout, style = h.style, size = math.max(8, round(cfg.base_font_size * h.scale / 100)),
-        counter = h.counter, shake = h.shake, slide = values.tape.slide, plate = values.tape.plate,
+        counter = h.counter, shake = h.shake, slide = values.tape.slide,
+        plate = (h.layout == "tape" and values.tape or values.lines).plate, -- each layout has its own
         next = values.tape.next, done = values.tape.done,
         per_line = values.lines.per_line, max_lines = values.lines.max_lines,
         offset = { X = h.offset_x, Y = h.offset_y },

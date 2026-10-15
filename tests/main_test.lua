@@ -830,6 +830,21 @@ local function run_until_open(game, ms)
     run(ANIM_MS + 300)
 end
 
+-- The seconds the auto-pick text shows (nil: not that text).
+local function solving_seconds(text)
+    local n = tonumber(type(text) == "string" and text:match("%d+") or nil)
+    if n and text == string.format(EN.solving, n) then return n end
+end
+
+-- The seconds auto-pick needs for keys[from..]: every A/D and W/S at the autosolver's pace, rounded up, at least 1.
+local function eta_seconds(keys, from)
+    local ms = 0
+    for i = from, #keys do
+        ms = ms + ((keys[i] == "A" or keys[i] == "D") and config.solve_eta_ad_ms or config.solve_eta_ws_ms)
+    end
+    return math.max(1, math.ceil(ms / 1000))
+end
+
 test("F3 opens the lock: the autosolver presses the hint without strain", function()
     load_main()
     local game = open(DIGGER, DIGGER_START)
@@ -837,7 +852,8 @@ test("F3 opens the lock: the autosolver presses the hint without strain", functi
     local keys = solver.solve(game.ctx, DIGGER_START, 1)
     env.binds["KEY_F3"]()
     run(FRAME_MS * 2)
-    eq(last().model.counter, EN.solving, "the counter says the autosolver runs")
+    eq(solving_seconds(last().model.counter), eta_seconds(keys, #game.inputs + 1),
+        "the counter says the autosolver runs and how long it needs")
     run_until_open(game, 60000)
     eq(str(game.pos), "4 4 4 4 4", "plates")
     eq(game.strains, 0, "strains")
@@ -1246,13 +1262,13 @@ end)
 test("the start line tells the version, the game, the language, the hooks and UE4SS", function()
     load_main(nil, { culture = "ru", ue4ss = true })
     run(FRAME_MS)
-    eq(logged(string.format("G1LockPickHelper 1.1.3: game unknown (lock db %s), language ru (auto, culture ru), "
+    eq(logged(string.format("G1LockPickHelper 1.2.0: game unknown (lock db %s), language ru (auto, culture ru), "
         .. "input hooks yes, UE4SS 3.0.1", db.build)), true, "start line")
     load_main(nil, { hooks = false })
     run(FRAME_MS)
     eq(logged("language en (auto, culture unknown), input hooks no, UE4SS unknown"), true, "without them")
     run(5000)
-    eq(count_logged("G1LockPickHelper 1.1.3:"), 1, "once")
+    eq(count_logged("G1LockPickHelper 1.2.0:"), 1, "once")
 end)
 
 test("the hint waits for ready_frames frames even when the clock jumps (a loading freeze)", function()
@@ -1289,8 +1305,29 @@ test("the autosolver's text shows even with the counter off", function()
     eq(last().model.counter_always, nil, "the plain hint keeps the setting")
     env.binds["KEY_F3"]()
     run(FRAME_MS * 2)
-    eq(last().model.counter, EN.solving, "text")
+    eq(solving_seconds(last().model.counter) ~= nil, true, "text")
     eq(last().model.counter_always, true, "shown whatever the setting")
+end)
+
+test("the auto-pick time counts down to 1 s as the keys go", function()
+    load_main()
+    local game = open(DIGGER, DIGGER_START)
+    run(3200)
+    local keys = solver.solve(game.ctx, DIGGER_START, 1)
+    env.binds["KEY_F3"]()
+    local from = #env.calls + 1
+    run_until_open(game, 60000)
+    local shown = {}
+    for i = from, #env.calls do
+        local n = env.calls[i].model and solving_seconds(env.calls[i].model.counter)
+        if n then shown[#shown + 1] = n end
+    end
+    eq(#shown > 3, true, "shown along the way")
+    eq(shown[1] >= eta_seconds(keys, 2), true, "starts at the whole plan")
+    for i = 2, #shown do
+        if shown[i] > shown[i - 1] then error("went up: " .. table.concat(shown, " ")) end
+    end
+    eq(shown[#shown], 1, "ends at 1 s")
 end)
 
 test("an armed autosolver on a lock not in the database logs its stop", function()
@@ -1454,7 +1491,7 @@ test("two resets within double_reset_ms start the autosolver; it opens the lock"
     run(200)
     press("R")
     run(FRAME_MS * 2)
-    eq(last().model.counter, EN.solving, "the autosolver runs")
+    eq(solving_seconds(last().model.counter) ~= nil, true, "the autosolver runs")
     eq(logged("autosolve: double reset"), true, "logged")
     run_until_open(game, 60000)
     eq(str(game.pos), "4 4 4 4 4", "plates")

@@ -46,7 +46,7 @@ test("spec has five sections with their items", function()
     eq(#spec[1].items, 2, "general items")
     eq(#spec[2].items, 11, "view items")
     eq(#spec[3].items, 4, "tape items")
-    eq(#spec[4].items, 3, "lines items")
+    eq(#spec[4].items, 4, "lines items")
     eq(#spec[5].items, 2, "solve items")
     eq(item(spec, I.collapse_min).desc, M.desc.collapse_min, "item hint")
     eq(item(spec, I.solve_auto).desc, M.desc.solve_auto, "auto hint")
@@ -160,6 +160,17 @@ test("plain switches pass booleans", function()
     eq(changes[1][3], true, "value")
 end)
 
+test("the Lines tab has its own dark background switch: [lines] plate", function()
+    local changes = {}
+    local spec = menu.spec(opts(changes))
+    local plate = spec[4].items[4]
+    eq(plate.name, I.lines_plate, "name")
+    eq(plate.get(), false, "get")
+    plate.set(true)
+    eq(changes[1][1] .. "." .. changes[1][2], "lines.plate", "setting")
+    eq(changes[1][3], true, "value")
+end)
+
 test("actions call their handlers", function()
     local called = {}
     local spec = menu.spec(opts({}, {
@@ -270,7 +281,7 @@ test("every item name fits Shared Mod Menu (21 characters, 35 bytes)", function(
                 eq(#it.name <= 35, true, lang .. " bytes " .. #it.name .. ": " .. tostring(it.name))
             end
         end
-        eq(count, 22 + 5, lang .. " items checked: 22 settings and 5 keys")
+        eq(count, 23 + 5, lang .. " items checked: 23 settings and 5 keys")
     end
 end)
 

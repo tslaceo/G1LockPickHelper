@@ -155,6 +155,9 @@ The player reads the autosolver as "auto-pick" (the hint's notes, Shared Mod Men
   player's. After a W/S it waits 60 ms; after an A/D, until the plates confirm it. It stops when the lock opens,
   on any press of the player, when the minigame closes, when an A/D does not show within 2.5 s, and after 3
   replans in a row.
+- While it runs, the counter's place shows the seconds it still needs: the keys left in the hint, each A/D at
+  `solve_eta_ad_ms` (400) and each W/S at `solve_eta_ws_ms` (70), rounded up. Measured in game over 760
+  presses: an A/D takes 370-420 ms until the next press, a W/S 60-70 ms. A replan recounts it.
 
 ## Language
 

@@ -50,6 +50,16 @@ function M:player_pressed()
     return true
 end
 
+-- How long the autosolver needs for keys[from..]: each A/D waits for the plates (ad_ms), each W/S for its gap
+-- (ws_ms). Milliseconds.
+function M.eta_ms(keys, from, ad_ms, ws_ms)
+    local ms = 0
+    for i = from, #keys do
+        ms = ms + ((keys[i] == "A" or keys[i] == "D") and ad_ms or ws_ms)
+    end
+    return ms
+end
+
 local function halt(self, reason)
     self:stop()
     return nil, reason

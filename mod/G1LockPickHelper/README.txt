@@ -1,4 +1,4 @@
-G1LockPickHelper 1.1.3 - lockpicking helper for Gothic 1 Remake (UE4SS Lua mod)
+G1LockPickHelper 1.2.0 - lockpicking helper for Gothic 1 Remake (UE4SS Lua mod)
 
 Shows the key sequence that opens the lock in the lockpicking minigame and follows
 you through it. F3 lets the mod pick the lock for you, using only moves that cannot

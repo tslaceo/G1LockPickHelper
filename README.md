@@ -8,8 +8,8 @@ moves that cannot strain the pick.
   follows your presses, keyboard or gamepad, and replans when the lock does not do what was expected.
 - **Auto-pick.** F3 in the minigame picks the lock with the moves the hint shows - only moves that cannot strain
   the pick. F3 right after using a chest (while the hero sits down) auto-picks the minigame that opens next.
-  Any key you press yourself takes over. "Always auto-pick" in the settings picks every lock as soon as its
-  minigame starts.
+  While it picks, the hint counts down the seconds it still needs. Any key you press yourself takes over.
+  "Always auto-pick" in the settings picks every lock as soon as its minigame starts.
 - **Gamepad.** With a gamepad the hint shows the game's own button icons - PlayStation, Xbox or Switch, as the
   game's "Button icons" option says (with "Do not use" it shows letters, unless `[hint] icons = gamepad`).
   Press reset twice (Triangle / Y) and the mod picks the lock.
@@ -57,7 +57,7 @@ your own comments in it are lost.
   `smm_fix` (the Shared Mod Menu fix, "Fix stuck controls" in the menu; `false` turns it off).
 - `[hint]` - tape or lines, simple or gothic style, letters or gamepad icons (`icons`: auto, keys, gamepad;
   `gamepad`: auto - as the game - or playstation, xbox, switch), size, position, counter, shake on a miss.
-- `[tape]`, `[lines]` - how many keys are shown and how.
+- `[tape]`, `[lines]` - how many keys are shown and how; `plate`: a dark background under the tape or the lines.
 - `[solve]` - `auto`: auto-pick each lock by itself ("Always auto-pick"); `double_reset`: reset twice to auto-pick.
 - `[keys]` - the keys above and the key labels of the minigame.
 

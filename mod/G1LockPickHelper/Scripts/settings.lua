@@ -25,6 +25,7 @@ M.SCHEMA = {
     { section = "lines", key = "per_line", kind = "int", default = 16, min = 4, max = 40 },
     { section = "lines", key = "max_lines", kind = "int", default = 6, min = 1, max = 12 },
     { section = "lines", key = "collapse_min", kind = "int", default = 3, min = 0, max = 20 },
+    { section = "lines", key = "plate", kind = "bool", default = false },
     { section = "solve", key = "auto", kind = "bool", default = false },
     { section = "solve", key = "double_reset", kind = "bool", default = true },
     { section = "keys", key = "toggle", kind = "key", default = "F4" },
