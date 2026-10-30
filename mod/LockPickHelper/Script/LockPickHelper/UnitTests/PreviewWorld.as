@@ -1,10 +1,10 @@
 // Development only: with `-LPHPreview` the main menu shows the hint on the mod's viewport layer, so that its look can be
 // checked on a picture of the game's window (internal/tools/dev/g1r-shot.ps1 -Title "Gothic 1 Remake  "). Every hint
 // draws view.lua's SAMPLE (LPHTests_SampleView), in two columns, from the top:
-//   the tape, simple style, on the dark plate             | the lines, simple style
-//   the tape, gothic style, on the plate, auto-pick's text | the lines, gothic style
+//   the tape, plain style, on the dark plate              | the lines, plain style
+//   the tape, gold letters, on the plate, auto-pick's text | the lines, gold letters
 //   the tape with Xbox icons, on the plate                 | the lines with PlayStation icons
-//   a message (Russian), on the plate                      | the lines with Switch icons, gothic style, on the plate
+//   a message (Russian), on the plate                      | the lines with Switch icons, gold letters, on the plate
 // The first tape is shown twice - one press and one miss before the SAMPLE, then the SAMPLE on the first frame (nothing
 // ticks while the startup logos play, about 15 s after BeginPlay) - so it slides and shakes once; the log has the offsets
 // of those frames. Saved/LockPickHelper-preview.log has `preview shown` once everything is on the screen (the logos still

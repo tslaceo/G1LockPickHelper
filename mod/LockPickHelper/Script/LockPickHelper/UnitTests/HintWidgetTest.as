@@ -23,6 +23,7 @@ void LPHTests_HintWidget(ULPH_TestRun T)
 
 	LPHTests_HintWidgetTape(T, Layer);
 	LPHTests_HintWidgetLines(T, Layer);
+	LPHTests_HintWidgetStyles(T, Layer);
 	LPHTests_HintWidgetOther(T, Layer);
 	LPHTests_HintWidgetRelease(T, Layer);
 
@@ -171,6 +172,97 @@ void LPHTests_HintWidgetLines(ULPH_TestRun T, ULPH_ViewportLayer Layer)
 	T.EqualStr(LPHTests_HintText(Run.Tail), "×3", "the count after the icon");
 	T.True(LPHTests_HintShown(Run.Tail), "shown");
 	T.EqualInt(Hint.Builds, 1, "no rebuild");
+}
+
+bool LPHTests_Near(float A, float B)
+{
+	return Math::Abs(A - B) < 0.0001;
+}
+
+bool LPHTests_SameColor(FLinearColor Color, float R, float G, float B, float A)
+{
+	return LPHTests_Near(Color.R, R) && LPHTests_Near(Color.G, G) && LPHTests_Near(Color.B, B) && LPHTests_Near(Color.A, A);
+}
+
+// The drop shadow of a text as it is on the widget: shown (the colour of LPH::ColorShadow) or not (no opacity).
+bool LPHTests_Shadowed(UTextBlock Block)
+{
+	return Block != nullptr && LPHTests_Near(Block.ShadowColorAndOpacity.A, LPH::ColorShadow.A);
+}
+
+bool LPHTests_NoShadow(UTextBlock Block)
+{
+	return Block != nullptr && LPHTests_Near(Block.ShadowColorAndOpacity.A, 0.0);
+}
+
+// The corners and the outline of the brush a Border (a key's frame, the plate) was drawn with.
+float LPHTests_FrameRadius(UBorder Frame)
+{
+	return Frame.Background.OutlineSettings.CornerRadii.X;
+}
+
+float LPHTests_FrameWidth(UBorder Frame)
+{
+	return Frame.Background.OutlineSettings.Width;
+}
+
+void LPHTests_HintWidgetStyles(ULPH_TestRun T, ULPH_ViewportLayer Layer)
+{
+	T.Begin("HintWidget style: the plain style copies the minigame's key prompts");
+	FLPH_Style Plain = LPH::StyleOf(false);
+	T.True(LPHTests_SameColor(Plain.Current, 1.0, 0.68, 0.51, 1.0), "the current letter is sRGB #FFD7BD (linear 1, 0.68, 0.51)");
+	T.True(LPHTests_SameColor(Plain.Next, 1.0, 0.68, 0.51, 1.0), "the other letters too");
+	T.True(LPHTests_SameColor(Plain.Frame, 1.0, 0.68, 0.51, 1.0), "the border too");
+	T.True(LPHTests_SameColor(Plain.Fill, 0.0065, 0.0061, 0.0065, 1.0), "the fill is sRGB #131213");
+	T.True(Plain.FrameRadius == 0.0 && LPHTests_Near(Plain.FrameWidth, 1.5), "a square frame, 1.5 px");
+	T.True(!Plain.bCurrentShadow, "no shadow under the current letter");
+	FLPH_Style Gold = LPH::StyleOf(true);
+	T.True(LPHTests_SameColor(Gold.Current, 1.0, 0.78, 0.1, 1.0), "gold letters: the current letter is gold");
+	T.True(LPHTests_SameColor(Gold.Next, 1.0, 1.0, 1.0, 1.0), "the others white");
+	T.True(Gold.FrameRadius == 3.0 && Gold.FrameWidth == 2.0 && Gold.bCurrentShadow, "a rounded frame of 2 px, the shadow as before");
+
+	T.Begin("HintWidget style: plain tape - a square thin frame, no shadow under the current letter only");
+	TArray<FString> Letters;
+	FLPH_Values Values;
+	Values.bPlate = true;
+	ULPH_HintWidget Hint = LPHTests_HintWidgetNew(T, Layer, Values);
+	FLPH_HintModel M = LPH::Tape(LPHTests_SampleView(), Values.TapeNext, Values.TapeDone, Letters);
+	Hint.ShowHint(M, 1000);
+	ULPH_HintToken Current = Hint.CellAt(3);
+	T.True(LPHTests_FrameRadius(Current.Frame) == 0.0 && LPHTests_Near(LPHTests_FrameWidth(Current.Frame), 1.5), "the frame: square, 1.5 px");
+	T.True(LPHTests_NoShadow(Current.Letter), "the current letter has no shadow");
+	T.True(LPHTests_Shadowed(Hint.CellAt(4).Letter) && LPHTests_Shadowed(Hint.CellAt(8).Letter), "the next ones keep it");
+	T.True(LPHTests_Shadowed(Hint.CellAt(1).Letter) && LPHTests_Shadowed(Hint.CellAt(0).Letter), "so do the done and the miss");
+	T.True(LPHTests_Near(LPHTests_FrameRadius(Hint.PlateBorder()), 3.0), "the dark plate keeps radius 3");
+
+	T.Begin("HintWidget style: gold letters keep the rounded frame and the shadow");
+	Values.bGothic = true;
+	ULPH_HintWidget GoldHint = LPHTests_HintWidgetNew(T, Layer, Values);
+	GoldHint.ShowHint(M, 1000);
+	ULPH_HintToken GoldCurrent = GoldHint.CellAt(3);
+	T.True(LPHTests_Near(LPHTests_FrameRadius(GoldCurrent.Frame), 3.0) && LPHTests_Near(LPHTests_FrameWidth(GoldCurrent.Frame), 2.0), "the frame: radius 3, 2 px");
+	T.True(LPHTests_Shadowed(GoldCurrent.Letter), "the current letter has its shadow");
+	T.True(LPHTests_Near(LPHTests_FrameRadius(GoldHint.PlateBorder()), 3.0), "the dark plate: radius 3");
+
+	T.Begin("HintWidget style: the shadow follows the current key through the lines");
+	FLPH_Values LinesValues;
+	LinesValues.bTape = false;
+	ULPH_HintWidget Lines = LPHTests_HintWidgetNew(T, Layer, LinesValues);
+	Lines.ShowHint(LPH::Lines(LPHTests_ViewOf("WSAD", 0, ""), LinesValues.PerLine, LinesValues.MaxLines, LinesValues.CollapseMin, Letters), 1000);
+	T.True(LPHTests_NoShadow(Lines.TokenAt(0, 0).Letter) && LPHTests_Shadowed(Lines.TokenAt(0, 1).Letter), "the first key is the current one");
+	Lines.ShowHint(LPH::Lines(LPHTests_ViewOf("WSAD", 1, "W+"), LinesValues.PerLine, LinesValues.MaxLines, LinesValues.CollapseMin, Letters), 1100);
+	T.True(LPHTests_Shadowed(Lines.TokenAt(0, 0).Letter), "a key pressed gets its shadow back");
+	T.True(LPHTests_NoShadow(Lines.TokenAt(0, 1).Letter), "the next one has none");
+	T.EqualInt(Lines.Builds, 1, "without a rebuild");
+
+	T.Begin("HintWidget style: the count after an icon of the current key has no shadow either");
+	Lines.ShowHint(LPH::Lines(LPHTests_SampleView(), LinesValues.PerLine, LinesValues.MaxLines, LinesValues.CollapseMin, Letters), 1200);
+	Lines.SetIcons(ELPH_IconSet::Xbox);
+	ULPH_HintToken Run = Lines.TokenAt(0, 3);
+	T.True(Run.Tail != nullptr && LPHTests_NoShadow(Run.Tail), "the current run's count");
+	T.True(Lines.TokenAt(0, 1).Tail != nullptr && LPHTests_Shadowed(Lines.TokenAt(0, 1).Tail), "another key's count");
+	Lines.SetIcons(ELPH_IconSet::Letters);
+	T.True(LPHTests_NoShadow(Run.Letter), "back to letters: the current letter has none");
 }
 
 void LPHTests_HintWidgetOther(ULPH_TestRun T, ULPH_ViewportLayer Layer)

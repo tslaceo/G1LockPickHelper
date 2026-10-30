@@ -414,7 +414,7 @@ class ULPH_HintWidget : UObject
 			return false;
 		}
 		if (Opts.bPlate)
-			Rounded(Plate, FLinearColor(0.0, 0.0, 0.0, LPH::PlateAlpha), LPH::ColorPlateFrame, 1.5);
+			Rounded(Plate, FLinearColor(0.0, 0.0, 0.0, LPH::PlateAlpha), LPH::ColorPlateFrame, 1.5, LPH::PlateRadius);
 		else
 			Plate.SetBrushColor(FLinearColor(0.0, 0.0, 0.0, 0.0));
 		Plate.SetPadding(FMargin(Px(F * 0.4), Px(F * 0.2), Px(F * 0.4), Px(F * 0.2)));
@@ -450,7 +450,7 @@ class ULPH_HintWidget : UObject
 					CellWidth = Px(F * 2.0);
 				}
 				ULPH_HintToken Token = NewToken(LetterSize, FMargin(0.0, 0.0, 0.0, 0.0), true);
-				// The height is a minimum only: the gothic font has a taller line than the simple one, and the row
+				// The height is a minimum only: the gold letters' font has a taller line than the plain style's, and the row
 				// stretches every cell to the tallest, so the current cell's frame (Fill) encloses its letter.
 				USizeBox Cell = Cast<USizeBox>(Owner.ConstructWidget(USizeBox));
 				Cell.SetWidthOverride(CellWidth);
@@ -492,12 +492,12 @@ class ULPH_HintWidget : UObject
 		Block.SetFont(Info);
 		Block.SetColorAndOpacity(FSlateColor(Color));
 		Block.SetShadowOffset(FVector2D(1.5, 1.5));
-		Block.SetShadowColorAndOpacity(FLinearColor(0.0, 0.0, 0.0, 0.9));
+		Block.SetShadowColorAndOpacity(LPH::ColorShadow);
 		return Block;
 	}
 
-	// Draws a Border as a rounded box: Fill inside, an outline of Width px in Outline.
-	private void Rounded(UBorder Border, FLinearColor Fill, FLinearColor Outline, float Width)
+	// Draws a Border as a rounded box: Fill inside, an outline of Width px in Outline, corners of Radius px (0: square).
+	private void Rounded(UBorder Border, FLinearColor Fill, FLinearColor Outline, float Width, float Radius)
 	{
 		FSlateBrush Brush;
 		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
@@ -505,9 +505,22 @@ class ULPH_HintWidget : UObject
 		Brush.OutlineSettings.Width = Width;
 		Brush.OutlineSettings.Color = FSlateColor(Outline);
 		Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
-		Brush.OutlineSettings.CornerRadii = FVector4(LPH::CornerRadius, LPH::CornerRadius, LPH::CornerRadius, LPH::CornerRadius);
+		Brush.OutlineSettings.CornerRadii = FVector4(Radius, Radius, Radius, Radius);
 		Border.SetBrush(Brush);
 		Border.SetBrushColor(FLinearColor(1.0, 1.0, 1.0, 1.0));
+	}
+
+	// The drop shadow of a key's texts (the letter, and the "×N" after an icon): on, except under the current key (the one
+	// in the frame) when its style has none - the plain style copies the game's key prompts, whose letters have none.
+	// The other letters sit over the scene outside a box and keep the shadow to stay readable.
+	private void SetShadow(ULPH_HintToken Token)
+	{
+		FLinearColor Shadow = LPH::ColorShadow;
+		if (Token.FramedState == 1 && !BuiltStyle.bCurrentShadow)
+			Shadow = LPH::ColorNoShadow;
+		Token.Letter.SetShadowColorAndOpacity(Shadow);
+		if (Token.Tail != nullptr)
+			Token.Tail.SetShadowColorAndOpacity(Shadow);
 	}
 
 	// A key: the Overlay with the frame (collapsed until the key is the current one) under the letter.
@@ -519,7 +532,7 @@ class ULPH_HintWidget : UObject
 		Token.Pad = Pad;
 		Token.Box = Cast<UOverlay>(Owner.ConstructWidget(UOverlay));
 		Token.Frame = Cast<UBorder>(Owner.ConstructWidget(UBorder));
-		Rounded(Token.Frame, BuiltStyle.Fill, BuiltStyle.Frame, 2.0);
+		Rounded(Token.Frame, BuiltStyle.Fill, BuiltStyle.Frame, BuiltStyle.FrameWidth, BuiltStyle.FrameRadius);
 		Token.Frame.SetVisibility(ESlateVisibility::Collapsed);
 		Token.FramedState = 0;
 		UOverlaySlot FrameSlot = Token.Box.AddChildToOverlay(Token.Frame);
@@ -554,6 +567,8 @@ class ULPH_HintWidget : UObject
 		Token.Tail.SetVisibility(ESlateVisibility::Collapsed);
 		Token.TailText = "";
 		Token.bTailSet = true;
+		if (Token.FramedState == 1)
+			SetShadow(Token); // the icon is first drawn in the current key: its "×N" has no shadow either
 		UHorizontalBoxSlot TailSlot = Token.IconRow.AddChildToHorizontalBox(Token.Tail);
 		TailSlot.SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
 		Token.IconRow.SetVisibility(ESlateVisibility::Collapsed);
@@ -756,6 +771,7 @@ class ULPH_HintWidget : UObject
 			else
 				Token.Frame.SetVisibility(ESlateVisibility::Collapsed);
 			Token.FramedState = Framed;
+			SetShadow(Token);
 		}
 	}
 
