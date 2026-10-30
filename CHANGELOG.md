@@ -19,8 +19,9 @@ which refuses to start with UE4SS. The features are the ones of 1.2.0.
   and outside it; they are fixed keys now (the game's options cannot take a key).
 - New: while the solver prepares a big lock the hint says "Thinking…" ("Считаю…").
 - The lock database comes from the Modkit sources of `Build102` (416 locks).
-- The log is `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log`, new on every start. For a detailed log add `Debug=True` under
-  `[/Script/Angelscript.LPH_Settings]` in `GameUserSettings.ini` (README, "Report a bug").
+- The log is `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log`, new on every start. For a detailed log change `Debug=False`
+  to `Debug=True` in the section `[/Script/Angelscript.LPH_Settings]` of `GameUserSettings.ini`, or add `-LPHDebug` to
+  the game's launch options (README, "Report a bug").
 - 1.x stays for the Steam beta branch `previousrelease` (game build `Build83`, with UE4SS) and gets no updates.
 
 ## 1.2.0

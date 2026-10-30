@@ -33,9 +33,17 @@ you, using only moves that cannot strain the pick.
 1. Extract the archive (`LockPickHelper-<version>.zip`) into the `Mods` folder of the game's `G1R` folder (make
    `Mods` if it is not there). The archive holds one folder, `LockPickHelper`, so that
    `G1R\Mods\LockPickHelper\GothicMod.json` exists afterwards. `README.txt` and `LICENSE.txt` are in that folder too.
-2. Start the game. It lists a new mod as enabled by itself: the main menu shows "1 mods enabled" (with this mod
-   alone) and `%LOCALAPPDATA%\G1R\Saved\Mods.ini` gets the line `LockPickHelper=1`. If you need to turn the mod off or
-   on, use the game's mod list (the launch option `-ModManagementUI`).
+2. Start the game. It should list the mod as enabled: the main menu shows "1 mods enabled" (with this mod alone). If
+   it does not, start the game with the launch option `-ModManagementUI` and enable LockPick Helper in the game's mod
+   list; the same list turns the mod off.
+
+Use one way, Workshop or by hand, not both. To switch to the Workshop copy, delete the folder `G1R\Mods\LockPickHelper`
+first.
+
+**Upgrading from 1.x.** The current game does not start with UE4SS installed, so remove UE4SS first: delete
+`dwmapi.dll` and the `ue4ss` folder in `G1R\Binaries\Win64` (the 1.x mod, `ue4ss\Mods\G1LockPickHelper`, is inside it).
+If the game is on the Steam beta branch `previousrelease`, switch the beta back to None (the game's Properties >
+Betas). The `settings.ini` of 1.x is not read: set the settings again in Options > Game.
 
 **The game's warning about saves.** The game remembers the list of mods in a save. Loading a save made with another
 list - before you installed the mod, or after you removed it - shows "This save was made with a different modlist":
@@ -57,8 +65,9 @@ there is no rebinding in 2.0.
 ## Settings
 
 Options > the **Game** tab, the block **[Mod] LockPick Helper**: 20 rows, in this order. The game keeps them in
-`GameUserSettings.ini`. The labels are Russian when the game's language is Russian or the row "Language" is 2, English
-otherwise (the table gives the English ones). The **Reset** button of the tab is the game's own.
+`GameUserSettings.ini`. The labels are in the language of the row "Language" (0: the game's interface language); a
+change of that row shows in the menu after a save load or a restart (the table gives the English labels). The **Reset**
+button of the tab is the game's own.
 
 Settings can be changed only between lockpicking minigames: the game's pause and options cannot be opened during
 one. A change applies from the next lock.
@@ -91,10 +100,12 @@ one. A change applies from the next lock.
 1. Attach `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log` (a new file on every start of the game). Its first line
    tells the mod's version, the game build, the language, the icon settings and whether the detailed log is on;
    after that come the lock of every minigame, auto-pick's starts and stops, and warnings.
-2. For a detailed log (every plate reading, press and redraw), close the game and add the line `Debug=True` under
-   `[/Script/Angelscript.LPH_Settings]` in `%LOCALAPPDATA%\G1R\Saved\Config\Windows\GameUserSettings.ini`; add that
-   section at the end of the file if it is not there yet. (The launch option `-LPHDebug` does the same.) Then
-   repeat what went wrong and attach the new log.
+2. For a detailed log (every plate reading, press and redraw), close the game and, in the section
+   `[/Script/Angelscript.LPH_Settings]` of `%LOCALAPPDATA%\G1R\Saved\Config\Windows\GameUserSettings.ini`, change
+   `Debug=False` to `Debug=True` (the game writes that line itself, the last one of the section; if the line or the
+   section is missing, add it at the end). Simpler: add `-LPHDebug` to the game's launch options (Steam: the game's
+   Properties > Launch Options). The first line of the log then says `debug on`. Repeat what went wrong and attach the
+   new log.
 3. Open an issue on GitHub (or a bug report on the Nexus page).
 
 ## Known limits
@@ -116,7 +127,7 @@ one. A change applies from the next lock.
 stays for the Steam beta branch `previousrelease` (game build `Build83_CL174209`, with UE4SS - AngelScript Fix):
 [1.2.0 on Nexus](https://www.nexusmods.com/gothic1remake/mods/654) and the
 [v1.2.0 release on GitHub](https://github.com/tslaceo/G1LockPickHelper/releases/tag/v1.2.0). It gets no updates. Its
-source is the tag `v1.2.0` of this repository.
+source is the tag `v1.2.0` of this repository. To move from 1.x to 2.0 see "Upgrading from 1.x" under Install.
 
 ## Build from source
 
@@ -139,7 +150,12 @@ The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`
   `tests done: <N> passed, <M> failed`. `-LPHTests=golden` adds the full reference runs of the solver. (A script
   compile error shows as a window of the game.)
 - Release archive: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package.ps1` →
-  `out\LockPickHelper-<version>.zip` (it refuses to pack while `LPH::DebugAlways` in `Config.as` is true).
+  `out\LockPickHelper-<version>.zip`. It packs only the files git tracks in `mod/LockPickHelper` and refuses to pack
+  while that folder has an uncommitted or untracked file, or while `LPH::DebugAlways` in `Config.as` is true.
+- The release build in the game, as a player gets it (for a manual-install check, and before a Workshop upload):
+  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-release.ps1 -GameDir "<game folder>"` replaces
+  `G1R\Mods\LockPickHelper` with that archive and checks the result. More in [docs/TECHNICAL.md](docs/TECHNICAL.md),
+  "Release".
 
 How the mod works inside: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
