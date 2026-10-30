@@ -27,6 +27,7 @@ class ULPH_Log : UObject
 	FString Buffer;
 	int64 OpenedMs = 0;
 	int64 FlushedMs = 0;
+	bool bWaiting = false; // lines in Buffer that are not in the file yet
 
 	// Starts a new log file Saved/<FileName> (an old one with that name is replaced).
 	void Open(FString FileName)
@@ -45,7 +46,16 @@ class ULPH_Log : UObject
 			return;
 		int64 Now = LPH::NowMs();
 		Buffer += f"[{Now - OpenedMs}] {Text}\n";
+		bWaiting = true;
 		if (Now - FlushedMs >= LPH::LogFlushMs)
+			Flush();
+	}
+
+	// Writes the file when lines wait and LPH::LogFlushMs has passed since the last write: the glue calls it every frame,
+	// so that a line reaches the file soon even when no other line follows it (a crash loses at most that much).
+	void FlushIfDue()
+	{
+		if (bWaiting && LPH::NowMs() - FlushedMs >= LPH::LogFlushMs)
 			Flush();
 	}
 
@@ -56,12 +66,13 @@ class ULPH_Log : UObject
 			Line(Text);
 	}
 
-	// Writes the file now.
+	// Writes the file now, as UTF-8 without a byte order mark (the default wrote UTF-16 as soon as a line had Cyrillic).
 	void Flush()
 	{
 		if (Path.IsEmpty())
 			return;
 		FlushedMs = LPH::NowMs();
-		FFileHelper::SaveStringToFile(Buffer, Path);
+		bWaiting = false;
+		FFileHelper::SaveStringToFile(Buffer, Path, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
 }

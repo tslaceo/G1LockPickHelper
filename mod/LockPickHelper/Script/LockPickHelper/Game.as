@@ -154,6 +154,67 @@ namespace LPHGame
 		return bFound;
 	}
 
+	// For the log: everything FindLock looks at - each interaction ability of the hero that holds an object (its class,
+	// whether it has ended, the object, its lock) and each object with a lock within LockSearchCm (its name, lock and
+	// distance). One line; "no hero" without one.
+	FString DescribeLockSearch()
+	{
+		AGothicCharacter Player = Hero();
+		if (Player == nullptr)
+			return "no hero";
+		FString Text = "abilities:";
+		int Abilities = 0;
+		UAbilitySystemComponent System = Player.GetAbilitySystemComponent();
+		if (System != nullptr)
+		{
+			TArray<FGameplayAbilitySpecHandle> Handles;
+			System.GetAllAbilities(Handles);
+			for (FGameplayAbilitySpecHandle Handle : Handles)
+			{
+				FGameplayAbilitySpec Spec;
+				if (!System.FindAbilitySpecFromHandle(Handle, Spec))
+					continue;
+				TArray<UGameplayAbility> Instances = Spec.GetAbilityInstances();
+				for (UGameplayAbility Ability : Instances)
+				{
+					UGameplayAbilityInteractionBase Interaction = Cast<UGameplayAbilityInteractionBase>(Ability);
+					if (Interaction == nullptr)
+						continue;
+					AActor Target = Interaction.m_InteractiveActor.Get();
+					if (Target == nullptr)
+						continue;
+					AInteractiveObjectActor Object = Cast<AInteractiveObjectActor>(Target);
+					FName Lock = LockOf(Object);
+					Text += f" {Ability.Class.Name} (ended {Interaction.m_AbilityEnded}, {Target.Name}, lock {Lock});";
+					Abilities++;
+				}
+			}
+		}
+		if (Abilities == 0)
+			Text += " none;";
+		Text += " near:";
+		int Near = 0;
+		TArray<AInteractiveObjectActor> Objects;
+		GetAllActorsOfClass(AInteractiveObjectActor::StaticClass(), Objects);
+		for (AInteractiveObjectActor Object : Objects)
+		{
+			if (Object == nullptr)
+				continue;
+			FName Lock = LockOf(Object);
+			if (Lock.IsNone())
+				continue;
+			float Distance = Object.ActorLocation.Distance(Player.ActorLocation);
+			if (Distance > LockSearchCm)
+				continue;
+			int Cm = Math::FloorToInt(Distance + 0.5);
+			Text += f" {Object.Name} (lock {Lock}, {Cm} cm);";
+			Near++;
+		}
+		if (Near == 0)
+			Text += " none";
+		return Text;
+	}
+
 	// The hero's lockpicking skill (LockpickPrecision: the game removes round(precision) connections of the lock's list);
 	// 0 without a skill, and when it cannot be read.
 	float Precision()

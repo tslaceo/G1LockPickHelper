@@ -21,4 +21,14 @@ namespace LPH
 	const int PrepareBudgetMs = 6; // the solver's work per frame while it prepares a lock
 	const int FocusRetryMs = 500; // how often the key catcher takes the focus back (Alt+Tab, gamepad and keyboard switching)
 	const int ContextCache = 2; // how many prepared locks (solver tables) stay in memory
+	const int LockRetryMs = 100; // how often the lock is looked for until it is found (the search walks the hero's abilities)
+	const int IconReadMs = 2000; // how often the game's button icons option and the gamepad's name are read again
+	const int HotkeyTwiceMs = 150; // F3/F4 by the key binding and by the key catcher this close together: one press
+
+	const FString ModVersion = "2.0.0"; // also modVersion in GothicMod.json
+
+	// The in-game checks of 2.0 (Tasks 12 and 14) want every detail in the log without the player touching the ini: while
+	// this is true the debug lines are always written. False for the release: then only Debug=True in
+	// GameUserSettings.ini or -LPHDebug on the command line turns them on.
+	const bool DebugAlways = true;
 }

@@ -321,7 +321,8 @@ class ULPH_HintWidget : UObject
 		return Rows[Row].Tokens[Column];
 	}
 
-	// For the tests and the preview: the counter and message blocks, the plate, the body (null: no tree).
+	// For the tests and the preview: the counter and message blocks, the plate, the body (null: no tree). The minigame's
+	// window keeps the plate across Detach to take it out of its canvas at its next Construct (LockPickExtension.as).
 	UTextBlock CounterBlock()
 	{
 		return Counter;
