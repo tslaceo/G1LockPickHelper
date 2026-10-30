@@ -76,7 +76,7 @@ one. A change applies from the next lock.
 |---|---|---|---|
 | Language (0 as in the game, 1 English, 2 Русский) | The language of the hint's texts and of these labels. 0 follows the game's interface language: Russian, otherwise English | 0-2 | 0 |
 | Tape layout | On: the tape (the current key and the next ones). Off: lines (the whole sequence) | on / off | on |
-| Gothic style | On: a golden letter in a golden frame. Off: a plain key like those in the game's controls menu | on / off | off |
+| Gold letters | On: a gold letter in a gold frame (the game's text font). Off: keys like the game's own key prompts in the minigame. Called Gothic style in 1.x | on / off | off |
 | Icons (0 auto, 1 letters, 2 icons) | 0: gamepad icons while you play with a gamepad, letters on the keyboard (and always letters when the game's "Button icons" is "Do not use"). 1: always letters. 2: always gamepad icons | 0-2 | 0 |
 | Icon set (0 game, 1 PS, 2 Xbox, 3 Switch) | Which icons. 0: as the game's "Button icons" option says (with "Auto": by the pad's name). 1 PlayStation, 2 Xbox, 3 Switch | 0-3 | 0 |
 | Size, % | The size of the hint | 50-200 | 100 |

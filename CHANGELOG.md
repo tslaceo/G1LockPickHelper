@@ -13,11 +13,13 @@ which refuses to start with UE4SS. The features are the ones of 1.2.0.
   settings start from their defaults. "Dark background" is one row for the tape and the lines. The Shared Mod Menu
   buttons "Show example" and "Reset position" and its input fix are gone. The settings can be changed between
   lockpicking minigames only: the options cannot be opened during one.
-- Same as before: the hint (tape or lines, simple or gothic style, dark background, counter, shake on a miss, smooth
+- Same as before: the hint (tape or lines, plain or gold letters, dark background, counter, shake on a miss, smooth
   scroll, folded repeats), auto-pick (F3 in the minigame and right before it, "Always auto-pick", reset twice,
   countdown), the game's gamepad icons, English and Russian, the lockpicking skill. F4 and F3 work in the minigame
   and outside it; they are fixed keys now (the game's options cannot take a key).
 - New: while the solver prepares a big lock the hint says "Thinking…" ("Считаю…").
+- Changed: the row "Gothic style" is now "Gold letters". With it off, the keys look like the minigame's own key prompts:
+  a square dark box with a thin beige border, and no shadow under the letter.
 - The lock database comes from the Modkit sources of `Build102` (416 locks).
 - The log is `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log`, new on every start. For a detailed log change `Debug=False`
   to `Debug=True` in the section `[/Script/Angelscript.LPH_Settings]` of `GameUserSettings.ini`, or add `-LPHDebug` to

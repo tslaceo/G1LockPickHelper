@@ -126,7 +126,7 @@ namespace LPH
 		FLPH_Labels L;
 		L.Language = "Language (0 as in the game, 1 English, 2 Русский)";
 		L.Tape = "Tape layout";
-		L.Gothic = "Gothic style";
+		L.Gothic = "Gold letters";
 		L.Icons = "Icons (0 auto, 1 letters, 2 icons)";
 		L.Gamepad = "Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)";
 		L.Scale = "Size, %";
@@ -152,7 +152,7 @@ namespace LPH
 		FLPH_Labels L;
 		L.Language = "Язык (0 авто, 1 English, 2 Русский)";
 		L.Tape = "Лента вместо строк";
-		L.Gothic = "Готический стиль";
+		L.Gothic = "Золотые буквы";
 		L.Icons = "Значки (0 авто, 1 буквы, 2 значки)";
 		L.Gamepad = "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)";
 		L.Scale = "Размер, %";

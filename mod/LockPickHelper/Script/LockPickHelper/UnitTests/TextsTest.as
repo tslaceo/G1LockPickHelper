@@ -139,7 +139,7 @@ void LPHTests_TextsLabels(ULPH_TestRun T)
 	FLPH_Labels En = LPH::Labels(ELPH_Lang::En);
 	T.EqualStr(En.Language, "Language (0 as in the game, 1 English, 2 Русский)", "Language");
 	T.EqualStr(En.Tape, "Tape layout", "Tape");
-	T.EqualStr(En.Gothic, "Gothic style", "Gothic");
+	T.EqualStr(En.Gothic, "Gold letters", "Gothic");
 	T.EqualStr(En.Icons, "Icons (0 auto, 1 letters, 2 icons)", "Icons");
 	T.EqualStr(En.Gamepad, "Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)", "Gamepad");
 	T.EqualStr(En.Scale, "Size, %", "Scale");
@@ -162,7 +162,7 @@ void LPHTests_TextsLabels(ULPH_TestRun T)
 	FLPH_Labels Ru = LPH::Labels(ELPH_Lang::Ru);
 	T.EqualStr(Ru.Language, "Язык (0 авто, 1 English, 2 Русский)", "Language");
 	T.EqualStr(Ru.Tape, "Лента вместо строк", "Tape");
-	T.EqualStr(Ru.Gothic, "Готический стиль", "Gothic");
+	T.EqualStr(Ru.Gothic, "Золотые буквы", "Gothic");
 	T.EqualStr(Ru.Icons, "Значки (0 авто, 1 буквы, 2 значки)", "Icons");
 	T.EqualStr(Ru.Gamepad, "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)", "Gamepad");
 	T.EqualStr(Ru.Scale, "Размер, %", "Scale");

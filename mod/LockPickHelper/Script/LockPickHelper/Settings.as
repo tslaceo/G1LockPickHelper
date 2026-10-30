@@ -31,7 +31,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsBool Gothic = FModUserSettingsBool(
 		Value = false,
 		DefaultValue = false,
-		DisplayText = FText::FromString("Gothic style"));
+		DisplayText = FText::FromString("Gold letters"));
 
 	UPROPERTY(Config)
 	FModUserSettingsInt Icons = FModUserSettingsInt(

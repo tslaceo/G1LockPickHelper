@@ -6,7 +6,7 @@ struct FLPH_Values
 {
 	int Language = 0; // 0 as in the game, 1 English, 2 Russian
 	bool bTape = true; // tape instead of lines
-	bool bGothic = false; // a golden letter in a frame instead of a simple key
+	bool bGothic = false; // "Gold letters" (old name in the ini): a gold letter in a gold frame, not the plain key
 	int Icons = 0; // 0 auto (by device), 1 letters, 2 gamepad icons
 	int Gamepad = 0; // 0 as in the game, 1 PlayStation, 2 Xbox, 3 Switch
 	int Scale = 100; // percent

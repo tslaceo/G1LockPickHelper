@@ -139,10 +139,17 @@ with a gold outline, or clear) with a column of the counter, the message and the
 fixed width, so the slide needs no measuring) or the lines (tokens as wide as their text).
 
 - The game's own assets, loaded by path with `System::MakeSoftObjectPath` and `FAssetPreload::BlockingLoad`: the fonts
-  `Boucherie-Block_Font` (simple style) and `NotoSerif-Regular_Font` (`Bold` for the gothic style, `Default` for the
-  counter and the notes), the D-pad icons `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>`
-  (Xbox: `T_Icon_Xbox_Dpad...`, Switch: `T_Icon_Switch_<...>`), tinted like the letters. An asset that does not load gives
-  the engine font or the letter, with one log line per path.
+  `Boucherie-Block_Font` (plain style, the game's key prompts) and `NotoSerif-Regular_Font` (`Bold` for the gold
+  letters, `Default` for the counter and the notes), the D-pad icons
+  `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox: `T_Icon_Xbox_Dpad...`, Switch:
+  `T_Icon_Switch_<...>`), tinted like the letters. An asset that does not load gives the engine font or the letter, with
+  one log line per path.
+- The two styles are the setting "Gold letters" (`bGothic` in the player's files, the name from 1.x). Off, the plain
+  style copies the minigame's own key prompts, measured on a 3440x1440 screenshot of its legend (the boxes "A D", "W S",
+  "ESC", "R"): a square box with a thin border (1.5 px, not scaled with the hint), fill sRGB `#131213`, border and
+  letters sRGB `#FFD7BD`, no drop shadow under the letter of the current key (the other letters keep theirs, they sit
+  over the scene). On, a gold letter in a rounded gold frame (radius 3, 2 px) with the shadows. The frame's corners and
+  width and the shadow are fields of `FLPH_Style` (`Look.as`); the dark plate has radius 3 in both.
 - A new shape (layout, style, size, the tape's cells, the lines' size, the plate) builds the tree again; anything else
   changes the built widgets, and only where it changed. Tokens are made when a model first needs them, so a short plan
   costs a few widgets, not 40x12.
