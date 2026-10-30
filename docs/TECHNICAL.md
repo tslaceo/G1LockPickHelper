@@ -135,7 +135,8 @@ the autosolver (it could no longer tell its keys from the player's). Six presses
 `ULPH_HintWidget` builds UMG widgets from script inside a canvas: the window's root `CanvasPanel`
 (`AddChildToCanvas`), anchor (1; 0.45), alignment (1; 0.5), offset -760 in UI units by default (the game draws the lock
 at a fixed UI distance from the right edge on every aspect ratio). The tree is a plate (a `Border`: a dark rounded box
-with a gold outline, or clear) with a column of the counter, the message and the body. The body is the tape (cells of a
+with an outline in the style's colour - gold for the gold letters, beige for the plain style - or clear) with a column of
+the counter, the message and the body. The body is the tape (cells of a
 fixed width, so the slide needs no measuring) or the lines (tokens as wide as their text).
 
 - The game's own assets, loaded by path with `System::MakeSoftObjectPath` and `FAssetPreload::BlockingLoad`: the fonts

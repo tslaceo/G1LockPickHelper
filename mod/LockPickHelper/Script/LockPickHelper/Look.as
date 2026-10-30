@@ -1,7 +1,7 @@
 // How the hint looks: the overlay block of config.lua of 1.2.0, carried over unchanged (placement, sizes, animation, the
 // game's fonts and the colours of both styles). The player's choices (style, size, offset) are settings (Values.as).
 
-// One style of the keys: the colours, and the shape of the current key's frame.
+// One style of the keys: the colours, the shape of the current key's frame, the outline of the dark plate.
 struct FLPH_Style
 {
 	FLinearColor Current; // the letter of the key to press now
@@ -11,6 +11,7 @@ struct FLPH_Style
 	float FrameRadius = 3.0; // the corners of that frame, px
 	float FrameWidth = 2.0; // its outline, px (not scaled with the hint)
 	bool bCurrentShadow = true; // a drop shadow under the letter of that key
+	FLinearColor PlateFrame; // the outline of the dark plate (the setting "Dark background")
 }
 
 namespace LPH
@@ -44,8 +45,6 @@ namespace LPH
 	const FLinearColor ColorMiss = FLinearColor(0.92, 0.29, 0.24, 1.0);
 	const FLinearColor ColorMessage = FLinearColor(1.0, 0.55, 0.35, 1.0);
 	const FLinearColor ColorCounter = FLinearColor(0.84, 0.59, 0.43, 1.0);
-	// outline of the dark plate: the gold of the gold letters' frame
-	const FLinearColor ColorPlateFrame = FLinearColor(1.0, 0.78, 0.1, 1.0);
 
 	// The drop shadow of the letters (the offset is set where a text is made); none is the same colour with no opacity.
 	const FLinearColor ColorShadow = FLinearColor(0.0, 0.0, 0.0, 0.9);
@@ -83,6 +82,7 @@ namespace LPH
 			Style.FrameRadius = GothicFrameRadius;
 			Style.FrameWidth = GothicFrameWidth;
 			Style.bCurrentShadow = true;
+			Style.PlateFrame = GothicFrame; // the plate's outline is the gold of the key frame
 		}
 		else
 		{
@@ -93,6 +93,7 @@ namespace LPH
 			Style.FrameRadius = SimpleFrameRadius;
 			Style.FrameWidth = SimpleFrameWidth;
 			Style.bCurrentShadow = false;
+			Style.PlateFrame = SimpleFrame; // the plate's outline is the beige of the key frame
 		}
 		return Style;
 	}

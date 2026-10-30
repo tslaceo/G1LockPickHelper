@@ -3,7 +3,8 @@
 // (FLPH_HintModel), the shape and the place from the player's settings (Configure), letters or the game's gamepad icons
 // from SetIcons.
 //
-// The tree: the canvas -> the plate (a Border: a dark rounded box with a gold outline with Values.bPlate, clear without;
+// The tree: the canvas -> the plate (a Border: a dark rounded box with an outline in the style's colour - gold for the gold
+// letters, beige for the plain style - with Values.bPlate, clear without;
 // its canvas slot holds the anchor, the pivot and the offset) -> a column of the counter, the message and the body. The
 // body is the tape (a row of cells of a fixed width, known without measuring, which the slide relies on; the current cell
 // is wider and its letter 1.3 times bigger) or the lines (rows of tokens, each as wide as its text). A cell or token is an
@@ -414,7 +415,7 @@ class ULPH_HintWidget : UObject
 			return false;
 		}
 		if (Opts.bPlate)
-			Rounded(Plate, FLinearColor(0.0, 0.0, 0.0, LPH::PlateAlpha), LPH::ColorPlateFrame, 1.5, LPH::PlateRadius);
+			Rounded(Plate, FLinearColor(0.0, 0.0, 0.0, LPH::PlateAlpha), BuiltStyle.PlateFrame, 1.5, LPH::PlateRadius);
 		else
 			Plate.SetBrushColor(FLinearColor(0.0, 0.0, 0.0, 0.0));
 		Plate.SetPadding(FMargin(Px(F * 0.4), Px(F * 0.2), Px(F * 0.4), Px(F * 0.2)));
