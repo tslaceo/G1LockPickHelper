@@ -37,6 +37,7 @@ class ULPH_TestWorld : UScriptWorldSubsystem
 	void RunAll(ULPH_TestRun T, bool bGolden)
 	{
 		LPHTests_Keys(T);
+		LPHTests_LockDb(T);
 
 		if (bGolden)
 		{
