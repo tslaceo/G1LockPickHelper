@@ -72,7 +72,6 @@ namespace LPH
 namespace LPHGame
 {
 	const float LockSearchCm = 400.0; // the fallback looks for the lock among the objects this close to the hero
-	const int MaxPieces = 16; // piece ids are 0..6; ids beyond this are not read
 
 	AGothicCharacter Hero()
 	{
@@ -166,16 +165,6 @@ namespace LPHGame
 		return Value;
 	}
 
-	// The plate offset (the root's X relative to its parent) of a piece, false when it has no root.
-	bool RootX(AGothicLockPieceActor Piece, float& OutX)
-	{
-		USceneComponent Root = Piece.RootComponent;
-		if (Root == nullptr)
-			return false;
-		OutX = Root.GetRelativeLocation().X;
-		return true;
-	}
-
 	// True when the game paints this plate as the selected one: HighlightColor of its material, white (R 1) for the
 	// others, (0.65, 0.70, 1.0) for the selected.
 	bool IsHighlighted(AGothicLockPieceActor Piece)
@@ -199,97 +188,37 @@ namespace LPHGame
 		return false;
 	}
 
-	// One look at the minigame's plates (the pieces of the lock scene: type 1 a plate, 2 its bar, 3 the latch; m_PieceId
-	// 0..6 front to back). Visible counts every plate the game shows, whatever its id: the controller compares it with the
-	// plates of the lock in the database (a lock changed by another mod, a scene being taken down). Holes are those of the
-	// shown plates 0..Plates-1, a plate's hole being where its offset from its bar puts it; the pieces with a higher id
-	// stand elsewhere and are not read. bSettled is false while one of those plates is between holes, when it has no bar
-	// or root to measure, and when the game shows no plate at all. Cursor is the plate with the highlight (-1: none, as
-	// during a reset), read only for a settled look.
+	// One look at the minigame's plates: the lock scene's pieces (type 1 a plate, 2 its bar, 3 the latch; m_PieceId 0..6
+	// front to back) are collected as FLPH_Pieces and read by LPH::ReadingOf (Plates.as has the rules: which plates are shown,
+	// the holes, the settled look, the cursor). Only the plates below Plates that are not hidden are asked for their
+	// highlight (the material of each is read).
 	FLPH_Reading ReadPlates(int Plates)
 	{
-		FLPH_Reading Reading;
-		if (Plates < 1 || Plates > MaxPieces)
-			return Reading;
-
-		TArray<AGothicLockPieceActor> Pieces;
-		GetAllActorsOfClass(AGothicLockPieceActor::StaticClass(), Pieces);
-
-		// By piece id: the shown plate and the X of its root, the bar's X.
-		TArray<AGothicLockPieceActor> PlateOf;
-		TArray<float> PlateX;
-		TArray<bool> HasPlateX;
-		TArray<float> BarX;
-		TArray<bool> HasBarX;
-		PlateOf.SetNum(Plates);
-		PlateX.SetNum(Plates);
-		HasPlateX.SetNum(Plates);
-		BarX.SetNum(Plates);
-		HasBarX.SetNum(Plates);
-		for (int i = 0; i < Plates; i++)
+		TArray<FLPH_Piece> Pieces;
+		if (Plates >= 1 && Plates <= LPH::MaxPlateIds)
 		{
-			PlateOf[i] = nullptr;
-			PlateX[i] = 0.0;
-			HasPlateX[i] = false;
-			BarX[i] = 0.0;
-			HasBarX[i] = false;
-		}
-
-		for (AGothicLockPieceActor Piece : Pieces)
-		{
-			if (Piece == nullptr)
-				continue;
-			int Kind = int(Piece.m_LockPieceType);
-			int Id = Piece.m_PieceId;
-			if (Kind == 1 && !Piece.bHidden)
+			TArray<AGothicLockPieceActor> Actors;
+			GetAllActorsOfClass(AGothicLockPieceActor::StaticClass(), Actors);
+			for (AGothicLockPieceActor Actor : Actors)
 			{
-				Reading.Visible++;
-				if (Id >= 0 && Id < Plates)
+				if (Actor == nullptr)
+					continue;
+				FLPH_Piece Piece;
+				Piece.Kind = int(Actor.m_LockPieceType);
+				Piece.Id = Actor.m_PieceId;
+				Piece.bHidden = Actor.bHidden;
+				USceneComponent Root = Actor.RootComponent;
+				if (Root != nullptr)
 				{
-					PlateOf[Id] = Piece;
-					HasPlateX[Id] = RootX(Piece, PlateX[Id]);
+					Piece.bHasLocation = true;
+					Piece.Location = Root.GetRelativeLocation();
 				}
-			}
-			else if (Kind == 2 && Id >= 0 && Id < Plates)
-				HasBarX[Id] = RootX(Piece, BarX[Id]);
-		}
-		if (Reading.Visible == 0)
-			return Reading;
-
-		bool bSettled = true;
-		for (int Id = 0; Id < Plates && bSettled; Id++)
-		{
-			if (PlateOf[Id] == nullptr)
-				continue; // not shown: the controller sees it in Visible and Holes
-			if (!HasPlateX[Id] || !HasBarX[Id])
-			{
-				bSettled = false;
-				break;
-			}
-			int Hole = LPH::HoleOf(PlateX[Id] - BarX[Id]);
-			if (Hole < 0)
-			{
-				bSettled = false;
-				break;
-			}
-			Reading.Holes.Add(Hole);
-		}
-		if (!bSettled)
-		{
-			Reading.Holes.Reset();
-			return Reading;
-		}
-		Reading.bSettled = true;
-
-		for (int Id = 0; Id < Plates; Id++)
-		{
-			if (PlateOf[Id] != nullptr && IsHighlighted(PlateOf[Id]))
-			{
-				Reading.Cursor = Id;
-				break;
+				if (Piece.Kind == 1 && !Piece.bHidden && Piece.Id >= 0 && Piece.Id < Plates)
+					Piece.bHighlighted = IsHighlighted(Actor);
+				Pieces.Add(Piece);
 			}
 		}
-		return Reading;
+		return LPH::ReadingOf(Pieces, Plates);
 	}
 
 	UGothicGameUserSettings GameSettings()
