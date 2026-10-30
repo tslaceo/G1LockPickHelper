@@ -1,6 +1,8 @@
 // Runs the tests inside the game: the release game does not run Hazelight's Test_* functions, so the mod has its own
-// runner. Start the game with `-LPHTests` (`-LPHTests=golden` adds the full reference runs): the tests run once, in
-// the main menu world, and write Saved/LockPickHelper-tests.log; its last line is `tests done: <N> passed, <M> failed`.
+// runner. Start the game with `-LPHTests` (`-LPHTests=golden` adds the full reference runs; `-LPHTests=defaults` adds
+// the two checks of the rows' defaults, which are right only on a clean profile, without the mod's section in
+// GameUserSettings.ini): the tests run once, in the main menu world, and write Saved/LockPickHelper-tests.log; its last
+// line is `tests done: <N> passed, <M> failed`.
 // If the run stops without that line, a script error or a crash hit the case named in the last `case` line.
 // The folder is UnitTests, not Tests: the game does not compile script folders named Test, Tests or Dev (silently: no
 // error window, the files just are not there).

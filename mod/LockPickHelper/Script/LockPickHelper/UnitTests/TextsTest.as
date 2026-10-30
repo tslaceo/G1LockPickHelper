@@ -2,7 +2,9 @@
 // is checked letter by letter against lang/en.lua and lang/ru.lua of 1.2.0, with %s and %d turned into {0}), the
 // settings struct with its defaults and limits, and the reading of the rows. The rows themselves (DefaultValue, the
 // limits, the labels) cannot be read back by a script, so what ends up in the game's menu is checked by eye (Task 12).
-// The CDO test of the defaults assumes that the player has not changed the mod's rows in the game's options.
+// The tests do not depend on what the player has set in the options: a test-made settings object starts as a copy of the
+// class default object (the player's values), so every case writes the values it needs first. The two checks that do read
+// the player's state (the rows' declared defaults against FLPH_Values) run only with `-LPHTests=defaults`, on a clean profile.
 
 void LPHTests_TextsLang(ULPH_TestRun T, int Setting, FName Display, ELPH_Lang Expected, FString What)
 {
@@ -251,32 +253,115 @@ void LPHTests_ValuesFlip(ULPH_Settings S, FLPH_Values& V, int Index)
 	else if (Index == 9) { S.Debug = !S.Debug; V.bDebug = !V.bDebug; }
 }
 
+// Writes all 21 fields of V into the rows of a settings object (and Debug). A test-made object starts as a copy of the class
+// default object, i.e. of what the player has set (see the checks on the clean profile), so every case that needs known values
+// writes them first and does not rely on the object's own.
+void LPHTests_ValuesApply(ULPH_Settings S, FLPH_Values V)
+{
+	S.Language.Value = V.Language;
+	S.Tape.bValue = V.bTape;
+	S.Gothic.bValue = V.bGothic;
+	S.Icons.Value = V.Icons;
+	S.Gamepad.Value = V.Gamepad;
+	S.Scale.Value = V.Scale;
+	S.OffsetX.Value = V.OffsetX;
+	S.OffsetY.Value = V.OffsetY;
+	S.Counter.bValue = V.bCounter;
+	S.Shake.bValue = V.bShake;
+	S.TapeNext.Value = V.TapeNext;
+	S.TapeDone.Value = V.TapeDone;
+	S.Slide.bValue = V.bSlide;
+	S.Plate.bValue = V.bPlate;
+	S.PerLine.Value = V.PerLine;
+	S.MaxLines.Value = V.MaxLines;
+	S.CollapseMin.Value = V.CollapseMin;
+	S.AutoPick.bValue = V.bAutoPick;
+	S.DoubleReset.bValue = V.bDoubleReset;
+	S.Timer.bValue = V.bTimer;
+	S.Debug = V.bDebug;
+}
+
+// Bit Pass of Code as a bool: with Code 0 to 9 and Pass 0 to 3 every Code has its own four bits, so in one of the four
+// passes any two switches differ and a swap of them shows.
+bool LPHTests_Bit(int Code, int Pass)
+{
+	return ((Code >> Pass) & 1) == 1;
+}
+
+// In-range values, the numbers all different from each other and from their defaults, the ten switches set by their codes
+// (Tape 0, Gothic 1, Counter 2, Shake 3, Slide 4, Plate 5, AutoPick 6, DoubleReset 7, Timer 8, Debug 9). Pass 0 chooses
+// Russian for the labels, the other passes English.
+FLPH_Values LPHTests_ValuesDistinct(int Pass)
+{
+	FLPH_Values V = LPHTests_ValuesBrief();
+	V.Language = Pass == 0 ? 2 : 1;
+	V.Icons = Pass == 0 ? 1 : 2;
+	V.Gamepad = 3;
+	V.TapeDone = 4;
+	V.CollapseMin = 5;
+	V.TapeNext = 7;
+	V.MaxLines = 9;
+	V.PerLine = 21;
+	V.Scale = 150;
+	V.OffsetX = -123;
+	V.OffsetY = 456;
+	V.bTape = LPHTests_Bit(0, Pass);
+	V.bGothic = LPHTests_Bit(1, Pass);
+	V.bCounter = LPHTests_Bit(2, Pass);
+	V.bShake = LPHTests_Bit(3, Pass);
+	V.bSlide = LPHTests_Bit(4, Pass);
+	V.bPlate = LPHTests_Bit(5, Pass);
+	V.bAutoPick = LPHTests_Bit(6, Pass);
+	V.bDoubleReset = LPHTests_Bit(7, Pass);
+	V.bTimer = LPHTests_Bit(8, Pass);
+	V.bDebug = LPHTests_Bit(9, Pass);
+	return V;
+}
+
 void LPHTests_ValuesDefaults(ULPH_TestRun T)
 {
 	T.Begin("Values: the defaults");
 	FLPH_Values Brief = LPHTests_ValuesBrief();
 	T.EqualStr(LPHTests_ValuesDiff(FLPH_Values(), Brief), "", "FLPH_Values() against settings.lua of 1.2.0");
-	// The rows hold the defaults until the player changes them (the ini has no section of the mod before that).
-	T.EqualStr(LPHTests_ValuesDiff(LPH::ReadValues(), Brief), "", "ReadValues() without changes by the player");
+
+	// The only link between the literals in the row declarations (Settings.as) and FLPH_Values is the rows' own state, and
+	// that state is what the player has set in the options (a test-made object copies it). So these two checks mean something
+	// only on a clean profile: GameUserSettings.ini without a [/Script/Angelscript.LPH_Settings] section.
+	if (!FCommandLine::Get().Contains("-LPHTests=defaults"))
+	{
+		if (T.Output != nullptr)
+			T.Output.Line("defaults check skipped (needs -LPHTests=defaults on a clean profile)");
+		return;
+	}
+	T.EqualStr(LPHTests_ValuesDiff(LPH::ReadValues(), Brief), "", "ReadValues() on a clean profile");
+	ULPH_Settings Fresh = Cast<ULPH_Settings>(NewObject(T, ULPH_Settings::StaticClass()));
+	if (Fresh == nullptr)
+	{
+		T.True(false, "a ULPH_Settings object can be created");
+		return;
+	}
+	T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(Fresh), Brief), "", "a fresh settings object on a clean profile");
 }
 
 void LPHTests_ValuesMapping(ULPH_TestRun T)
 {
 	T.Begin("Values: every row goes to its own field");
-	// A settings object of its own (the class default object is the player's).
+	// Settings objects of the test's own, each given the defaults table before the case (not the player's values).
 	ULPH_Settings S = Cast<ULPH_Settings>(NewObject(T, ULPH_Settings::StaticClass()));
 	if (S == nullptr)
 	{
 		T.True(false, "a ULPH_Settings object can be created");
 		return;
 	}
-	T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(S), LPHTests_ValuesBrief()), "", "a fresh object holds the defaults");
+	LPHTests_ValuesApply(S, LPHTests_ValuesBrief());
+	T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(S), LPHTests_ValuesBrief()), "", "the defaults table written into an object reads back");
 
 	// Every switch on its own: only its field changes.
 	for (int i = 0; i < 10; i++)
 	{
 		ULPH_Settings One = Cast<ULPH_Settings>(NewObject(T, ULPH_Settings::StaticClass()));
 		FLPH_Values Expected = LPHTests_ValuesBrief();
+		LPHTests_ValuesApply(One, Expected);
 		LPHTests_ValuesFlip(One, Expected, i);
 		T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(One), Expected), "", f"switch {i} flipped alone");
 	}
@@ -379,6 +464,31 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 	T.EqualStr(LPHTests_ValuesDiff(LPH::Clamped(Mixed), Mixed), "", "switches and values inside the limits stay");
 }
 
+// Initialize relabels every row by assigning it a new struct: it must give each row back its own value. A slip in one of
+// the twenty hand-written blocks (a row that reads another row's value) would swap the player's settings every time the
+// menu is built. Four objects, each with the switches set by LPHTests_Bit, so that any swap of two switches shows in one
+// of them; the labels of both languages are built (pass 0 asks for Russian).
+void LPHTests_SettingsInitialize(ULPH_TestRun T)
+{
+	T.Begin("Settings: Initialize keeps the values of the rows");
+	for (int Pass = 0; Pass < 4; Pass++)
+	{
+		ULPH_Settings S = Cast<ULPH_Settings>(NewObject(T, ULPH_Settings::StaticClass()));
+		if (S == nullptr)
+		{
+			T.True(false, "a ULPH_Settings object can be created");
+			return;
+		}
+		FLPH_Values V = LPHTests_ValuesDistinct(Pass);
+		LPHTests_ValuesApply(S, V);
+		T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(S), V), "", f"pass {Pass}: the values are in the rows before Initialize");
+		S.Initialize();
+		T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(S), V), "", f"pass {Pass}: after Initialize");
+		S.Initialize();
+		T.EqualStr(LPHTests_ValuesDiff(LPH::ValuesOf(S), V), "", f"pass {Pass}: after a second Initialize");
+	}
+}
+
 void LPHTests_Texts(ULPH_TestRun T)
 {
 	LPHTests_TextsLangFor(T);
@@ -388,4 +498,5 @@ void LPHTests_Texts(ULPH_TestRun T)
 	LPHTests_ValuesDefaults(T);
 	LPHTests_ValuesMapping(T);
 	LPHTests_ValuesClamp(T);
+	LPHTests_SettingsInitialize(T);
 }
