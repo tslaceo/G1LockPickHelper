@@ -166,7 +166,7 @@ out of the sources.
 
 - `LockGraphs.as`: `LPH_RegisterLockGraphs(ULPH_LockDb)` with `Db.AddLock(n"Name", plates)` and
   `Db.AddEdge(src, dst, dir)` in authored order, plus `LPH::LocksSource` (the Modkit commit) and `LPH::LocksBuild` (the
-  game build). 416 locks: 49 with 4 plates, 163 with 5, 183 with 6, 21 with 7 (one 3,600-statement function compiles).
+  game build). 416 locks: 49 with 4 plates, 163 with 5, 183 with 6, 21 with 7 (one 3,682-statement function compiles).
 - `tools/oracle/locks_data.lua`: the same for the Lua reference of the solver (plates 1-based), with each plate's start
   hole, `4 - rotation` (checked in game on `OC_Chest_Mud_Lock`: 7 5 7 7 5).
 
@@ -236,7 +236,9 @@ controller reads is the caller's `LPH::NowMs()`, so the tests keep their own clo
   name and the property names are in the players' files and must not change. The script sees only a row's `Value` /
   `bValue`; the limits are repeated in `Values.as` (`Clamped`) because a hand-edited ini can hold anything.
   `Initialize()` gives each row a new struct with the same value and the label in the mod's language (a row has no
-  setter for its label). A plain `UPROPERTY(Config) bool Debug` is no row and is saved all the same.
+  setter for its label); the game runs it at a save load or a game start, so a change of the Language row relabels the
+  menu after the next load or restart (seen at acceptance). A plain `UPROPERTY(Config) bool Debug` is no row and is
+  saved all the same.
 - **Reading.** The game keeps the values on the class default object: `ReadValues()` = `ValuesOf(ULPH_Settings.DefaultObject)`.
   `Mod.Configure()` reads them at the start of the game, at every minigame start (before `Opened`) and right before every
   F3/F4; a change is logged. The options cannot be opened during a minigame, so a change reaches the next one.
@@ -263,8 +265,12 @@ settings and their changes, the lock of each minigame, auto-pick's starts and st
 with debug on: every reading and press, the draws, the key catcher, the lock search.
 
 Debug is on when `LPH::DebugAlways` (`Config.as`) is true, when the command line has `-LPHDebug`, or when the hidden
-`Debug=True` is in `GameUserSettings.ini` under `[/Script/Angelscript.LPH_Settings]`. `DebugAlways` is a switch for the
-in-game checks of 2.0; `scripts/package.ps1` refuses to pack while it is true. In a release only the last two are left.
+property `Debug` is `True` in `GameUserSettings.ini`, section `[/Script/Angelscript.LPH_Settings]`. The game saves that
+property itself, so the section already ends with `Debug=False`: the player changes that line (a second `Debug` line
+above it is not reliable) or, when the line or the section is missing, adds it at the end; `-LPHDebug` among Steam's
+launch options is the simpler way. `DebugAlways` is a switch for the in-game checks of 2.0, false in the repository;
+`scripts/package.ps1` refuses to pack while it is true. In a release only the last two are left. The start line of the
+log says `debug on` when the lines are on.
 
 ## Loading a save
 
@@ -294,6 +300,24 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   database, and that the committed `LockGraphs.as` is what the generator writes.
 - Not covered by tests, checked in game: the extension, the focus catcher, the key binding, the widgets in the window
   and in the layer.
+
+## Release
+
+- **Build.** Commit everything under `mod/` and keep `LPH::DebugAlways` false, then `scripts/package.ps1` makes
+  `out/LockPickHelper-<version>.zip`. It packs only the files `git ls-files mod/LockPickHelper` lists (minus
+  `UnitTests/`) and stops on an uncommitted or untracked file under `mod/LockPickHelper`, on `DebugAlways` true (the
+  trial archive made with `-AllowDebugAlways` is named `...-debug.zip`) and on a version that differs between
+  `GothicMod.json`, `Config.as` and `README.txt`.
+- **Check the build, then upload.** For a manual-install check and before every Workshop upload (the hidden test one
+  and the public one) run `scripts/install-release.ps1 -GameDir "<game folder>"`. It replaces `G1R\Mods\LockPickHelper`
+  with the archive as players get it and asserts that `DebugAlways` is false and no tests folder, `LICENSE.txt` and
+  `README.txt` are there. The Workshop uploads the folder `G1R\Mods\LockPickHelper` as it is, so never upload after
+  `scripts/deploy.ps1`: that copy brings `UnitTests/` (about 7,000 lines the game would compile for every subscriber) and
+  the working tree's state.
+- **Files the game may add.** Both scripts stop, naming the file, when `G1R\Mods\LockPickHelper` holds a file that is not
+  in the archive (the package, for `deploy.ps1`) and is not a script; nothing is deleted then. An id file that the game
+  writes into the folder after a Workshop upload would show up this way: look at it after the hidden upload and, if there
+  is one, commit it to the repository, so that the next upload updates the same item.
 
 ## AngelScript pitfalls of this build
 
