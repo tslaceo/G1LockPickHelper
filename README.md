@@ -38,8 +38,12 @@ The game finds Workshop mods by itself; there is nothing to copy.
    it does not, start the game with the launch option `-ModManagementUI` and enable LockPick Helper in the game's mod
    list; the same list turns the mod off.
 
-Use one way, Workshop or by hand, not both. To switch to the Workshop copy, delete the folder `G1R\Mods\LockPickHelper`
-first.
+**Vortex** works too, with its Gothic 1 Remake extension: use Mod Manager Download on the Nexus page, or Install From
+File with the archive. It puts the files into `G1R\Mods\LockPickHelper` as links. Removing the mod in Vortex leaves that
+folder with Vortex's empty marker files; delete it by hand. Tested with Vortex 2.9.
+
+Use one way, Workshop or by hand (or Vortex), not both. To switch to the Workshop copy, delete the folder
+`G1R\Mods\LockPickHelper` first.
 
 **Upgrading from 1.x.** The current game does not start with UE4SS installed, so remove UE4SS first: delete
 `dwmapi.dll` and the `ue4ss` folder in `G1R\Binaries\Win64` (the 1.x mod, `ue4ss\Mods\G1LockPickHelper`, is inside it).
