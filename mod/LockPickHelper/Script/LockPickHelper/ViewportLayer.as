@@ -1,10 +1,10 @@
 // The mod's own layer in the game's viewport: a widget the size of the screen whose root is an empty canvas, drawn above
 // the game's interface and never taking the mouse or the keys. The hint lives inside the minigame's window; this layer is
 // for what the mod shows elsewhere (the notes of F3 and F4 outside a minigame, the preview): a ULPH_HintWidget attaches
-// to it with Attach(Layer, Layer.LayerCanvas). The engine drops viewport widgets when a level loads; Show() adds the layer
-// back, with what its canvas holds. So a hint on the layer outlives a load: Hide() takes it off the screen and Release()
-// off the layer - never a plain Detach(), which would leave its plate in the canvas (shown as it was) and make the next
-// show add a second one.
+// to it with Attach(Layer, Layer.LayerCanvas). One layer is made per world (ULPH_NoteLayer, Hotkeys.as) and the engine
+// takes it out of the viewport together with the world, so the layer and the hint on it die together: nothing is
+// released when a save loads. (Release(), not a plain Detach(), is for a canvas the mod owns that survives a load - R14;
+// there is none today.)
 
 class ULPH_ViewportLayer : UUserWidget
 {

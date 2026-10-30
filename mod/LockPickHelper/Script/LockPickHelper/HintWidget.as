@@ -19,10 +19,12 @@
 // The caller: UseLog, Attach (the owner makes the widgets, the canvas holds them), Configure, SetIcons, then ShowHint /
 // ShowMessage / Hide when what is shown changes (not every frame) and Animate every frame (the tape slides back after a
 // press, the hint shakes after a miss). The end depends on the canvas:
-// - one that goes with its world (the minigame window): Detach on its Destruct and when a save loads - no call into it;
-// - one that stays (the mod's viewport layer, ViewportLayer.as): Hide to take the hint off the screen, Release to take
-//   it off the layer - never a plain Detach, which would leave the plate in the layer (and a second one after the next
-//   show).
+// - one that dies with its world (the minigame window; the note layer of Hotkeys.as, one per world, which the engine takes
+//   out with the world): Detach on the window's Destruct and when a save loads - no call into it; the note layer needs
+//   no call at all;
+// - one the mod owns that survives (R14; none today: the layers are made per world): Hide to take the hint off the screen,
+//   Release to take it off the canvas - never a plain Detach, which would leave the plate in the canvas (and a second one
+//   after the next show).
 // Attach to another canvas releases the hint from the old one when that one is still valid.
 
 namespace LPH
@@ -178,9 +180,10 @@ class ULPH_HintWidget : UObject
 	}
 
 	// Takes the hint off its canvas (the plate leaves it, when both are still valid) and forgets the owner, the canvas and
-	// the tree. For a canvas that outlives the hint's use - the mod's viewport layer, which a load does not take down:
-	// Hide() takes the hint off the screen, Release() off the layer. Never a plain Detach there: the plate would stay in
-	// the layer as it was (a note shown at the moment stays on the screen) and the next show would add another one.
+	// the tree. For a canvas the mod owns that survives the hint's use (R14; the viewport layers of 2.0 are made per world
+	// and go with it, so none today): Hide() takes the hint off the screen, Release() off the canvas. Never a plain Detach
+	// there: the plate would stay in the canvas as it was (a note shown at the moment stays on the screen) and the next
+	// show would add another one.
 	void Release()
 	{
 		if (IsValid(Plate) && IsValid(Canvas))

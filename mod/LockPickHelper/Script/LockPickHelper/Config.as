@@ -28,8 +28,9 @@ namespace LPH
 
 	const FString ModVersion = "2.0.0"; // also modVersion in GothicMod.json
 
-	// The in-game checks of 2.0 (Tasks 12 and 14) want every detail in the log without the player touching the ini: while
-	// this is true the debug lines are always written. False for the release: then only Debug=True in
+	// A switch for the in-game checks of 2.0 (Tasks 12 and 14), which want every detail in the log without the tester
+	// touching the ini: while this is true the debug lines are always written. False in everything that ships (the
+	// release, the Workshop upload; package.ps1 refuses to pack while it is true): then only Debug=True in
 	// GameUserSettings.ini or -LPHDebug on the command line turns them on.
-	const bool DebugAlways = true;
+	const bool DebugAlways = false;
 }

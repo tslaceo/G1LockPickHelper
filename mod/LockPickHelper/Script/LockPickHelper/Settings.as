@@ -1,7 +1,8 @@
 // The mod's rows in the game's options ("Game" tab, block "[Mod] LockPick Helper"). The game keeps them in
 // GameUserSettings.ini under [/Script/Angelscript.LPH_Settings]: the class name and the property names are part of the
-// player's files and must not change. The labels are set in Initialize, in the language of LPH::LangFor
-// (whether a change of the Language row relabels an open menu is up to the game: check it in the menu).
+// player's files and must not change. The labels are set in Initialize, in the language of LPH::LangFor; the game runs
+// Initialize at a save load or at a game start, so a change of the Language row shows in the menu only after a save load
+// or a restart (checked in game at acceptance).
 // The rest of the mod reads LPH::ReadValues().
 //
 // The defaults and the limits below repeat FLPH_Values / LPH::Clamped (Values.as): the script cannot read DefaultValue,
@@ -159,9 +160,10 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	bool Debug = false;
 
 	// Gives every row its label in the player's language (a row has no way to change only its label: each one is
-	// assigned a new struct with the value it has now). The game calls it when it builds its options. In the test runs it
-	// had not touched the class default object by the time the main menu world started, so a test cannot see it work:
-	// look at the options menu itself.
+	// assigned a new struct with the value it has now). The game calls it at a save load or at a game start, not when the
+	// Language row changes: the new language shows in the menu after the next load or restart. In the test runs it had not
+	// touched the class default object by the time the main menu world started, so a test cannot see it work: look at the
+	// options menu itself.
 	UFUNCTION(BlueprintOverride)
 	void Initialize()
 	{
