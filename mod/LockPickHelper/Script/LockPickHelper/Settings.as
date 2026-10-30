@@ -36,7 +36,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt Icons = FModUserSettingsInt(
 		Value = 0,
 		DefaultValue = 0,
-		DisplayText = FText::FromString("Letters or icons (0 auto, 1 letters, 2 gamepad icons)"),
+		DisplayText = FText::FromString("Icons (0 auto, 1 letters, 2 icons)"),
 		MinValue = 0,
 		MaxValue = 2);
 
@@ -44,7 +44,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt Gamepad = FModUserSettingsInt(
 		Value = 0,
 		DefaultValue = 0,
-		DisplayText = FText::FromString("Gamepad icon set (0 as in game, 1 PlayStation, 2 Xbox, 3 Switch)"),
+		DisplayText = FText::FromString("Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)"),
 		MinValue = 0,
 		MaxValue = 3);
 

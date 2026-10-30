@@ -22,8 +22,61 @@ void LPHTests_CheckSet(ULPH_TestRun T, ELPH_IconSet Want, int IconsSetting, int 
 	T.EqualStr(LPHTests_SetName(Got), LPHTests_SetName(Want), What);
 }
 
+// One IconSetNow call (Ruling R15): the set drawn now, then IconSet's arguments, then the time on the gamepad.
+void LPHTests_CheckNow(ULPH_TestRun T, ELPH_IconSet Want, ELPH_IconSet Current, int IconsSetting, int GamepadSetting,
+	int InputType, int ButtonGraphics, FName GamepadName, int MsSincePad, FString What)
+{
+	ELPH_IconSet Got = LPH::IconSetNow(Current, IconsSetting, GamepadSetting, InputType, ButtonGraphics, GamepadName,
+		MsSincePad);
+	T.EqualStr(LPHTests_SetName(Got), LPHTests_SetName(Want), What);
+}
+
+// R15: after a switch to the gamepad, icons that go by its name wait up to PadNameWaitMs for the name.
+void LPHTests_IconsWait(ULPH_TestRun T)
+{
+	T.Begin("Icons: waiting for the pad's name");
+	ELPH_IconSet L = ELPH_IconSet::Letters;
+	ELPH_IconSet P = ELPH_IconSet::PlayStation;
+	ELPH_IconSet X = ELPH_IconSet::Xbox;
+	ELPH_IconSet S = ELPH_IconSet::Switch;
+	int Wait = LPH::PadNameWaitMs;
+
+	// By name (the mod's set as in the game, the game's option auto).
+	LPHTests_CheckNow(T, L, L, 0, 0, 1, 1, n"Generic", 0, "the first switch keeps the letters while the pad is Generic");
+	LPHTests_CheckNow(T, L, L, 0, 0, 1, 1, n"Generic", Wait - 1, "until just before the wait ends");
+	LPHTests_CheckNow(T, X, L, 0, 0, 1, 1, n"Generic", Wait, "then Generic is Xbox");
+	LPHTests_CheckNow(T, L, L, 0, 0, 1, 1, NAME_None, 0, "no name yet: the letters");
+	LPHTests_CheckNow(T, X, L, 0, 0, 1, 1, NAME_None, Wait + 500, "no name after the wait: Xbox");
+	LPHTests_CheckNow(T, P, L, 0, 0, 1, 1, n"PS5", 0, "PS5 applies at once");
+	LPHTests_CheckNow(T, P, L, 0, 0, 1, 1, n"PS5", 1400, "PS5 named 1.4 s after the switch");
+	LPHTests_CheckNow(T, X, L, 0, 0, 1, 1, n"XSX", 0, "XSX applies at once");
+	LPHTests_CheckNow(T, S, L, 0, 0, 1, 1, n"SWITCH", 0, "SWITCH applies at once");
+	LPHTests_CheckNow(T, P, P, 0, 0, 1, 1, n"Generic", 200, "a set shown already is kept while the name is Generic");
+
+	// Not by name: at once, whatever the name.
+	LPHTests_CheckNow(T, P, L, 0, 1, 1, 1, n"Generic", 0, "the mod's PlayStation at once");
+	LPHTests_CheckNow(T, S, L, 0, 3, 1, 1, NAME_None, 0, "the mod's Switch at once");
+	LPHTests_CheckNow(T, X, L, 0, 0, 1, 2, n"Generic", 0, "the game's Xbox option at once");
+	LPHTests_CheckNow(T, P, L, 0, 0, 1, 3, n"Generic", 0, "the game's PS5 option at once");
+	LPHTests_CheckNow(T, X, L, 0, 0, 1, -1, n"Generic", 0, "an unread option is Xbox at once");
+	LPHTests_CheckNow(T, L, P, 0, 0, 1, 0, n"Generic", 0, "the game's do not use: the letters");
+	LPHTests_CheckNow(T, L, P, 1, 0, 1, 1, n"Generic", 0, "the letters setting: the letters");
+
+	// The keyboard.
+	LPHTests_CheckNow(T, L, P, 0, 0, 0, 1, n"PS5", 0, "back to the keyboard: the letters at once");
+	LPHTests_CheckNow(T, X, L, 2, 0, 0, 1, n"Generic", 0, "icons always, keyboard input: no wait (Generic is Xbox)");
+	LPHTests_CheckNow(T, X, X, 2, 0, 1, 1, n"Generic", 100, "icons always, a fresh gamepad: Xbox kept");
+	LPHTests_CheckNow(T, P, X, 2, 0, 1, 1, n"PS5", 100, "icons always, the pad named PS5: PlayStation");
+
+	T.True(LPH::KnownPadName(n"PS5") && LPH::KnownPadName(n"XSX") && LPH::KnownPadName(n"SWITCH"), "known names");
+	T.True(!LPH::KnownPadName(n"Generic") && !LPH::KnownPadName(n"generic") && !LPH::KnownPadName(NAME_None),
+		"Generic and no name are not");
+}
+
 void LPHTests_Icons(ULPH_TestRun T)
 {
+	LPHTests_IconsWait(T);
+
 	// The numbers below: Icons 0 auto, 1 letters, 2 gamepad; Gamepad 0 as in the game, 1 PlayStation, 2 Xbox, 3 Switch;
 	// input type 0 keyboard, 1 gamepad, 2 touch, -1 unread; ButtonGraphics 0 do not use, 1 auto, 2 Xbox, 3 PS5, 4 Switch,
 	// -1 unread. The names: PS5, SWITCH, XSX, Generic as the CommonUI reports them.

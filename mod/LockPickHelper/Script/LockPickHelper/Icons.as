@@ -12,12 +12,12 @@ enum ELPH_IconSet
 
 namespace LPH
 {
-	// The "Letters or icons" setting (Values.Icons).
+	// The "Icons" setting (Values.Icons): letters or icons.
 	const int IconsAuto = 0; // by the device of the last input
 	const int IconsLetters = 1;
 	const int IconsGamepad = 2;
 
-	// The "Gamepad icon set" setting (Values.Gamepad).
+	// The "Icon set" setting (Values.Gamepad).
 	const int GamepadAsInGame = 0;
 	const int GamepadPlayStation = 1;
 	const int GamepadXbox = 2;
@@ -71,6 +71,36 @@ namespace LPH
 				return ELPH_IconSet::Switch;
 		}
 		return ELPH_IconSet::Xbox;
+	}
+
+	// Whether the game's name for the gamepad is a real one: CommonUI says "Generic" (or nothing) until the pad has been
+	// named, which comes about 1.4 s after its first press.
+	bool KnownPadName(FName GamepadName)
+	{
+		return !GamepadName.IsNone() && GamepadName != n"Generic";
+	}
+
+	// Whether IconSet takes the set from the gamepad's name with these settings: icons are drawn, the mod's set is "as in
+	// the game" and the game's button icons option is auto.
+	bool IconSetByName(int IconsSetting, int GamepadSetting, int InputType, int ButtonGraphics)
+	{
+		bool bIcons = IconsSetting == IconsGamepad || (IconsSetting == IconsAuto && InputType == InputGamepad);
+		return bIcons && ButtonGraphics == GraphicsAuto && GamepadSetting != GamepadPlayStation
+			&& GamepadSetting != GamepadXbox && GamepadSetting != GamepadSwitch;
+	}
+
+	// IconSet over time (Ruling R15): right after a switch to the gamepad the game has not named it yet, and a set that
+	// goes by the name would show Xbox for a moment before the right one. So while the input is the gamepad's for less
+	// than PadNameWaitMs (MsSincePad) and its name is not known, such a set keeps Current (the letters on the first
+	// switch); after that the name decides (Generic: Xbox). A known name, and a set that does not go by the name, apply
+	// at once.
+	ELPH_IconSet IconSetNow(ELPH_IconSet Current, int IconsSetting, int GamepadSetting, int InputType, int ButtonGraphics,
+		FName GamepadName, int MsSincePad)
+	{
+		if (InputType == InputGamepad && MsSincePad < PadNameWaitMs && !KnownPadName(GamepadName)
+			&& IconSetByName(IconsSetting, GamepadSetting, InputType, ButtonGraphics))
+			return Current;
+		return IconSet(IconsSetting, GamepadSetting, InputType, ButtonGraphics, GamepadName);
 	}
 
 	// The object path of the game's icon of a key in a set (what a TSoftObjectPtr<UTexture2D> is made from): W is the

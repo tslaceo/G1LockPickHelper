@@ -98,7 +98,7 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 	private int ButtonGraphics = -1;
 	private FName GamepadName;
 	private int64 IconsReadMs = LPH::NeverMs;
-
+	private int64 PadSinceMs = LPH::NeverMs; // when the input became the gamepad's
 	private FLPH_HotkeyGate Gate;
 
 	UFUNCTION(BlueprintOverride)
@@ -155,24 +155,38 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 	}
 
 	// The icon set the hint draws now: by the settings, the device of the last input (read every call - cheap), the game's
-	// button icons option and the gamepad's name (read every LPH::IconReadMs and after Configure). A new set goes to the
-	// controller (it draws the hint again) and to the log. Needs a world (call it from the minigame's window).
+	// button icons option and the gamepad's name (read every LPH::IconReadMs and after Configure, and every call while a
+	// switch to the gamepad waits for the pad's name: LPH::IconSetNow, Ruling R15). A new set goes to the controller (it
+	// draws the hint again) and to the log. Needs a world (call it from the minigame's window).
 	ELPH_IconSet FollowIcons(int64 Now)
 	{
-		if (Now - IconsReadMs >= LPH::IconReadMs)
+		int Input = LPHGame::InputType();
+		if (Input == LPH::InputGamepad && Input != InputType)
+			PadSinceMs = Now;
+		int64 Since = Now - PadSinceMs;
+		int SincePad = 1000000; // (long ago; kept inside the int range)
+		if (Since < 1000000)
+			SincePad = int(Since);
+		bool bNameAwaited = Input == LPH::InputGamepad && SincePad < LPH::PadNameWaitMs;
+		if (Now - IconsReadMs >= LPH::IconReadMs || bNameAwaited)
 		{
 			IconsReadMs = Now;
 			ButtonGraphics = LPHGame::ButtonGraphics();
 			GamepadName = LPHGame::GamepadName();
 		}
-		int Input = LPHGame::InputType();
-		ELPH_IconSet Set = LPH::IconSet(Values.Icons, Values.Gamepad, Input, ButtonGraphics, GamepadName);
+		ELPH_IconSet Current = ELPH_IconSet::Letters;
+		if (bIconsKnown)
+			Current = Icons;
+		ELPH_IconSet Set = LPH::IconSetNow(Current, Values.Icons, Values.Gamepad, Input, ButtonGraphics, GamepadName, SincePad);
 		if (!bIconsKnown || Set != Icons || Input != InputType)
 		{
 			if (!bIconsKnown || Set != Icons)
 			{
 				FString SetText = LPH::IconSetText(Set);
-				ModLog.Line(f"icons: {SetText} (input {Input}, button icons {ButtonGraphics}, gamepad {GamepadName}, settings {Values.Icons}/{Values.Gamepad})");
+				FString Pad = "";
+				if (Input == LPH::InputGamepad)
+					Pad = f", {SincePad} ms on the gamepad";
+				ModLog.Line(f"icons: {SetText} (input {Input}{Pad}, button icons {ButtonGraphics}, gamepad {GamepadName}, settings {Values.Icons}/{Values.Gamepad})");
 			}
 			else
 			{

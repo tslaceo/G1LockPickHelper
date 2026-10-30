@@ -24,6 +24,7 @@ namespace LPH
 	const int LockRetryMs = 100; // how often the lock is looked for until it is found (the search walks the hero's abilities)
 	const int IconReadMs = 2000; // how often the game's button icons option and the gamepad's name are read again
 	const int HotkeyTwiceMs = 150; // F3/F4 by the key binding and by the key catcher this close together: one press
+	const int PadNameWaitMs = 1500; // after a switch to the gamepad, icons that go by its name wait this long for the name (R15)
 
 	const FString ModVersion = "2.0.0"; // also modVersion in GothicMod.json
 

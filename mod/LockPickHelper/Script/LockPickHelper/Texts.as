@@ -127,8 +127,8 @@ namespace LPH
 		L.Language = "Language (0 as in the game, 1 English, 2 Русский)";
 		L.Tape = "Tape layout";
 		L.Gothic = "Gothic style";
-		L.Icons = "Letters or icons (0 auto, 1 letters, 2 gamepad icons)";
-		L.Gamepad = "Gamepad icon set (0 as in game, 1 PlayStation, 2 Xbox, 3 Switch)";
+		L.Icons = "Icons (0 auto, 1 letters, 2 icons)";
+		L.Gamepad = "Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)";
 		L.Scale = "Size, %";
 		L.OffsetX = "Position X";
 		L.OffsetY = "Position Y";
@@ -153,8 +153,8 @@ namespace LPH
 		L.Language = "Язык (0 авто, 1 English, 2 Русский)";
 		L.Tape = "Лента вместо строк";
 		L.Gothic = "Готический стиль";
-		L.Icons = "Буквы или значки (0 авто, 1 буквы, 2 значки)";
-		L.Gamepad = "Набор значков (0 как в игре, 1 PS, 2 Xbox, 3 Switch)";
+		L.Icons = "Значки (0 авто, 1 буквы, 2 значки)";
+		L.Gamepad = "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)";
 		L.Scale = "Размер, %";
 		L.OffsetX = "Положение по X";
 		L.OffsetY = "Положение по Y";
