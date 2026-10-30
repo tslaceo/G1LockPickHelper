@@ -18,7 +18,12 @@
 //
 // The caller: UseLog, Attach (the owner makes the widgets, the canvas holds them), Configure, SetIcons, then ShowHint /
 // ShowMessage / Hide when what is shown changes (not every frame) and Animate every frame (the tape slides back after a
-// press, the hint shakes after a miss); Detach when the owner's world goes (a save loaded).
+// press, the hint shakes after a miss). The end depends on the canvas:
+// - one that goes with its world (the minigame window): Detach on its Destruct and when a save loads - no call into it;
+// - one that stays (the mod's viewport layer, ViewportLayer.as): Hide to take the hint off the screen, Release to take
+//   it off the layer - never a plain Detach, which would leave the plate in the layer (and a second one after the next
+//   show).
+// Attach to another canvas releases the hint from the old one when that one is still valid.
 
 namespace LPH
 {
@@ -160,21 +165,32 @@ class ULPH_HintWidget : UObject
 		ModLog = InLog;
 	}
 
-	// The widget that makes the hint's widgets (ConstructWidget) and the canvas that holds them. Another owner or canvas
-	// (a new minigame window) forgets the tree built for the old one without a call into it (the old window is gone with
-	// its widgets); the next show builds anew.
+	// The widget that makes the hint's widgets (ConstructWidget) and the canvas that holds them; the next show builds the
+	// tree there. Another owner or canvas releases the hint from the one it is attached to first (Release), so a canvas
+	// that is still valid keeps no orphan of it; after Detach there is nothing to release.
 	void Attach(UUserWidget InOwner, UCanvasPanel InCanvas)
 	{
 		if (InOwner == Owner && InCanvas == Canvas)
 			return;
-		ForgetTree();
+		Release();
 		Owner = InOwner;
 		Canvas = InCanvas;
-		AnimPressed = 0;
-		AnimMisses = 0;
 	}
 
-	// Forgets the owner, the canvas and the tree without a call into them (their world may be going: a save loaded).
+	// Takes the hint off its canvas (the plate leaves it, when both are still valid) and forgets the owner, the canvas and
+	// the tree. For a canvas that outlives the hint's use - the mod's viewport layer, which a load does not take down:
+	// Hide() takes the hint off the screen, Release() off the layer. Never a plain Detach there: the plate would stay in
+	// the layer as it was (a note shown at the moment stays on the screen) and the next show would add another one.
+	void Release()
+	{
+		if (IsValid(Plate) && IsValid(Canvas))
+			Plate.RemoveFromParent();
+		Detach();
+	}
+
+	// Forgets the owner, the canvas and the tree without a call into them, leaving the plate where it is: for a canvas
+	// that goes with its world - the minigame window on its Destruct or when a save loads (a call into its widgets then
+	// may not be safe).
 	void Detach()
 	{
 		ForgetTree();

@@ -2,7 +2,9 @@
 // the game's interface and never taking the mouse or the keys. The hint lives inside the minigame's window; this layer is
 // for what the mod shows elsewhere (the notes of F3 and F4 outside a minigame, the preview): a ULPH_HintWidget attaches
 // to it with Attach(Layer, Layer.LayerCanvas). The engine drops viewport widgets when a level loads; Show() adds the layer
-// back.
+// back, with what its canvas holds. So a hint on the layer outlives a load: Hide() takes it off the screen and Release()
+// off the layer - never a plain Detach(), which would leave its plate in the canvas (shown as it was) and make the next
+// show add a second one.
 
 class ULPH_ViewportLayer : UUserWidget
 {

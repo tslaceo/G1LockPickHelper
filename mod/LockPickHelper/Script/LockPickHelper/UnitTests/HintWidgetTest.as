@@ -24,6 +24,7 @@ void LPHTests_HintWidget(ULPH_TestRun T)
 	LPHTests_HintWidgetTape(T, Layer);
 	LPHTests_HintWidgetLines(T, Layer);
 	LPHTests_HintWidgetOther(T, Layer);
+	LPHTests_HintWidgetRelease(T, Layer);
 
 	Layer.RemoveFromParent();
 }
@@ -211,9 +212,60 @@ void LPHTests_HintWidgetOther(ULPH_TestRun T, ULPH_ViewportLayer Layer)
 	Bare.Animate(1000);
 	T.EqualInt(Bare.Builds, 0, "no tree");
 
-	T.Begin("HintWidget: another owner forgets the tree");
+	T.Begin("HintWidget: another canvas releases the old one");
+	UBorder OldPlate = Hint.PlateBorder();
 	Hint.Attach(Layer, nullptr);
-	T.True(Hint.PlateBorder() == nullptr, "forgotten");
+	T.True(Hint.PlateBorder() == nullptr, "the tree is forgotten");
+	T.True(OldPlate.GetParent() == nullptr, "its plate left the layer's canvas");
 	Hint.ShowHint(M, 1300);
 	T.EqualInt(Hint.Builds, 1, "and nothing is built without a canvas");
+}
+
+// A canvas of its own for a check that counts the canvas's children (the layer's canvas holds the other tests' hints).
+UCanvasPanel LPHTests_HintCanvas(ULPH_ViewportLayer Layer)
+{
+	return Cast<UCanvasPanel>(Layer.ConstructWidget(UCanvasPanel));
+}
+
+void LPHTests_HintWidgetRelease(ULPH_TestRun T, ULPH_ViewportLayer Layer)
+{
+	T.Begin("HintWidget Release: off the canvas, and one plate after the next show");
+	FLPH_Values Values;
+	UCanvasPanel Canvas = LPHTests_HintCanvas(Layer);
+	ULPH_HintWidget Hint = Cast<ULPH_HintWidget>(NewObject(T, ULPH_HintWidget::StaticClass()));
+	Hint.Attach(Layer, Canvas);
+	Hint.Configure(Values);
+	Hint.ShowMessage("note");
+	T.EqualInt(Canvas.GetChildrenCount(), 1, "the note is in the canvas");
+	Hint.Release();
+	T.EqualInt(Canvas.GetChildrenCount(), 0, "Release takes it off");
+	T.True(Hint.PlateBorder() == nullptr, "and forgets the tree");
+	Hint.ShowMessage("note");
+	T.EqualInt(Canvas.GetChildrenCount(), 0, "nothing is shown until the next Attach");
+	Hint.Attach(Layer, Canvas);
+	Hint.ShowMessage("note");
+	T.EqualInt(Canvas.GetChildrenCount(), 1, "attached again: one plate");
+
+	T.Begin("HintWidget Release: Attach twice to the same canvas");
+	Hint.Attach(Layer, Canvas);
+	Hint.ShowMessage("note 2");
+	T.EqualInt(Canvas.GetChildrenCount(), 1, "still one plate");
+	T.EqualInt(Hint.Builds, 2, "the same tree");
+
+	T.Begin("HintWidget Release: Attach to another canvas releases the old one");
+	UCanvasPanel Other = LPHTests_HintCanvas(Layer);
+	Hint.Attach(Layer, Other);
+	T.EqualInt(Canvas.GetChildrenCount(), 0, "the old canvas is empty");
+	Hint.ShowMessage("note");
+	T.EqualInt(Other.GetChildrenCount(), 1, "the new one has the plate");
+
+	T.Begin("HintWidget Detach: no call into the old canvas, one plate in the next");
+	Hint.Detach();
+	T.True(Hint.PlateBorder() == nullptr, "the tree is forgotten");
+	T.EqualInt(Other.GetChildrenCount(), 1, "the old plate stays where it was (that canvas goes with its world)");
+	UCanvasPanel Fresh = LPHTests_HintCanvas(Layer);
+	Hint.Attach(Layer, Fresh);
+	Hint.ShowMessage("note");
+	T.EqualInt(Fresh.GetChildrenCount(), 1, "the fresh canvas has one plate");
+	T.EqualInt(Other.GetChildrenCount(), 1, "and the old one is not touched");
 }
