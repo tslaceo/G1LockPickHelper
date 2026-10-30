@@ -120,3 +120,5 @@ of tslaceo, who designed the features, played and tested every version in game a
 MIT - see [LICENSE](LICENSE). The lock layouts in `mod/G1LockPickHelper/Scripts/lockgraphs.lua` (and the test
 fixture) are extracted from Gothic 1 Remake; they are not covered by the license and belong to the game's
 rights holders.
+
+This is an unofficial modification. It is not made, endorsed or supported by THQ Nordic.

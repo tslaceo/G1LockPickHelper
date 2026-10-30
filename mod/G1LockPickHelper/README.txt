@@ -25,3 +25,4 @@ cursor: press F2 twice.
 
 Source code, bug reports, technical notes: https://github.com/tslaceo/G1LockPickHelper
 License: MIT (LICENSE.txt). The lock data extracted from the game is not covered.
+This is an unofficial modification. It is not made, endorsed or supported by THQ Nordic.
