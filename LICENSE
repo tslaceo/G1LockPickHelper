@@ -22,7 +22,8 @@ SOFTWARE.
 
 ---
 
-Game data. mod/LockPickHelper/Script/LockPickHelper/LockGraphs.as, tools/oracle/locks_data.lua,
+Game data. mod/LockPickHelper/Script/LockPickHelper/LockGraphs.as (in the release archive:
+Script/LockPickHelper/LockGraphs.as), tools/oracle/locks_data.lua,
 mod/LockPickHelper/Script/LockPickHelper/UnitTests/GoldenSolver.as and tests/fixtures/* contain
 lock layouts, and data derived from them, from Gothic 1 Remake; the first two are generated from
 the sources of the G1R-Modkit by tools/gen_lockgraphs.py. They are not covered by this license;
