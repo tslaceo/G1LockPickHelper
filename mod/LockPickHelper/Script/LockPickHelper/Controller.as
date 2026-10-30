@@ -27,7 +27,8 @@
 //
 // The glue, every frame of an open minigame: Tick (with the plates read when WantsReading), then TakeKey (and its
 // Broadcast), then DisplaySig - and Display only when that changed. Opened/LockFound/NoLock/Closed, Solve (F3), ToggleHint
-// (F4) and PlayerKey come as they happen.
+// (F4) and PlayerKey come as they happen; Configure comes at mod start, before every Opened, and right before every Solve
+// and ToggleHint outside a minigame (the settings and the language must be current there).
 
 // One reading of the minigame's plates.
 struct FLPH_Reading
@@ -123,9 +124,10 @@ class ULPH_Controller : UObject
 
 	// Configure.
 	private FLPH_Values Values;
+	private ELPH_Lang Lang = ELPH_Lang::En;
 	private FLPH_Texts Texts;
 	private TArray<FString> Labels; // what the hint writes for W, S, A, D (empty: the letters)
-	private int Version = 0; // grows with every Configure
+	private int Version = 0; // grows with every Configure that changes something
 	private int Icons = 0; // the icon set the hint draws (SetIcons)
 
 	// F4, the notes and F3 outside a minigame: they outlive the sessions.
@@ -172,15 +174,21 @@ class ULPH_Controller : UObject
 		Auto.Init(LPH::SolveWsGapMs, LPH::SolveTimeoutMs, LPH::SolveMaxReplans);
 	}
 
-	// The player's settings, the language of the texts and the labels of W, S, A, D, at every minigame start, before
-	// Opened (the auto-pick setting arms the session there). A hint shown is drawn again with them; a message already shown
-	// keeps its words until it ends. The debug log follows bDebug.
+	// The player's settings, the language of the texts and the labels of W, S, A, D. They must be current whenever the
+	// controller reads them, so the glue calls this at mod start, at every minigame start before Opened (the auto-pick
+	// setting arms the session there), and right before every Solve and ToggleHint outside a minigame (F3 there reads
+	// the auto-pick setting; the notes are worded in this language). It may come at any other time too: the same values,
+	// language and labels change nothing (the Sig stays, nothing is redrawn); new ones draw a shown hint again (Version
+	// grows). A message already shown keeps its words until it ends. The debug log follows bDebug.
 	void Configure(FLPH_Values InValues, ELPH_Lang InLang, const TArray<FString>& InLabels)
 	{
+		bool bSame = LPH::SameValues(InValues, Values) && InLang == Lang && SameLabels(InLabels);
 		Values = InValues;
+		Lang = InLang;
 		Texts = LPH::Texts(InLang);
 		Labels = InLabels;
-		Version++;
+		if (!bSame)
+			Version++;
 		if (ModLog != nullptr)
 			ModLog.bDebug = InValues.bDebug;
 	}
@@ -599,6 +607,19 @@ class ULPH_Controller : UObject
 				LogDebug("autosolve stopped: " + Reason);
 		}
 		Auto.Stop();
+	}
+
+	// Whether these labels are the ones Configure gave last.
+	private bool SameLabels(const TArray<FString>& Other) const
+	{
+		if (Other.Num() != Labels.Num())
+			return false;
+		for (int i = 0; i < Labels.Num(); i++)
+		{
+			if (Other[i] != Labels[i])
+				return false;
+		}
+		return true;
 	}
 
 	// The state's name in the log, as 1.x wrote it.

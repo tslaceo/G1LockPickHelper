@@ -782,8 +782,30 @@ void LPHTests_ControllerSig(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, c
 	TArray<FString> Same;
 	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::En, Same);
 	Rig.Frame();
-	T.True(Rig.Shown.Sig != Sig, "Configure changes the Sig (the settings may be new)");
+	T.EqualStr(Rig.Shown.Sig, Sig, "Configure with the same values, language and labels changes nothing");
+	T.EqualInt(Rig.Ctl.ModelBuilds, Builds + 1, "and builds no model");
+	FLPH_Values Other = LPHTests_CtlLines();
+	Other.CollapseMin = 5;
+	Rig.Ctl.Configure(Other, ELPH_Lang::En, Same);
+	Rig.Frame();
+	T.True(Rig.Shown.Sig != Sig, "Configure with another value changes the Sig");
 	Sig = Rig.Shown.Sig;
+	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Same);
+	Rig.Frame();
+	T.True(Rig.Shown.Sig != Sig, "another language changes it");
+	Sig = Rig.Shown.Sig;
+	TArray<FString> Named;
+	Named.Add("Up");
+	Named.Add("Down");
+	Named.Add("Left");
+	Named.Add("Right");
+	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Named);
+	Rig.Frame();
+	T.True(Rig.Shown.Sig != Sig, "other labels change it");
+	Sig = Rig.Shown.Sig;
+	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Named);
+	Rig.Frame();
+	T.EqualStr(Rig.Shown.Sig, Sig, "the same again does not");
 	Rig.Ctl.SetIcons(1);
 	Rig.Frame();
 	T.True(Rig.Shown.Sig != Sig, "another icon set changes the Sig");
@@ -1110,6 +1132,55 @@ void LPHTests_ControllerEarly(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(En.SolveOn, "F3"), "the note");
 	Rig.Run(LPH::ToggleNoteMs);
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "hidden", "then nothing (the hint is hidden)");
+
+	// main_test.lua 1.2.0 "with [solve] auto F3 outside a minigame skips the next one", with the setting switched on after
+	// the last Configure: the glue configures right before F3 and F4 outside a minigame.
+	T.Begin("Controller 45 Configure right before F3/F4 outside a minigame: the setting and the language of that moment");
+	FLPH_Texts Ru = LPH::Texts(ELPH_Lang::Ru);
+	TArray<FString> Letters;
+	Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines()); // auto-pick off, English
+	Rig.Run(100);
+	Rig.Ctl.Configure(LPHTests_CtlAlways(), ELPH_Lang::Ru, Letters); // since then: auto-pick always, Russian
+	Rig.Solve();
+	Rig.Frame();
+	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(Ru.SolveOff, "F3"), "F3: the next one is skipped (in Russian)");
+	Rig.Run(1000);
+	Rig.Open(n"LPHTest_Three", 0.0, Three, Start);
+	T.EqualStr(LPHTests_CtlAuto(Rig), "off", "the next minigame is not armed");
+	Rig.Run(LPH::ReadyDelayMs + 1000);
+	T.EqualInt(Rig.OwnKeys.Num(), 0, "nothing pressed");
+	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "hint", "just the hint");
+	Rig.Close();
+	Rig.Open(n"LPHTest_Three", 0.0, Three, Start);
+	T.EqualStr(LPHTests_CtlAuto(Rig), "armed", "the one after it is armed, as set");
+	Rig.Close();
+	Rig.Run(LPH::ToggleNoteMs);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters); // auto-pick off again
+	Rig.Ctl.ToggleHint(Rig.Now);
+	Rig.Frame();
+	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(Ru.HintOff, "F4"), "F4: the note in Russian");
+	FString Sig = Rig.Shown.Sig;
+	int Redraws = Rig.Redraws;
+	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Frame();
+	T.EqualStr(Rig.Shown.Sig, Sig, "the same Configure again: the note's Sig stays");
+	T.EqualInt(Rig.Redraws, Redraws, "nothing to redraw");
+	Rig.Run(LPH::ToggleNoteMs);
+	Rig.Ctl.ToggleHint(Rig.Now);
+	Rig.Run(LPH::ToggleNoteMs);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Solve();
+	Rig.Frame();
+	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + Ru.SolveArmed, "F3 with auto-pick off: the wait for the next one");
+	Sig = Rig.Shown.Sig;
+	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Frame();
+	T.EqualStr(Rig.Shown.Sig, Sig, "the same Configure during the wait: the Sig stays");
+	FLPH_Values NoTimer = LPHTests_CtlLines();
+	NoTimer.bTimer = false;
+	Rig.Ctl.Configure(NoTimer, ELPH_Lang::Ru, Letters);
+	Rig.Frame();
+	T.True(Rig.Shown.Sig != Sig, "another value: a new Sig");
 }
 
 // 1.x: "a player press stops the autosolver and the hint follows the player", "presses the game swallows stop the

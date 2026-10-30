@@ -318,6 +318,54 @@ FLPH_Values LPHTests_ValuesDistinct(int Pass)
 	return V;
 }
 
+// The defaults with field Field (0..20, in the order of FLPH_Values) changed; any other Field: the defaults.
+FLPH_Values LPHTests_ValuesOneOff(int Field)
+{
+	FLPH_Values V;
+	if (Field == 0) V.Language = 2;
+	if (Field == 1) V.bTape = !V.bTape;
+	if (Field == 2) V.bGothic = !V.bGothic;
+	if (Field == 3) V.Icons = 2;
+	if (Field == 4) V.Gamepad = 3;
+	if (Field == 5) V.Scale = 150;
+	if (Field == 6) V.OffsetX = -123;
+	if (Field == 7) V.OffsetY = 456;
+	if (Field == 8) V.bCounter = !V.bCounter;
+	if (Field == 9) V.bShake = !V.bShake;
+	if (Field == 10) V.TapeNext = 7;
+	if (Field == 11) V.TapeDone = 4;
+	if (Field == 12) V.bSlide = !V.bSlide;
+	if (Field == 13) V.bPlate = !V.bPlate;
+	if (Field == 14) V.PerLine = 21;
+	if (Field == 15) V.MaxLines = 9;
+	if (Field == 16) V.CollapseMin = 5;
+	if (Field == 17) V.bAutoPick = !V.bAutoPick;
+	if (Field == 18) V.bDoubleReset = !V.bDoubleReset;
+	if (Field == 19) V.bTimer = !V.bTimer;
+	if (Field == 20) V.bDebug = !V.bDebug;
+	return V;
+}
+
+void LPHTests_ValuesSame(ULPH_TestRun T)
+{
+	T.Begin("Values: SameValues sees every field");
+	FLPH_Values Defaults;
+	T.True(LPH::SameValues(Defaults, FLPH_Values()), "the defaults twice");
+	T.True(LPH::SameValues(LPHTests_ValuesDistinct(1), LPHTests_ValuesDistinct(1)), "other values twice");
+	int Fields = 0;
+	for (int Field = 0; Field < 40; Field++)
+	{
+		FLPH_Values V = LPHTests_ValuesOneOff(Field);
+		FString What = LPHTests_ValuesDiff(Defaults, V);
+		if (What.IsEmpty())
+			continue;
+		Fields++;
+		T.True(!LPH::SameValues(Defaults, V), "another" + What);
+		T.True(!LPH::SameValues(V, Defaults), "another" + What + " (the other way round)");
+	}
+	T.EqualInt(Fields, 21, "(every field of LPHTests_ValuesDiff changed once)");
+}
+
 void LPHTests_ValuesDefaults(ULPH_TestRun T)
 {
 	T.Begin("Values: the defaults");
@@ -498,5 +546,6 @@ void LPHTests_Texts(ULPH_TestRun T)
 	LPHTests_ValuesDefaults(T);
 	LPHTests_ValuesMapping(T);
 	LPHTests_ValuesClamp(T);
+	LPHTests_ValuesSame(T);
 	LPHTests_SettingsInitialize(T);
 }

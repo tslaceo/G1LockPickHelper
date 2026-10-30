@@ -1,6 +1,6 @@
 // The player's settings as plain numbers: what the rest of the mod reads (Settings.as holds the rows of the game's
 // options menu and fills this struct). The defaults are those of settings.lua of 1.2.0; the rows in Settings.as repeat
-// them as DefaultValue, and the limits as MinValue and MaxValue.
+// them as DefaultValue, and the limits as MinValue and MaxValue. A new field goes into LPH::SameValues as well.
 
 struct FLPH_Values
 {
@@ -45,5 +45,17 @@ namespace LPH
 		Result.MaxLines = Math::Clamp(Values.MaxLines, 1, 12);
 		Result.CollapseMin = Math::Clamp(Values.CollapseMin, 0, 20);
 		return Result;
+	}
+
+	// Whether two sets of values are the same, field by field (the controller redraws only for new values). A new field of
+	// FLPH_Values goes here too.
+	bool SameValues(const FLPH_Values& A, const FLPH_Values& B)
+	{
+		return A.Language == B.Language && A.bTape == B.bTape && A.bGothic == B.bGothic && A.Icons == B.Icons
+			&& A.Gamepad == B.Gamepad && A.Scale == B.Scale && A.OffsetX == B.OffsetX && A.OffsetY == B.OffsetY
+			&& A.bCounter == B.bCounter && A.bShake == B.bShake && A.TapeNext == B.TapeNext && A.TapeDone == B.TapeDone
+			&& A.bSlide == B.bSlide && A.bPlate == B.bPlate && A.PerLine == B.PerLine && A.MaxLines == B.MaxLines
+			&& A.CollapseMin == B.CollapseMin && A.bAutoPick == B.bAutoPick && A.bDoubleReset == B.bDoubleReset
+			&& A.bTimer == B.bTimer && A.bDebug == B.bDebug;
 	}
 }
