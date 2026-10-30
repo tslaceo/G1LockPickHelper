@@ -38,10 +38,13 @@ class ULPH_TestWorld : UScriptWorldSubsystem
 	{
 		LPHTests_Keys(T);
 		LPHTests_LockDb(T);
+		LPHTests_Solver(T);
+		LPHTests_SolverGolden(T);
 
 		if (bGolden)
 		{
-			// The full reference runs (the solver against the 1.2.0 sequences) go here.
+			// The full reference runs (the solver against the 1.2.0 sequences).
+			LPHTests_SolverGoldenFull(T);
 		}
 	}
 }
