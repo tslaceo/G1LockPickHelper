@@ -41,6 +41,11 @@ def one_based(lock):
     return [(src + 1, dst + 1, d) for src, dst, d in lock.edges]
 
 
+def lock_text(*lines):
+    """A lock class (header on line 1, `{` on line 2, the given lines from line 3)."""
+    return "class UX_Lock: UGothicLockConfig\n{\n" + "".join(f" {line}\n" for line in lines) + "}\n"
+
+
 class ParseTest(unittest.TestCase):
     def test_names_from_m_unique_name_or_the_class_name_without_u(self):
         locks = sample_locks()
@@ -89,10 +94,13 @@ class ParseTest(unittest.TestCase):
         unnamed = sample_locks()["Fixture_Unnamed_Lock"]
         self.assertEqual((unnamed.plates, unnamed.edges, unnamed.start), (2, [(1, 0, 1)], [2, 6]))
 
-    def test_connection_to_a_missing_plate_is_kept_as_authored(self):
-        # The generator reports the sources as they are; no lock of Build102 has such a connection (checked below).
-        text = "class UX_Lock: UGothicLockConfig\n{\n default AddPiece(0, 0);\n default AddConnection(3, 4, -1);\n}\n"
-        self.assertEqual(gen.parse_locks(text)[0].edges, [(3, 4, -1)])
+    def test_the_extreme_holes_are_accepted(self):
+        lock = gen.parse_locks(lock_text("default AddPiece(0, 3);", "default AddPiece(1, -3);"))[0]
+        self.assertEqual(lock.start, [1, 7])
+
+    def test_a_commented_out_line_that_would_be_an_error_is_not_one(self):
+        text = lock_text("default AddPiece(0, 0);", "// default AddPiece(1, ROT);", "/* default AddConnection(0, 9, 0) */")
+        self.assertEqual(gen.parse_locks(text)[0].plates, 1)
 
     def test_a_comment_marker_inside_a_string_is_not_a_comment(self):
         text = (
@@ -117,6 +125,90 @@ class ParseTest(unittest.TestCase):
                 )
             with self.assertRaises(ValueError):
                 gen.load_locks(tmp)
+
+
+class RejectionTest(unittest.TestCase):
+    """What the generator does not understand or what cannot be a lock is an error that names the class and the line, never
+    a lock written wrong (a regeneration from a newer Modkit must not go through silently)."""
+
+    PIECE = "default AddPiece(0, 0);"
+
+    def assertRejected(self, lines, *expected):
+        with self.assertRaises(ValueError) as caught:
+            gen.parse_locks(lock_text(*lines))
+        message = str(caught.exception)
+        self.assertIn("class UX_Lock", message)
+        for part in expected:
+            self.assertIn(part, message)
+
+    def test_a_piece_that_is_not_numbers(self):
+        self.assertRejected([self.PIECE, "default AddPiece(1, ROT);"], "line 4", "AddPiece(1, ROT)")
+
+    def test_a_piece_without_a_semicolon(self):
+        self.assertRejected([self.PIECE, "default AddPiece(1, 0)"], "line 4")
+
+    def test_a_connection_without_a_semicolon(self):
+        self.assertRejected([self.PIECE, "default AddPiece(1, 0);", "default AddConnection(0, 1, 1)"], "line 5", "AddConnection(0, 1, 1)")
+
+    def test_a_connection_that_is_not_numbers(self):
+        self.assertRejected([self.PIECE, "default AddConnection(0, N, 1);"], "line 4")
+
+    def test_a_connection_written_without_default(self):
+        self.assertRejected([self.PIECE, "AddConnection(0, 0, 1);"], "line 4")
+
+    def test_a_name_with_an_escaped_quote(self):
+        # (It used to fall back to the class name without a word.)
+        self.assertRejected([r'default m_UniqueName = n"A\"B";', self.PIECE], "line 3", "m_UniqueName")
+
+    def test_a_name_without_a_semicolon(self):
+        self.assertRejected(['default m_UniqueName = n"A"', self.PIECE], "line 3")
+
+    def test_a_name_written_without_default(self):
+        self.assertRejected(['m_UniqueName = n"A";', self.PIECE], "line 3")
+
+    def test_a_hole_outside_the_plate(self):
+        self.assertRejected(["default AddPiece(0, 9);"], "plate 0", "hole -5")
+        self.assertRejected(["default AddPiece(0, 0);", "default AddPiece(1, -4);"], "plate 1", "hole 8")
+        self.assertRejected(["default AddPiece(0, 4);"], "hole 0")
+
+    def test_a_direction_that_is_not_plus_or_minus_one(self):
+        self.assertRejected([self.PIECE, "default AddConnection(0, 0, 0);"], "(0, 0, 0)", "direction")
+        self.assertRejected([self.PIECE, "default AddConnection(0, 0, 2);"], "direction")
+
+    def test_a_connection_to_a_plate_that_is_not_there(self):
+        self.assertRejected([self.PIECE, "default AddConnection(3, 4, -1);"], "(3, 4, -1)", "not in 0..0")
+        self.assertRejected([self.PIECE, "default AddConnection(0, 1, 1);"], "(0, 1, 1)")
+        self.assertRejected([self.PIECE, "default AddConnection(-1, 0, 1);"], "(-1, 0, 1)")
+
+    def test_a_class_without_pieces(self):
+        self.assertRejected([], "no AddPiece")
+        self.assertRejected(['default m_UniqueName = n"A";', "default AddConnection(0, 0, 1);"], "no AddPiece")
+
+    def test_plates_that_are_not_from_zero_or_repeat(self):
+        self.assertRejected([self.PIECE, "default AddPiece(2, 0);"], "not 0..1")
+        self.assertRejected([self.PIECE, self.PIECE], "added twice")
+
+    def test_the_message_of_a_source_file_names_the_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, "Script", "Items"))
+            with open(os.path.join(tmp, "Script", "Items", "Bad.as"), "w", encoding="utf-8") as f:
+                f.write(lock_text(self.PIECE, "default AddPiece(1, ROT);"))
+            with self.assertRaises(ValueError) as caught:
+                gen.load_locks(tmp)
+            self.assertIn("Bad.as", str(caught.exception))
+            self.assertIn("line 4", str(caught.exception))
+
+    def test_main_stops_and_writes_nothing_for_a_source_it_cannot_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, "Script"))
+            with open(os.path.join(tmp, "Script", "Bad.as"), "w", encoding="utf-8") as f:
+                f.write(lock_text(self.PIECE, "default AddPiece(1, ROT);"))
+            out_as, out_lua = os.path.join(tmp, "a.as"), os.path.join(tmp, "b.lua")
+            with contextlib.redirect_stderr(io.StringIO()) as stderr:
+                code = gen.main(["--modkit", tmp, "--out-as", out_as, "--out-lua", out_lua])
+            self.assertEqual(code, 1)
+            self.assertIn("Bad.as", stderr.getvalue())
+            self.assertFalse(os.path.exists(out_as) or os.path.exists(out_lua))
 
 
 class GroundTruthTest(unittest.TestCase):
