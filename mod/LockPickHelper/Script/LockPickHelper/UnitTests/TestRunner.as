@@ -47,6 +47,8 @@ class ULPH_TestWorld : UScriptWorldSubsystem
 		LPHTests_View(T);
 		LPHTests_Texts(T);
 		LPHTests_Controller(T);
+		LPHTests_Icons(T);
+		LPHTests_Game(T);
 
 		if (bGolden)
 		{
