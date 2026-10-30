@@ -50,6 +50,7 @@ class ULPH_TestWorld : UScriptWorldSubsystem
 		LPHTests_Icons(T);
 		LPHTests_Plates(T);
 		LPHTests_Game(T);
+		LPHTests_HintWidget(T);
 
 		if (bGolden)
 		{

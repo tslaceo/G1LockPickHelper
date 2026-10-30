@@ -1,8 +1,8 @@
 // View.as: the 14 cases of tests/view_test.lua of 1.2.0 (cases 01 to 14, in the order of that file; the tracker's Index is
 // 0-based here, so a Lua index of 3 is Index 2 and the counter is Min(Index, total)), then the edge cases 2.0 adds
 // (15 and on): the extreme tape and line settings of Review Focus 4, a view without a plan, labels that are missing.
-// Case 12 of the Lua file renders M.SAMPLE of view.lua; 2.0 has no sample in View.as (the settings preview builds its
-// own), so the same view is built by hand here.
+// Case 12 of the Lua file renders M.SAMPLE of view.lua; 2.0 has no sample in View.as, so the same view is built by hand
+// here (LPHTests_SampleView, which the preview of the hint draws too).
 
 // "D+ A- W+" -> the history { D ok, A miss, W ok }
 bool LPHTests_ViewKeyOf(FString Letter, ELPH_Key& Key)
@@ -370,9 +370,7 @@ void LPHTests_ViewCases12(ULPH_TestRun T)
 {
 	// 12 (view.lua's M.SAMPLE: a miss, a run in progress, a long plan)
 	T.Begin("View 12 the example renders in both layouts");
-	FLPH_TrackerView Sample = LPHTests_ViewOf("DAAAAWDDSADDDWASDAAW", 2, "S+ W- D+ A+");
-	Sample.Pressed = 4;
-	Sample.Misses = 1;
+	FLPH_TrackerView Sample = LPHTests_SampleView();
 	FLPH_HintModel M = LPHTests_ViewTape(Sample, 5, 3);
 	T.EqualStr(LPHTests_ViewCellText(M, 3), "A", "current");
 	T.EqualInt(M.Misses, 1, "misses");
@@ -410,6 +408,15 @@ void LPHTests_ViewCases12(ULPH_TestRun T)
 	T.EqualStr(LPHTests_ViewTokenCounts(LPHTests_ViewRuns(LPHTests_ViewOf("DAAAAAW", 3, "D+ A+ A+"))), "D:0 A:3 W:0", "the current run counts down");
 	T.EqualStr(LPHTests_ViewTokenCounts(LPHTests_ViewFlat(LPHTests_ViewOf("DAAAAAW", 1, "D+"))), "D:0 A:0 A:0 A:0 A:0 A:0 W:0", "no folding");
 	T.EqualStr(LPHTests_ViewTokenCounts(LPHTests_ViewRuns(LPHTests_ViewOf("WWWWD", 4, "W+ W+ W+ W+"))), "W:4 D:0", "a pressed run");
+}
+
+// M.SAMPLE of view.lua of 1.2.0: a miss, a run in progress, a long plan (its Lua index 3 is Index 2 here).
+FLPH_TrackerView LPHTests_SampleView()
+{
+	FLPH_TrackerView Sample = LPHTests_ViewOf("DAAAAWDDSADDDWASDAAW", 2, "S+ W- D+ A+");
+	Sample.Pressed = 4;
+	Sample.Misses = 1;
+	return Sample;
 }
 
 // "D:0 A:5 W:0": the key and Count of every token of the first line (Count 0: a single key).
