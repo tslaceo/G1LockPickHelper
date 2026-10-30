@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.0.0
+
+LockPick Helper is now a mod for the game's official Modkit and works on the current game version (`Build102`),
+which refuses to start with UE4SS. The features are the ones of 1.2.0.
+
+- Install from the Steam Workshop, or by hand: extract the archive into `G1R\Mods` (`G1R\Mods\LockPickHelper\GothicMod.json`).
+  No UE4SS, no Shared Mod Menu. The game warns "This save was made with a different modlist" when you load a save made
+  without the mod (or with another list of mods): choose Continue anyway.
+- The settings are in the game's options, on the Game tab, in the block "[Mod] LockPick Helper" (20 rows), in the
+  language of the mod. They replace `settings.ini` and the Shared Mod Menu tab; a `settings.ini` of 1.x is not read, the
+  settings start from their defaults. "Dark background" is one row for the tape and the lines. The Shared Mod Menu
+  buttons "Show example" and "Reset position" and its input fix are gone. The settings can be changed between
+  lockpicking minigames only: the options cannot be opened during one.
+- Same as before: the hint (tape or lines, simple or gothic style, dark background, counter, shake on a miss, smooth
+  scroll, folded repeats), auto-pick (F3 in the minigame and right before it, "Always auto-pick", reset twice,
+  countdown), the game's gamepad icons, English and Russian, the lockpicking skill. F4 and F3 work in the minigame
+  and outside it; they are fixed keys now (the game's options cannot take a key).
+- New: while the solver prepares a big lock the hint says "Thinking…" ("Считаю…").
+- The lock database comes from the Modkit sources of `Build102` (416 locks).
+- The log is `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log`, new on every start. For a detailed log add `Debug=True` under
+  `[/Script/Angelscript.LPH_Settings]` in `GameUserSettings.ini` (README, "Report a bug").
+- 1.x stays for the Steam beta branch `previousrelease` (game build `Build83`, with UE4SS) and gets no updates.
+
 ## 1.2.0
 
 - Auto-pick shows how long it still needs: "Auto-picking… 12 s" counts down to the open lock. `[solve] timer`

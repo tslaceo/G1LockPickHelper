@@ -22,7 +22,8 @@ SOFTWARE.
 
 ---
 
-Game data. Scripts/lockgraphs.lua (mod/G1LockPickHelper/Scripts/lockgraphs.lua in the source
-repository) and tests/fixtures/groundtruth.json contain lock layouts extracted from Gothic 1
-Remake by tools/extract_lockgraphs.py. They are not covered by this license; the game and its
-data belong to their rights holders.
+Game data. mod/LockPickHelper/Script/LockPickHelper/LockGraphs.as, tools/oracle/locks_data.lua,
+mod/LockPickHelper/Script/LockPickHelper/UnitTests/GoldenSolver.as and tests/fixtures/* contain
+lock layouts, and data derived from them, from Gothic 1 Remake; the first two are generated from
+the sources of the G1R-Modkit by tools/gen_lockgraphs.py. They are not covered by this license;
+the game and its data belong to their rights holders.

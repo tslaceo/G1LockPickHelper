@@ -1,4 +1,4 @@
-# Copies the Modkit package from this repo into the game's Mods folder (the whole package, Tests/ included), after
+# Copies the Modkit package from this repo into the game's Mods folder (the whole package, UnitTests/ included), after
 # removing the old copy. Refuses while the game is running: it holds the scripts.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\deploy.ps1 -GameDir "<Gothic 1 Remake folder>"
 #        [-Source mod\LockPickHelper]
