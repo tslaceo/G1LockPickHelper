@@ -4,8 +4,10 @@
 // of A (-1) or D (+1) moves the selected plate and the plates it is connected with (a connection moves its plate the
 // way the selected one goes, or the opposite way); a hole that would leave 1..7 strains the pick, so such a press is not
 // a move. Moves can be undone, so one search from the open lock (every hole 4) gives the distance of every state to it.
-// A state is the number code = sum((hole - 1) * 7^plate); Dist is indexed by code, -1 is "not reached". The search is
-// split into pieces of LPH::SolverChunk states so that a 7-plate lock (823,543 states) is prepared over several frames.
+// A state is the number code = sum((hole - 1) * 7^plate); Dist is indexed by code, -1 is "not reached". Begin only builds
+// the moves (a few hundred operations); Step does all the work that grows with the number of states (7^plates, 823,543
+// for 7 plates): filling Dist with -1, then the search. Both go in pieces of LPH::SolverChunk, so a lock is prepared over
+// several frames, each taking the time it is given.
 //
 // To keep the search fast every state also travels as a packed number (4 bits per plate, hole - 1), from which one table
 // lookup per two plates says which of the moves are open; the move's change of the code and of the packed number are
@@ -24,7 +26,7 @@ namespace LPH
 	const int HoleMax = 7;
 	const int HoleGoal = 4;
 	const int SolverMaxPlates = 7; // 7^7 states is the biggest search (all the locks of the game have 4 to 7 plates)
-	const int SolverChunk = 1000; // states searched between two looks at the clock
+	const int SolverChunk = 1000; // states filled or searched between two looks at the clock
 }
 
 class ULPH_Solver : UObject
@@ -47,14 +49,20 @@ class ULPH_Solver : UObject
 	// 2*group + 1 (high 4 bits) leave open (bit m is move m).
 	TArray<int> OpenBy;
 
+	int StateCount = 0; // 7^PlateCount
+	int GoalCode = 0; // the code and the packed number of the open lock (every hole 4)
+	int GoalPacked = 0;
+
+	// The work of Step. Dist grows to StateCount entries of -1 (its length says how far the fill is), then the queue gets
+	// the goal and the search goes on until the queue is used up.
 	TArray<int> Dist;
 	TArray<int> Queue; // the codes found, in the order of the search
 	TArray<int> QueuePacked; // and the same states, packed
 	int Head = 0; // the next of them to look at
-	int Tail = 0; // how many there are
+	int Tail = 0; // how many there are (0: the search has not started)
 
-	// Starts the search for this lock; Step does the work. A solver is used for one lock after another: what it had
-	// is dropped (and its memory freed). A graph with no plates or more than LPH::SolverMaxPlates cannot be searched:
+	// Starts the preparation for this lock; Step does the work (Begin is quick: it builds the moves and nothing the size of
+	// the state space). A solver is used for one lock after another: what it had is dropped (and its memory freed). A graph with no plates or more than LPH::SolverMaxPlates cannot be searched:
 	// the solver is then ready at once with no plates, and every Solve says BadState. Connections that name a plate the
 	// lock does not have are skipped.
 	void Begin(FLPH_LockGraph Graph)
@@ -140,28 +148,18 @@ class ULPH_Solver : UObject
 			}
 		}
 
-		int GoalCode = 0;
-		int GoalPacked = 0;
+		StateCount = Size;
 		for (int Plate = 0; Plate < PlateCount; Plate++)
 		{
 			GoalCode += (LPH::HoleGoal - LPH::HoleMin) * Weights[Plate];
 			GoalPacked += (LPH::HoleGoal - LPH::HoleMin) * (1 << (4 * Plate));
 		}
-		Dist.SetNum(Size);
-		for (int Code = 0; Code < Size; Code++)
-			Dist[Code] = -1;
-		Queue.SetNum(Size);
-		QueuePacked.SetNum(Size);
-		Dist[GoalCode] = 0;
-		Queue[0] = GoalCode;
-		QueuePacked[0] = GoalPacked;
-		Head = 0;
-		Tail = 1;
 	}
 
-	// Goes on with the search for about BudgetMs milliseconds (the clock is looked at once in LPH::SolverChunk states).
-	// At least one such piece is searched even with 0 ms, so that repeated calls always come to an end. True when the
-	// search is done (and for a solver that is ready already). False also for a solver that was never given a lock.
+	// Goes on with the preparation for about BudgetMs milliseconds (the clock is looked at once in LPH::SolverChunk
+	// states, in the fill and in the search alike). At least one such piece is done even with 0 ms, so that repeated
+	// calls always come to an end. True when the solver is ready (and for one that was ready already). False also for a
+	// solver that was never given a lock.
 	bool Step(int BudgetMs)
 	{
 		if (bReady)
@@ -172,22 +170,35 @@ class ULPH_Solver : UObject
 		int64 Started = LPH::NowMs();
 		do
 		{
-			SearchPiece();
+			if (Dist.Num() < StateCount)
+				FillPiece();
+			else
+				SearchPiece();
 		}
-		while (Head < Tail && LPH::NowMs() - Started < BudgetMs);
+		while (!bReady && LPH::NowMs() - Started < BudgetMs);
+		return bReady;
+	}
 
-		if (Head < Tail)
-			return false;
-		Queue.Empty();
-		QueuePacked.Empty();
-		bReady = true;
-		return true;
+	// Adds up to LPH::SolverChunk entries of "not reached" to Dist.
+	void FillPiece()
+	{
+		int Count = Math::Min(LPH::SolverChunk, StateCount - Dist.Num());
+		for (int i = 0; i < Count; i++)
+			Dist.Add(-1);
 	}
 
 	// Looks at up to LPH::SolverChunk states of the queue and puts the states one move away that were not reached yet
-	// at its end: their distance is one more.
+	// at its end: their distance is one more. The first piece starts the queue with the open lock; the one that uses
+	// the queue up makes the solver ready (and frees the queue).
 	void SearchPiece()
 	{
+		if (Tail == 0)
+		{
+			Dist[GoalCode] = 0;
+			Queue.Add(GoalCode);
+			QueuePacked.Add(GoalPacked);
+			Tail = 1;
+		}
 		int Left = LPH::SolverChunk;
 		while (Head < Tail && Left > 0)
 		{
@@ -207,8 +218,8 @@ class ULPH_Solver : UObject
 					if (Dist[To] < 0)
 					{
 						Dist[To] = Next;
-						Queue[Tail] = To;
-						QueuePacked[Tail] = Packed + MovePacked[Move];
+						Queue.Add(To);
+						QueuePacked.Add(Packed + MovePacked[Move]);
 						Tail++;
 					}
 				}
@@ -216,9 +227,16 @@ class ULPH_Solver : UObject
 				Move++;
 			}
 		}
+
+		if (Head >= Tail)
+		{
+			Queue.Empty();
+			QueuePacked.Empty();
+			bReady = true;
+		}
 	}
 
-	// True when the search is done: Solve works.
+	// True when the preparation is done (the fill and the search): Solve works.
 	bool IsReady() const
 	{
 		return bReady;
@@ -235,7 +253,7 @@ class ULPH_Solver : UObject
 	// that come closer to the goal are looked at plate by plate (A before D) and the first with the least cursor travel
 	// wins; W/S walk the cursor to its plate first. Ok with no keys: the lock is open. NoSafePath: no sequence gets
 	// there without a strain. BadState: not the lock's number of holes, a hole outside 1..7, the cursor outside the
-	// plates, or the search is not done yet. OutKeys is empty unless the answer is Ok.
+	// plates, or the preparation is not done yet. OutKeys is empty unless the answer is Ok.
 	ELPH_SolveStatus Solve(const TArray<int>& Holes, int Cursor, TArray<ELPH_Key>& OutKeys) const
 	{
 		OutKeys.Reset();
@@ -369,6 +387,9 @@ class ULPH_Solver : UObject
 		PlateCount = 0;
 		MoveCount = 0;
 		bReady = false;
+		StateCount = 0;
+		GoalCode = 0;
+		GoalPacked = 0;
 		Weights.Empty();
 		MoveOffset.Empty();
 		MovePacked.Empty();

@@ -20,6 +20,24 @@ FLPH_LockGraph LPHTests_FreePlates(int Plates)
 	return Graph;
 }
 
+// Plates in a ring, each connected with the next one by four connections with it: every move takes some hole out of
+// 1..7 from the open lock itself, so the search ends after one state (and only the preparation of the arrays takes time).
+FLPH_LockGraph LPHTests_StuckPlates(int Plates)
+{
+	FLPH_LockGraph Graph;
+	Graph.Plates = Plates;
+	for (int Plate = 0; Plate < Plates; Plate++)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			Graph.Src.Add(Plate);
+			Graph.Dst.Add((Plate + 1) % Plates);
+			Graph.Dir.Add(1);
+		}
+	}
+	return Graph;
+}
+
 TArray<int> LPHTests_Holes2(int A, int B)
 {
 	TArray<int> Holes;
@@ -260,7 +278,7 @@ void LPHTests_Solver(ULPH_TestRun T)
 	}
 	T.True(bDone, "Step(0) gets the solver ready");
 	T.True(Slow.IsReady(), "IsReady after the last Step");
-	T.True(SlowCalls <= 17, "every Step(0) does at least a chunk of 1000 states, so 16,807 states take 17 calls at most");
+	T.True(SlowCalls <= 34, "every Step(0) does at least a chunk of 1000 states, so filling and searching 16,807 states take 34 calls at most");
 	T.True(Slow.Step(0), "Step on a ready solver says so");
 
 	// The same answer as the one-call search, and the least presses (the distance of every plate to 4).
@@ -282,6 +300,92 @@ void LPHTests_Solver(ULPH_TestRun T)
 			Presses++;
 	}
 	T.EqualInt(Presses, 3 + 3 + 1 + 1 + 2, "free plates: one press for each step to 4");
+
+	// The arrays are prepared in slices too, not by Begin: a 6-plate lock whose search ends after one state still takes
+	// one Step(0) for every 1000 of its 117,649 states (the fill) and has nothing ready after Begin.
+	ULPH_Solver Stuck6 = Cast<ULPH_Solver>(NewObject(T, ULPH_Solver::StaticClass()));
+	Stuck6.Begin(LPHTests_StuckPlates(6));
+	T.True(!Stuck6.IsReady(), "6 stuck plates: Begin leaves the arrays to Step");
+	int Stuck6Calls = 1;
+	while (!Stuck6.Step(0) && Stuck6Calls < 100000)
+		Stuck6Calls++;
+	T.True(Stuck6.IsReady(), "6 stuck plates: ready after the Steps");
+	T.True(Stuck6Calls >= 118, "6 stuck plates: the fill of 117,649 entries takes at least 118 Step(0) calls");
+	TArray<int> Six4;
+	for (int i = 0; i < 6; i++)
+		Six4.Add(4);
+	T.True(Stuck6.Solve(Six4, 0, Keys) == ELPH_SolveStatus::Ok, "6 stuck plates: the open lock is solved");
+	TArray<int> Six3 = Six4;
+	Six3[2] = 3;
+	T.True(Stuck6.Solve(Six3, 0, Keys) == ELPH_SolveStatus::NoSafePath, "6 stuck plates: any other state has no safe path");
+
+	// A lock prepared in slices gives the same answers as one prepared in one call: a 6-plate lock of the game
+	// (BC_Chest_04_Lock; about half of its states cannot reach the goal), the starting holes of its 1.2.0 reference case,
+	// the open lock and 40 states of a fixed pseudo-random series (every plate's hole, and the cursor).
+	ULPH_LockDb Db = LPHTests_MakeLockDb(T);
+	LPH_RegisterLockGraphs(Db);
+	FLPH_LockGraph SixPlates;
+	int Dropped = 0;
+	T.True(Db.Find(n"BC_Chest_04_Lock", 0, SixPlates, Dropped), "BC_Chest_04_Lock is in the database");
+	T.EqualInt(SixPlates.Plates, 6, "BC_Chest_04_Lock has 6 plates");
+	ULPH_Solver Sliced = Cast<ULPH_Solver>(NewObject(T, ULPH_Solver::StaticClass()));
+	Sliced.Begin(SixPlates);
+	T.True(!Sliced.IsReady(), "BC_Chest_04_Lock: Begin leaves the work to Step");
+	int SixCalls = 1;
+	while (!Sliced.Step(0) && SixCalls < 100000)
+		SixCalls++;
+	T.True(Sliced.IsReady(), "BC_Chest_04_Lock: ready after the Steps");
+	T.True(SixCalls > 1, "BC_Chest_04_Lock: more than one Step(0) call");
+	ULPH_Solver OneShot = LPHTests_ReadySolver(T, SixPlates);
+
+	int Seed = 4711;
+	int OkStates = 0;
+	int NoPathStates = 0;
+	for (int Sample = 0; Sample < 42; Sample++)
+	{
+		TArray<int> State;
+		int SampleCursor = 0;
+		if (Sample == 0)
+		{
+			State.Add(2);
+			State.Add(7);
+			State.Add(6);
+			State.Add(1);
+			State.Add(2);
+			State.Add(1);
+		}
+		else if (Sample == 1)
+		{
+			State = Six4;
+			SampleCursor = 5;
+		}
+		else
+		{
+			for (int Plate = 0; Plate < 6; Plate++)
+			{
+				Seed = ((Seed * 75) + 74) % 65537;
+				State.Add(1 + (Seed % 7));
+			}
+			Seed = ((Seed * 75) + 74) % 65537;
+			SampleCursor = Seed % 6;
+		}
+		TArray<ELPH_Key> SlicedKeys;
+		TArray<ELPH_Key> OneShotKeys;
+		ELPH_SolveStatus SlicedStatus = Sliced.Solve(State, SampleCursor, SlicedKeys);
+		ELPH_SolveStatus OneShotStatus = OneShot.Solve(State, SampleCursor, OneShotKeys);
+		T.True(SlicedStatus == OneShotStatus, f"BC_Chest_04_Lock sample {Sample}: the same status");
+		T.EqualStr(LPH::KeysText(SlicedKeys), LPH::KeysText(OneShotKeys), f"BC_Chest_04_Lock sample {Sample}: the same keys");
+		if (OneShotStatus == ELPH_SolveStatus::Ok)
+			OkStates++;
+		if (OneShotStatus == ELPH_SolveStatus::NoSafePath)
+			NoPathStates++;
+		if (Sample == 0)
+			T.EqualStr(LPH::KeysText(SlicedKeys), "WAASDWWAWDWDDDDDDWDDSSSAAASSD", "BC_Chest_04_Lock: the keys of 1.2.0 from the sliced solver");
+		if (Sample == 1)
+			T.EqualInt(SlicedKeys.Num(), 0, "BC_Chest_04_Lock: the open lock needs no keys");
+	}
+	T.True(OkStates >= 10, f"BC_Chest_04_Lock: the samples hold safe paths ({OkStates})");
+	T.True(NoPathStates >= 10, f"BC_Chest_04_Lock: the samples hold states without a safe path ({NoPathStates})");
 }
 
 // Checks one case of the 1.2.0 reference (GoldenSolver.as): the solver of this lock and Removed connections dropped,
@@ -313,16 +417,32 @@ namespace LPHGolden
 		for (int i = 0; i < Graph.Plates && i < All.Num(); i++)
 			Holes.Add(All[i]);
 
+		// Prepared the way the mod will: Step after Step, each with the time the mod gives it per frame.
 		ULPH_Solver Solver = Cast<ULPH_Solver>(NewObject(T, ULPH_Solver::StaticClass()));
 		int64 Started = LPH::NowMs();
 		Solver.Begin(Graph);
-		int Calls = 0;
-		while (!Solver.Step(1000000) && Calls < 1000)
-			Calls++;
-		int Took = int(LPH::NowMs() - Started);
+		int64 Begun = LPH::NowMs();
+		bool bDone = Solver.Step(LPH::PrepareBudgetMs);
+		int64 StepEnded = LPH::NowMs();
+		int FirstStep = int(StepEnded - Begun);
+		int LongestStep = FirstStep;
+		int Steps = 1;
+		while (!bDone && Steps < 100000)
+		{
+			bDone = Solver.Step(LPH::PrepareBudgetMs);
+			int64 Now = LPH::NowMs();
+			if (int(Now - StepEnded) > LongestStep)
+				LongestStep = int(Now - StepEnded);
+			StepEnded = Now;
+			Steps++;
+		}
+		int Took = int(StepEnded - Started);
 		T.True(Solver.IsReady(), Label + ": the solver gets ready");
 		if (Graph.Plates == 7 && T.Output != nullptr)
+		{
 			T.Output.Line(f"solver: {LockName} 7 plates ready in {Took} ms");
+			T.Output.Line(f"solver: {LockName} begin {int(Begun - Started)} ms, first step {FirstStep} ms, {Steps} steps, longest step {LongestStep} ms");
+		}
 
 		TArray<ELPH_Key> Result;
 		ELPH_SolveStatus Status = Solver.Solve(Holes, Cursor, Result);
