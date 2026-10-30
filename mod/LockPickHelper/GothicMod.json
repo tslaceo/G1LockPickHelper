@@ -2,7 +2,17 @@
 	"name": "LockPickHelper",
 	"title": "LockPick Helper: hint and auto-pick",
 	"author": "tslaceo",
-	"description": "Shows the keys that open the lock, planned for your lockpicking skill, and picks the lock for you with F3 without straining the pick.",
 	"projectWebsiteURL": "https://github.com/tslaceo/G1LockPickHelper",
-	"modVersion": "2.0.0"
+	"description": "Shows the keys that open the lock, planned for your lockpicking skill, and picks the lock for you with F3 without straining the pick.",
+	"modVersion": "2.0.0",
+	"metadata":
+	{
+		"SteamWorkshopID": "3830422263"
+	},
+	"scriptPreprocessorDefines": [],
+	"tags": [
+		"Utility"
+	],
+	"loadOrder": "Normal",
+	"dependencies": []
 }
