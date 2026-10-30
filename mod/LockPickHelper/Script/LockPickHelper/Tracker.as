@@ -40,6 +40,20 @@ struct FLPH_TrackerView
 	int Plan = 0;
 }
 
+// The numbers of the view without its copies of the keys and the history (View() copies both, up to 512 presses).
+// Whatever View() returns changes only together with one of these: the keys only on a replan (Plan grows), the history
+// with Pressed or on R (which replans), the status on a replan or when the game shows the open lock. A caller that looks
+// every frame compares these and calls View() only when they changed.
+struct FLPH_TrackerSummary
+{
+	ELPH_Status Status = ELPH_Status::BadState;
+	int Plan = 0;
+	int Index = 0;
+	int HistoryNum = 0; // History.Num() of the view
+	int Pressed = 0;
+	int Misses = 0;
+}
+
 namespace LPH
 {
 	const int TrackerHistoryMax = 512; // presses kept for the hint's "done" part
@@ -239,6 +253,24 @@ class ULPH_Tracker : UObject
 		{
 			Result.Status = ELPH_Status::Solved;
 			Result.Keys.Reset();
+			Result.Index = 0;
+		}
+		return Result;
+	}
+
+	// View() without the copies (FLPH_TrackerSummary).
+	FLPH_TrackerSummary Summary() const
+	{
+		FLPH_TrackerSummary Result;
+		Result.Status = Status;
+		Result.Plan = Plan;
+		Result.Index = Index;
+		Result.HistoryNum = History.Num();
+		Result.Pressed = Pressed;
+		Result.Misses = Misses;
+		if (bDone)
+		{
+			Result.Status = ELPH_Status::Solved;
 			Result.Index = 0;
 		}
 		return Result;

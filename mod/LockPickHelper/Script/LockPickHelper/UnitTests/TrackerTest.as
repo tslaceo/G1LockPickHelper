@@ -1,6 +1,6 @@
 // Tracker.as: the 30 cases of tests/tracker_test.lua of 1.2.0 (cases 01 to 30, in the order of that file, with the cursor
 // 0-based and Observe given -1 as the highlight, as 1.x had no highlight), then the cases of the highlight that 2.0 added
-// (31 and on).
+// (31 to 38) and of Summary (39).
 
 // The fake minigame: applies presses the way the game does (W/S clamp, a strained move changes nothing).
 class ULPH_FakeGame : UObject
@@ -701,4 +701,44 @@ void LPHTests_TrackerHighlight(ULPH_TestRun T, ULPH_Solver Free3)
 	Bare.Observe(Start, 1, 100);
 	V = Bare.View();
 	T.True(V.Status == ELPH_Status::BadState, "status after presses and a reading");
+
+	// 39
+	T.Begin("Tracker 39 Summary has the numbers of View");
+	Tr = LPHTests_NewTracker(T, Free3, Start, true);
+	T.EqualStr(LPHTests_SummaryText(Tr.Summary()), LPHTests_ViewText(Tr.View()), "a new tracker");
+	Tr.Key(LPHTests_WrongKey(Tr), 0);
+	T.EqualStr(LPHTests_SummaryText(Tr.Summary()), LPHTests_ViewText(Tr.View()), "after a miss");
+	V = Tr.View();
+	Tr.Key(V.Keys[V.Index], 10);
+	T.EqualStr(LPHTests_SummaryText(Tr.Summary()), LPHTests_ViewText(Tr.View()), "after the hinted key");
+	Tr.Key(ELPH_Key::R, 20);
+	T.EqualStr(LPHTests_SummaryText(Tr.Summary()), LPHTests_ViewText(Tr.View()), "after R");
+	Tr.Observe(LPHTests_Holes3(4, 4, 4), -1, 100);
+	T.EqualStr(LPHTests_SummaryText(Tr.Summary()), LPHTests_ViewText(Tr.View()), "solved");
+	T.True(Tr.Summary().Status == ELPH_Status::Solved, "the summary says solved");
+	T.EqualStr(LPHTests_SummaryText(Bare.Summary()), LPHTests_ViewText(Bare.View()), "without a solver");
+}
+
+FString LPHTests_StatusName(ELPH_Status Status)
+{
+	if (Status == ELPH_Status::Ok)
+		return "ok";
+	if (Status == ELPH_Status::Solved)
+		return "solved";
+	if (Status == ELPH_Status::NoSafePath)
+		return "nosafepath";
+	return "badstate";
+}
+
+// The numbers of a view and of a summary in the same words: status, plan, index, history, pressed, misses.
+FString LPHTests_ViewText(const FLPH_TrackerView& V)
+{
+	FString Status = LPHTests_StatusName(V.Status);
+	return f"{Status} plan {V.Plan} index {V.Index} history {V.History.Num()} pressed {V.Pressed} misses {V.Misses}";
+}
+
+FString LPHTests_SummaryText(const FLPH_TrackerSummary& S)
+{
+	FString Status = LPHTests_StatusName(S.Status);
+	return f"{Status} plan {S.Plan} index {S.Index} history {S.HistoryNum} pressed {S.Pressed} misses {S.Misses}";
 }
