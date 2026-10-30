@@ -1,0 +1,8 @@
+{
+	"name": "LockPickHelper",
+	"title": "LockPick Helper",
+	"author": "tslaceo",
+	"description": "Shows the exact W/S/A/D key sequence that opens a lock in the lockpicking minigame, and can pick the lock for you. This is an unofficial modification. It is not made, endorsed or supported by THQ Nordic.",
+	"projectWebsiteURL": "https://github.com/tslaceo/G1LockPickHelper",
+	"modVersion": "2.0.0"
+}
