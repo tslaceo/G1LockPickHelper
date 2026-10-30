@@ -323,9 +323,14 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   `scripts/deploy.ps1`: that copy brings `UnitTests/` (about 7,000 lines the game would compile for every subscriber) and
   the working tree's state.
 - **Files the game may add.** Both scripts stop, naming the file, when `G1R\Mods\LockPickHelper` holds a file that is not
-  in the archive (the package, for `deploy.ps1`) and is not a script; nothing is deleted then. An id file that the game
-  writes into the folder after a Workshop upload would show up this way: look at it after the hidden upload and, if there
-  is one, commit it to the repository, so that the next upload updates the same item.
+  in the archive (the package, for `deploy.ps1`) and is not a script; nothing is deleted then.
+- **The Workshop item.** "Prepare Steam Workshop Item" in the game's `-ModManagementUI` writes the item's id
+  (`metadata.SteamWorkshopID`, 3830422263) and the tags into `GothicMod.json`; that file is in the repository as the game
+  wrote it, so every upload updates the same item. In this game build the mod manager crashes on the preview image's
+  **Select** button: upload without an image, and set the preview with SteamCMD (`workshop_build_item` on a VDF with
+  `appid` 1297900, `publishedfileid` and `previewfile` only, which leaves the files, the title and the description
+  alone). The long description is edited on the item's page in Steam; check after an upload from the game whether it
+  was replaced by the short one from `GothicMod.json`.
 
 ## AngelScript pitfalls of this build
 
