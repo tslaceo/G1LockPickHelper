@@ -5,9 +5,10 @@
 LockPick Helper is now a mod for the game's official Modkit and works on the current game version (`Build102`),
 which refuses to start with UE4SS. The features are the ones of 1.2.0.
 
-- Install from the Steam Workshop, or by hand: extract the archive into `G1R\Mods` (`G1R\Mods\LockPickHelper\GothicMod.json`).
-  No UE4SS, no Shared Mod Menu. The game warns "This save was made with a different modlist" when you load a save made
-  without the mod (or with another list of mods): choose Continue anyway.
+- Install from the Steam Workshop, or by hand: extract the archive into the game folder (the one that contains the
+  `G1R` folder), so that `G1R\Mods\LockPickHelper\GothicMod.json` exists. No UE4SS, no Shared Mod Menu. The game warns
+  "This save was made with a different modlist" when you load a save made without the mod (or with another list of
+  mods): choose Continue anyway.
 - The settings are in the game's options, on the Game tab, in the block "[Mod] LockPick Helper" (20 rows), in the
   language of the mod. They replace `settings.ini` and the Shared Mod Menu tab; a `settings.ini` of 1.x is not read, the
   settings start from their defaults. "Dark background" is one row for the tape and the lines. The Shared Mod Menu

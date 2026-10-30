@@ -26,13 +26,14 @@ you, using only moves that cannot strain the pick.
 
 ## Install
 
-**Steam Workshop:** subscribe to LockPick Helper. The game finds Workshop mods by itself; there is nothing to copy.
+**Steam Workshop:** subscribe to [LockPick Helper: hint and auto-pick](https://steamcommunity.com/sharedfiles/filedetails/?id=3830422263).
+The game finds Workshop mods by itself; there is nothing to copy.
 
 **By hand** (the file from Nexus or from the GitHub release):
 
-1. Extract the archive (`LockPickHelper-<version>.zip`) into the `Mods` folder of the game's `G1R` folder (make
-   `Mods` if it is not there). The archive holds one folder, `LockPickHelper`, so that
-   `G1R\Mods\LockPickHelper\GothicMod.json` exists afterwards. `README.txt` and `LICENSE.txt` are in that folder too.
+1. Extract the archive (`LockPickHelper-<version>.zip`) into the game folder (the one that contains the `G1R`
+   folder), so that `G1R\Mods\LockPickHelper\GothicMod.json` exists afterwards. `README.txt` and `LICENSE.txt` are in
+   that folder too.
 2. Start the game. It should list the mod as enabled: the main menu shows "1 mods enabled" (with this mod alone). If
    it does not, start the game with the launch option `-ModManagementUI` and enable LockPick Helper in the game's mod
    list; the same list turns the mod off.
@@ -95,6 +96,11 @@ one. A change applies from the next lock.
 | Double reset | Two resets within half a second start auto-pick | on / off | on |
 | Countdown | While auto-pick works, the hint says "Auto-picking… 12 s", the seconds still needed. Off: "Auto-picking…" | on / off | on |
 
+## Status
+
+The mod is not in active development: the author has finished the game and does not plan another playthrough for
+now. Every feature was tested in game; compatibility with other mods was not tested.
+
 ## Report a bug
 
 1. Attach `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log` (a new file on every start of the game). Its first line
@@ -150,12 +156,13 @@ The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`
   `tests done: <N> passed, <M> failed`. `-LPHTests=golden` adds the full reference runs of the solver. (A script
   compile error shows as a window of the game.)
 - Release archive: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package.ps1` →
-  `out\LockPickHelper-<version>.zip`. It packs only the files git tracks in `mod/LockPickHelper` and refuses to pack
-  while that folder has an uncommitted or untracked file, or while `LPH::DebugAlways` in `Config.as` is true.
+  `out\LockPickHelper-<version>.zip`, whose entries are `G1R/Mods/LockPickHelper/...` (extract it into the game
+  folder). It packs only the files git tracks in `mod/LockPickHelper` and refuses to pack while that folder has an
+  uncommitted or untracked file, or while `LPH::DebugAlways` in `Config.as` is true.
 - The release build in the game, as a player gets it (for a manual-install check, and before a Workshop upload):
-  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-release.ps1 -GameDir "<game folder>"` replaces
-  `G1R\Mods\LockPickHelper` with that archive and checks the result. More in [docs/TECHNICAL.md](docs/TECHNICAL.md),
-  "Release".
+  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-release.ps1 -GameDir "<game folder>"` extracts
+  that archive into the game folder, replacing `G1R\Mods\LockPickHelper`, and checks the result. More in
+  [docs/TECHNICAL.md](docs/TECHNICAL.md), "Release".
 
 How the mod works inside: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 

@@ -7,13 +7,13 @@ strain the pick.
 Needs the current Gothic 1 Remake (tested on Build102_CL175960). No UE4SS, no other mods.
 
 Install
-- Steam Workshop: subscribe to LockPick Helper.
-- By hand: this archive holds the folder LockPickHelper. Extract the archive into the
-  game's G1R\Mods folder (make Mods if it is not there), so that
-  G1R\Mods\LockPickHelper\GothicMod.json exists. README.txt and LICENSE.txt are in that
-  folder too. Start the game: the main menu should show "1 mods enabled" (this mod
-  alone). If it does not, start the game with the launch option -ModManagementUI and
-  enable LockPick Helper in the game's mod list.
+- Steam Workshop: subscribe to "LockPick Helper: hint and auto-pick":
+  https://steamcommunity.com/sharedfiles/filedetails/?id=3830422263
+- By hand: extract this archive into the game folder (the one that contains the G1R
+  folder), so that G1R\Mods\LockPickHelper\GothicMod.json exists. README.txt and
+  LICENSE.txt are in that folder too. Start the game: the main menu should show
+  "1 mods enabled" (this mod alone). If it does not, start the game with the launch
+  option -ModManagementUI and enable LockPick Helper in the game's mod list.
 Use one way, Workshop or by hand, not both: to switch to Workshop, delete
 G1R\Mods\LockPickHelper first.
 Uninstall: unsubscribe, or delete the folder G1R\Mods\LockPickHelper.
@@ -31,6 +31,10 @@ Settings: Options > Game, the block "[Mod] LockPick Helper" (20 rows). They can 
 changed between lockpicking minigames only: the options cannot be opened during one.
 The labels are in the language of the row Language (0: the game's language); a change
 of that row shows in the menu after a save load or a restart.
+
+Status: not in active development (the author has finished the game and plans no new
+playthrough for now). Every feature was tested in game; compatibility with other mods
+was not tested.
 
 Report a bug: attach %LOCALAPPDATA%\G1R\Saved\LockPickHelper.log (new on every start).
 For a detailed log close the game and, in the section

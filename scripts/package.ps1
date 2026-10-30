@@ -1,5 +1,6 @@
-# Builds the release archive: out\LockPickHelper-<version>.zip, to be extracted into the game's G1R\Mods folder.
-# Inside: the folder LockPickHelper\ with GothicMod.json, Script\LockPickHelper\ (without UnitTests\, the in-game tests),
+# Builds the release archive: out\LockPickHelper-<version>.zip, to be extracted into the game folder (the one that
+# contains G1R), as the 1.x archives were.
+# Inside: G1R/Mods/LockPickHelper/ with GothicMod.json, Script\LockPickHelper\ (without UnitTests\, the in-game tests),
 # README.txt and LICENSE.txt - so that G1R\Mods\LockPickHelper\GothicMod.json exists after extracting, and the two texts
 # stay in the mod's own folder instead of among the other mods'.
 # Only what git tracks goes in (git ls-files mod/LockPickHelper, minus UnitTests/), and it refuses to pack while
@@ -49,7 +50,7 @@ if ($readme -notmatch [regex]::Escape("LockPick Helper $version ")) { throw "REA
 # The stage: the tracked files of the mod's folder without the tests, and the license as LICENSE.txt.
 $stage = Join-Path $repoRoot "out\package"
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force -Confirm:$false }
-$target = Join-Path $stage "LockPickHelper"
+$target = Join-Path $stage "G1R\Mods\LockPickHelper"
 New-Item -ItemType Directory -Force $target | Out-Null
 $prefix = "mod/LockPickHelper/"
 foreach ($file in $tracked) {

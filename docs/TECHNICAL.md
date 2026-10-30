@@ -312,13 +312,16 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
 ## Release
 
 - **Build.** Commit everything under `mod/` and keep `LPH::DebugAlways` false, then `scripts/package.ps1` makes
-  `out/LockPickHelper-<version>.zip`. It packs only the files `git ls-files mod/LockPickHelper` lists (minus
-  `UnitTests/`) and stops on an uncommitted or untracked file under `mod/LockPickHelper`, on `DebugAlways` true (the
-  trial archive made with `-AllowDebugAlways` is named `...-debug.zip`) and on a version that differs between
-  `GothicMod.json`, `Config.as` and `README.txt`.
+  `out/LockPickHelper-<version>.zip`. Its entries are laid out from the game folder, as the 1.x archives were:
+  `G1R/Mods/LockPickHelper/GothicMod.json`, `.../Script/LockPickHelper/*.as`, `.../README.txt`, `.../LICENSE.txt`
+  (26 files); a player extracts it into the game folder (the one that contains `G1R`). It packs only the files
+  `git ls-files mod/LockPickHelper` lists (minus `UnitTests/`) and stops on an uncommitted or untracked file under
+  `mod/LockPickHelper`, on `DebugAlways` true (the trial archive made with `-AllowDebugAlways` is named
+  `...-debug.zip`) and on a version that differs between `GothicMod.json`, `Config.as` and `README.txt`.
 - **Check the build, then upload.** For a manual-install check and before every Workshop upload (the hidden test one
-  and the public one) run `scripts/install-release.ps1 -GameDir "<game folder>"`. It replaces `G1R\Mods\LockPickHelper`
-  with the archive as players get it and asserts that `DebugAlways` is false and no tests folder, `LICENSE.txt` and
+  and the public one) run `scripts/install-release.ps1 -GameDir "<game folder>"`. It refuses an archive with an entry
+  outside `G1R/Mods/LockPickHelper/`, extracts the archive into the game folder, replacing `G1R\Mods\LockPickHelper`,
+  as players get it, and asserts that `DebugAlways` is false and no tests folder, `LICENSE.txt` and
   `README.txt` are there. The Workshop uploads the folder `G1R\Mods\LockPickHelper` as it is, so never upload after
   `scripts/deploy.ps1`: that copy brings `UnitTests/` (about 7,000 lines the game would compile for every subscriber) and
   the working tree's state.

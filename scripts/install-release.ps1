@@ -1,11 +1,13 @@
 # Puts the release archive into the game exactly as a player gets it: removes G1R\Mods\LockPickHelper, extracts
-# out\LockPickHelper-<version>.zip (the one package.ps1 built) into G1R\Mods and checks what is there. The Workshop
-# uploads the folder G1R\Mods\LockPickHelper as it is, so a Workshop upload must be made from this - never after
-# deploy.ps1, which brings UnitTests\ and the debug switch of the working tree.
-# Refuses while the game is running (it holds the scripts), a *-debug.zip and an archive whose Config.as says
-# DebugAlways = true (all before anything in the game folder is touched). If the folder it would remove
-# holds a file that is not in the archive and is not a .as under Script\ (an id file the game may write after a Workshop
-# upload, say), it stops and names the file instead of deleting it.
+# out\LockPickHelper-<version>.zip (the one package.ps1 built) into the game folder (its entries are all
+# G1R/Mods/LockPickHelper/...) and checks what is there. The Workshop uploads the folder G1R\Mods\LockPickHelper as it
+# is, so a Workshop upload must be made from this - never after deploy.ps1, which brings UnitTests\ and the debug
+# switch of the working tree.
+# Refuses while the game is running (it holds the scripts), a *-debug.zip, an archive with an entry outside
+# G1R/Mods/LockPickHelper/ and an archive whose Config.as says DebugAlways = true (all before anything in the game
+# folder is touched). If the folder it would remove holds a file that is not in the archive and is not a .as under
+# Script\ (an id file the game may write after a Workshop upload, say), it stops and names the file instead of
+# deleting it.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-release.ps1 -GameDir "<Gothic 1 Remake folder>"
 #        [-Zip out\LockPickHelper-<version>.zip]   (relative to the repository root; the version is modVersion of
 #        mod\LockPickHelper\GothicMod.json)
@@ -32,11 +34,12 @@ if (-not (Test-Path $Zip)) { throw "No archive: $Zip (build it with scripts\pack
 if ((Split-Path $Zip -Leaf) -like "*-debug.zip") { throw "$(Split-Path $Zip -Leaf) is a trial archive (DebugAlways); install a release archive" }
 
 # The archive's own file list, read before anything in the game folder is touched.
+$entryRoot = "G1R/Mods/LockPickHelper"
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $archive = [System.IO.Compression.ZipFile]::OpenRead($Zip)
 try {
     $entries = @($archive.Entries | Where-Object { $_.Name -ne "" } | ForEach-Object { $_.FullName })
-    $configEntry = $archive.GetEntry("LockPickHelper/Script/LockPickHelper/Config.as")
+    $configEntry = $archive.GetEntry("$entryRoot/Script/LockPickHelper/Config.as")
     if ($configEntry) {
         $reader = New-Object System.IO.StreamReader($configEntry.Open(), [System.Text.Encoding]::UTF8)
         try { $archivedConfig = $reader.ReadToEnd() } finally { $reader.Dispose() }
@@ -45,9 +48,9 @@ try {
     $archive.Dispose()
 }
 foreach ($entry in $entries) {
-    if (-not $entry.StartsWith("LockPickHelper/") -or $entry.Contains("..")) { throw "Unexpected entry in the archive: $entry" }
+    if (-not $entry.StartsWith("$entryRoot/") -or $entry.Contains("..")) { throw "Unexpected entry in the archive: $entry" }
 }
-if ($entries -notcontains "LockPickHelper/GothicMod.json") { throw "The archive has no LockPickHelper/GothicMod.json" }
+if ($entries -notcontains "$entryRoot/GothicMod.json") { throw "The archive has no $entryRoot/GothicMod.json" }
 if (-not $configEntry -or $archivedConfig -notmatch 'const bool DebugAlways = false;') {
     throw "Config.as in the archive does not say DebugAlways = false: not a release archive"
 }
@@ -57,7 +60,7 @@ $target = Join-Path $modsDir "LockPickHelper"
 if (Test-Path $target) {
     $targetFull = (Resolve-Path $target).Path
     $known = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
-    foreach ($entry in $entries) { [void]$known.Add($entry.Substring("LockPickHelper/".Length).Replace('/', '\')) }
+    foreach ($entry in $entries) { [void]$known.Add($entry.Substring("$entryRoot/".Length).Replace('/', '\')) }
     $unknown = @(Get-ChildItem $targetFull -Recurse -File -Force | ForEach-Object { $_.FullName.Substring($targetFull.Length + 1) } |
         Where-Object { -not $known.Contains($_) -and -not ($_ -like "Script\*.as") })
     if ($unknown) {
@@ -67,7 +70,7 @@ if (Test-Path $target) {
     }
     Remove-Item $target -Recurse -Force -Confirm:$false
 }
-[System.IO.Compression.ZipFile]::ExtractToDirectory($Zip, $modsDir)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($Zip, $GameDir)
 
 # What is there now is checked, not assumed.
 if (-not (Test-Path (Join-Path $target "GothicMod.json"))) { throw "After extracting there is no $target\GothicMod.json" }
