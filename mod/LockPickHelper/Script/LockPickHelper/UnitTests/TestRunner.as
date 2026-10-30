@@ -41,6 +41,7 @@ class ULPH_TestWorld : UScriptWorldSubsystem
 		LPHTests_Solver(T);
 		LPHTests_SolverGolden(T);
 		LPHTests_Tracker(T);
+		LPHTests_AutoSolve(T);
 
 		if (bGolden)
 		{
