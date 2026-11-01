@@ -1,4 +1,4 @@
-LockPick Helper 2.0.0 - lockpicking helper for Gothic 1 Remake (a mod for the game's Modkit)
+LockPick Helper 2.0.1 - lockpicking helper for Gothic 1 Remake (a mod for the game's Modkit)
 
 Shows the key sequence that opens the lock in the lockpicking minigame and follows
 you through it. F3 lets the mod pick the lock for you, using only moves that cannot

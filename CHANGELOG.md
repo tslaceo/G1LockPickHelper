@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.1
+
+- Fixed: with "Gold letters" off, the gamepad icons came out darker and more orange than the letters and the game's own
+  icons. The game's icons are already beige, and the mod tinted them beige once more. Now they look as the game draws
+  them; with "Gold letters" the current key's icon is a brighter gold, and the done and missed keys are nearer the
+  green and the red of the letters.
+- README: the known limit about remapped walking was wrong. The minigame always takes W/A/S/D, whatever keys walking is
+  bound to, so the hint's letters are always the keys to press.
+
 ## 2.0.0
 
 LockPick Helper is now a mod for the game's official Modkit and works on the current game version (`Build102`),

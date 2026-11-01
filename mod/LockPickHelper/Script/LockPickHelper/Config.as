@@ -26,7 +26,7 @@ namespace LPH
 	const int HotkeyTwiceMs = 150; // F3/F4 by the key binding and by the key catcher this close together: one press
 	const int PadNameWaitMs = 1500; // after a switch to the gamepad, icons that go by its name wait this long for the name (R15)
 
-	const FString ModVersion = "2.0.0"; // also modVersion in GothicMod.json
+	const FString ModVersion = "2.0.1"; // also modVersion in GothicMod.json
 
 	// A switch for the in-game checks of 2.0 (Tasks 12 and 14), which want every detail in the log without the tester
 	// touching the ini: while this is true the debug lines are always written. False in everything that ships (the

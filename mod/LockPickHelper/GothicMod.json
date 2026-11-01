@@ -4,7 +4,7 @@
 	"author": "tslaceo",
 	"projectWebsiteURL": "https://github.com/tslaceo/G1LockPickHelper",
 	"description": "Shows the keys that open the lock, planned for your lockpicking skill, and picks the lock for you with F3 without straining the pick.",
-	"modVersion": "2.0.0",
+	"modVersion": "2.0.1",
 	"metadata":
 	{
 		"SteamWorkshopID": "3830422263"

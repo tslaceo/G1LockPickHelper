@@ -120,8 +120,6 @@ now. Every feature was tested in game; compatibility with other mods was not tes
 
 ## Known limits
 
-- The minigame takes the game's movement keys (W/S/A/D), and the hint always writes W, S, A, D. If you remapped
-  walking in the game's controls, the hint's letters are not the keys you press.
 - The hint needs the lock in the mod's database (416 locks, made from the Modkit sources of build
   `Build102_CL175960`). A lock the database does not know shows `Lock not in the database: <name>`; a game update
   may add or change locks, and the log then warns that the database is for another build.
