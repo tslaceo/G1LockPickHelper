@@ -335,8 +335,9 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   wrote it, so every upload updates the same item. In this game build the mod manager crashes on the preview image's
   **Select** button: upload without an image, and set the preview with SteamCMD (`workshop_build_item` on a VDF with
   `appid` 1297900, `publishedfileid` and `previewfile` only, which leaves the files, the title and the description
-  alone). The long description is edited on the item's page in Steam; check after an upload from the game whether it
-  was replaced by the short one from `GothicMod.json`.
+  alone). Every upload from the game replaces the English description with the short one from `GothicMod.json` (seen
+  with 2.0.1; the Russian one and the preview stay): paste the long one back in "Edit title & description" on the
+  item's page in Steam.
 
 ## AngelScript pitfalls of this build
 
