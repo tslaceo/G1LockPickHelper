@@ -143,7 +143,10 @@ fixed width, so the slide needs no measuring) or the lines (tokens as wide as th
   `Boucherie-Block_Font` (plain style, the game's key prompts) and `NotoSerif-Regular_Font` (`Bold` for the gold
   letters, `Default` for the counter and the notes), the D-pad icons
   `/Game/UI/Textures/Common/HotkeysIcons/T_Icon_PS_Dpad<Up|Down|Left|Right>` (Xbox: `T_Icon_Xbox_Dpad...`, Switch:
-  `T_Icon_Switch_<...>`), tinted like the letters. An asset that does not load gives the engine font or the letter, with
+  `T_Icon_Switch_<...>`). The icons are already the beige of the key prompts (the game draws them untinted), so an icon
+  is tinted with its letter's colour divided by that beige (`LPH::IconTint`, each channel at most 1): in the plain style
+  it is the game's own icon, in the other colours as near the letter as the beige allows (2.0.0 tinted it with the
+  letter's colour and it came out darker). An asset that does not load gives the engine font or the letter, with
   one log line per path.
 - The two styles are the setting "Gold letters" (`bGothic` in the player's files, the name from 1.x). Off, the plain
   style copies the minigame's own key prompts, measured on a 3440x1440 screenshot of its legend (the boxes "A D", "W S",

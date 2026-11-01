@@ -99,6 +99,7 @@ void LPHTests_HintWidgetTape(ULPH_TestRun T, ULPH_ViewportLayer Layer)
 	T.EqualStr(Current.BrushPath, LPH::KeyTexture(ELPH_IconSet::PlayStation, ELPH_Key::A), "the icon of A");
 	T.True(Current.Tail.GetVisibility() == ESlateVisibility::Collapsed, "a tape cell has no count");
 	T.True(Current.Color.R == LPH::SimpleCurrent.R && Current.Color.A == 1.0, "the icon takes the letter's colour");
+	T.True(LPHTests_SameColor(Current.Icon.ColorAndOpacity, 1.0, 1.0, 1.0, 1.0), "drawn untinted, as the game draws it");
 	Hint.SetIcons(ELPH_IconSet::Letters);
 	T.True(LPHTests_HintShown(Current.Letter) && !LPHTests_HintShown(Current.IconRow), "letters again");
 	T.EqualInt(Hint.Builds, 1, "no rebuild for icons");
@@ -220,6 +221,13 @@ void LPHTests_HintWidgetStyles(ULPH_TestRun T, ULPH_ViewportLayer Layer)
 	T.True(LPHTests_SameColor(Gold.Current, 1.0, 0.78, 0.1, 1.0), "gold letters: the current letter is gold");
 	T.True(LPHTests_SameColor(Gold.Next, 1.0, 1.0, 1.0, 1.0), "the others white");
 	T.True(Gold.FrameRadius == 3.0 && Gold.FrameWidth == 2.0 && Gold.bCurrentShadow, "a rounded frame of 2 px, the shadow as before");
+
+	T.Begin("HintWidget style: an icon's tint takes out the beige the game's icons already have");
+	T.True(LPHTests_SameColor(LPH::IconTint(Plain.Current), 1.0, 1.0, 1.0, 1.0), "plain: the icon untinted");
+	T.True(LPHTests_SameColor(LPH::IconTint(FLinearColor(1.0, 0.68, 0.51, 0.4)), 1.0, 1.0, 1.0, 0.4), "the fade's opacity kept");
+	T.True(LPHTests_SameColor(LPH::IconTint(Gold.Next), 1.0, 1.0, 1.0, 1.0), "white is as near as a tint gets: untinted");
+	T.True(LPHTests_SameColor(LPH::IconTint(Gold.Current), 1.0, 1.0, 0.1 / 0.51, 1.0), "gold: the blue taken down, green at the beige");
+	T.True(LPHTests_SameColor(LPH::IconTint(LPH::ColorMiss), 0.92, 0.29 / 0.68, 0.24 / 0.51, 1.0), "a miss: exactly the red");
 
 	T.Begin("HintWidget style: plain tape - a square thin frame, no shadow under the current letter only");
 	TArray<FString> Letters;

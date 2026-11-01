@@ -752,7 +752,7 @@ class ULPH_HintWidget : UObject
 		{
 			if (bIconic)
 			{
-				Token.Icon.SetColorAndOpacity(Color);
+				Token.Icon.SetColorAndOpacity(LPH::IconTint(Color));
 				Token.Tail.SetColorAndOpacity(FSlateColor(Color));
 			}
 			else

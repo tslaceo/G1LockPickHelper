@@ -69,6 +69,26 @@ namespace LPH
 	const float GothicFrameRadius = 3.0;
 	const float GothicFrameWidth = 2.0;
 
+	// The game's gamepad icons (HotkeysIcons) are already in the beige of its key prompts: the game draws them untinted.
+	// An icon tinted with its letter's colour got that beige twice and came out darker than the letters and the game's
+	// own icons (2.0.0). IconTint takes the beige out: in the plain style the icons are the game's own, in the other
+	// colours as near the letter as a tint of that beige can get (a channel the beige cannot reach stays at the beige).
+	const FLinearColor IconBase = FLinearColor(1.0, 0.68, 0.51, 1.0);
+
+	FLinearColor IconTint(FLinearColor Letter)
+	{
+		return FLinearColor(IconChannel(Letter.R, IconBase.R), IconChannel(Letter.G, IconBase.G),
+			IconChannel(Letter.B, IconBase.B), Letter.A);
+	}
+
+	float IconChannel(float Letter, float Base)
+	{
+		float Tint = Letter / Base;
+		if (Tint > 1.0)
+			return 1.0;
+		return Tint;
+	}
+
 	// The style of the setting "Gold letters" (bGothic: its property in the player's files keeps the old name).
 	FLPH_Style StyleOf(bool bGothic)
 	{
