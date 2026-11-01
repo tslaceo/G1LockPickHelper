@@ -161,10 +161,9 @@ The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`
   `out\LockPickHelper-<version>.zip`, whose entries are `G1R/Mods/LockPickHelper/...` (extract it into the game
   folder). It packs only the files git tracks in `mod/LockPickHelper` and refuses to pack while that folder has an
   uncommitted or untracked file, or while `LPH::DebugAlways` in `Config.as` is true.
-- The release build in the game, as a player gets it (for a manual-install check, and before a Workshop upload):
+- The release build in the game, as a player gets it:
   `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-release.ps1 -GameDir "<game folder>"` extracts
-  that archive into the game folder, replacing `G1R\Mods\LockPickHelper`, and checks the result. More in
-  [docs/TECHNICAL.md](docs/TECHNICAL.md), "Release".
+  that archive into the game folder, replacing `G1R\Mods\LockPickHelper`, and checks the result.
 
 How the mod works inside: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 

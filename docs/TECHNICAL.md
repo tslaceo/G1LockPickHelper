@@ -312,33 +312,6 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
 - Not covered by tests, checked in game: the extension, the focus catcher, the key binding, the widgets in the window
   and in the layer.
 
-## Release
-
-- **Build.** Commit everything under `mod/` and keep `LPH::DebugAlways` false, then `scripts/package.ps1` makes
-  `out/LockPickHelper-<version>.zip`. Its entries are laid out from the game folder, as the 1.x archives were:
-  `G1R/Mods/LockPickHelper/GothicMod.json`, `.../Script/LockPickHelper/*.as`, `.../README.txt`, `.../LICENSE.txt`
-  (26 files); a player extracts it into the game folder (the one that contains `G1R`). It packs only the files
-  `git ls-files mod/LockPickHelper` lists (minus `UnitTests/`) and stops on an uncommitted or untracked file under
-  `mod/LockPickHelper`, on `DebugAlways` true (the trial archive made with `-AllowDebugAlways` is named
-  `...-debug.zip`) and on a version that differs between `GothicMod.json`, `Config.as` and `README.txt`.
-- **Check the build, then upload.** For a manual-install check and before every Workshop upload (the hidden test one
-  and the public one) run `scripts/install-release.ps1 -GameDir "<game folder>"`. It refuses an archive with an entry
-  outside `G1R/Mods/LockPickHelper/`, extracts the archive into the game folder, replacing `G1R\Mods\LockPickHelper`,
-  as players get it, and asserts that `DebugAlways` is false and no tests folder, `LICENSE.txt` and
-  `README.txt` are there. The Workshop uploads the folder `G1R\Mods\LockPickHelper` as it is, so never upload after
-  `scripts/deploy.ps1`: that copy brings `UnitTests/` (about 7,000 lines the game would compile for every subscriber) and
-  the working tree's state.
-- **Files the game may add.** Both scripts stop, naming the file, when `G1R\Mods\LockPickHelper` holds a file that is not
-  in the archive (the package, for `deploy.ps1`) and is not a script; nothing is deleted then.
-- **The Workshop item.** "Prepare Steam Workshop Item" in the game's `-ModManagementUI` writes the item's id
-  (`metadata.SteamWorkshopID`, 3830422263) and the tags into `GothicMod.json`; that file is in the repository as the game
-  wrote it, so every upload updates the same item. In this game build the mod manager crashes on the preview image's
-  **Select** button: upload without an image, and set the preview with SteamCMD (`workshop_build_item` on a VDF with
-  `appid` 1297900, `publishedfileid` and `previewfile` only, which leaves the files, the title and the description
-  alone). Every upload from the game replaces the English description with the short one from `GothicMod.json` (seen
-  with 2.0.1; the Russian one and the preview stay): paste the long one back in "Edit title & description" on the
-  item's page in Steam.
-
 ## AngelScript pitfalls of this build
 
 - The game silently does not compile script folders named `Test`, `Tests` or `Dev` (no error, the files are just not
