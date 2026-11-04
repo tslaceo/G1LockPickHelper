@@ -21,7 +21,7 @@ you, using only moves that cannot strain the pick.
 
 ## Requirements
 
-- Gothic 1 Remake with Modkit support (tested on build `Build102_CL175960`).
+- Gothic 1 Remake with Modkit support.
 - Nothing else: no UE4SS, no other mods.
 
 ## Install
@@ -121,9 +121,8 @@ now. Every feature was tested in game; compatibility with other mods was not tes
 
 ## Known limits
 
-- The hint needs the lock in the mod's database (416 locks, made from the Modkit sources of build
-  `Build102_CL175960`). A lock the database does not know shows `Lock not in the database: <name>`; a game update
-  may add or change locks, and the log then warns that the database is for another build.
+- The hint needs the lock in the mod's database (416 locks, made from the Modkit sources). A lock the database does
+  not know shows `Lock not in the database: <name>`.
 - Settings change only between minigames (see Settings).
 - A held D-pad repeats the move quickly.
 - A DualSense through Steam Input looks like an Xbox pad to the game: with the row "Icons" at 0 and the game's
@@ -132,7 +131,7 @@ now. Every feature was tested in game; compatibility with other mods was not tes
 
 ## Older game version (UE4SS)
 
-2.0 runs on the current game (`Build102`), which refuses to start with UE4SS installed. 1.x was a UE4SS mod and
+2.0 runs on the current game, which refuses to start with UE4SS installed. 1.x was a UE4SS mod and
 stays for the Steam beta branch `previousrelease` (game build `Build83_CL174209`, with UE4SS - AngelScript Fix):
 [1.2.0 on Nexus](https://www.nexusmods.com/gothic1remake/mods/654) and the
 [v1.2.0 release on GitHub](https://github.com/tslaceo/G1LockPickHelper/releases/tag/v1.2.0). It gets no updates. Its

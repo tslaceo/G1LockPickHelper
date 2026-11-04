@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The log no longer warns when the game's build is not the one the lock database was made from: the lock scripts were
+  the same in Build102 and Build106. The start line still names both builds.
+
 ## 2.0.1
 
 - Fixed: with "Gold letters" off, the gamepad icons came out darker and more orange than the letters and the game's own

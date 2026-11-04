@@ -182,8 +182,8 @@ out of the sources.
   hole, `4 - rotation` (checked in game on `OC_Chest_Mud_Lock`: 7 5 7 7 5).
 
 Names are compared without case (an `FName` does). Where a class has two `m_UniqueName` lines (`UOC_Mages_Room_01_Lock`)
-the last wins, as in 1.x. The start line of the log names the database's build, and a `WARNING` line comes when
-`G1R/Version/version.txt` names another one. The 416 locks equal the database of 1.2.0, which was extracted from the game's
+the last wins, as in 1.x. The start line of the log names the game's build (`G1R/Version/version.txt`) and the
+database's. The lock scripts were the same in Build102 and Build106, so a build that differs is no warning. The 416 locks equal the database of 1.2.0, which was extracted from the game's
 precompiled script cache.
 
 ## Solver

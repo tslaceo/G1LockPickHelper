@@ -258,7 +258,7 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 		return Graph.Plates;
 	}
 
-	// The start line (the first questions of a bug report), a warning when the database is for another game build, and the
+	// The start line (the first questions of a bug report: the game's build and the database's are both in it) and the
 	// settings.
 	private void LogStart()
 	{
@@ -278,10 +278,6 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 		Head += f", language {LangName} (setting {Values.Language}, game {GameLanguage}), icons {Values.Icons}/{Values.Gamepad} (button icons {Graphics})";
 		Head += f", F3/F4 by key binding and key catcher, debug {DebugText}";
 		ModLog.Line(Head);
-		if (Build.IsEmpty())
-			ModLog.Line(f"cannot read the game build; the lock database is for {LPH::LocksBuild}");
-		else if (Build != LPH::LocksBuild)
-			ModLog.Line(f"WARNING: the lock database is for {LPH::LocksBuild}, the game is {Build}: locks may have changed");
 		ModLog.Line("settings: " + LPH::ValuesText(Values));
 	}
 }
