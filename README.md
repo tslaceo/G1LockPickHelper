@@ -52,8 +52,8 @@ Betas). The `settings.ini` of 1.x is not read: set the settings again in Options
 
 **The game's warning about saves.** The game remembers the list of mods in a save. Loading a save made with another
 list - before you installed the mod, or after you removed it - shows "This save was made with a different modlist":
-choose **Continue anyway**. "Sync mods and restart game" turns the mod off; to turn it back on, start the game's Mod
-Management UI (in Steam: Play > Gothic 1 Remake Mod Management UI), tick LockPick Helper and click Start Game.
+choose **Continue anyway**. "Sync mods and restart game" turns the mod off. To turn it back on, click "mods enabled" at
+the top right of the main menu, then Manage mods, tick LockPick Helper and click Restart Game.
 
 Uninstall: unsubscribe in the Workshop, or delete the folder `G1R\Mods\LockPickHelper`.
 
