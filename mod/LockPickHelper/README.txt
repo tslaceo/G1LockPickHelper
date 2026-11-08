@@ -4,7 +4,7 @@ Shows the key sequence that opens the lock in the lockpicking minigame and follo
 you through it. F3 lets the mod pick the lock for you, using only moves that cannot
 strain the pick.
 
-Needs the current Gothic 1 Remake (tested on Build102_CL175960). No UE4SS, no other mods.
+Needs the current Gothic 1 Remake. No UE4SS, no other mods.
 
 Install
 - Steam Workshop: subscribe to "LockPick Helper: hint and auto-pick":
