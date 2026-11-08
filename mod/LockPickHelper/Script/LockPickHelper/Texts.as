@@ -4,7 +4,7 @@
 // picks the language its own interface is in, and another mod can add a language to these IDs with a YAML of its own.
 // The English below is the fallback for an ID the database does not answer (it gives an empty string then), and the
 // English YAML must say the same (tests/test_texts.py). {0} is filled by the mod (LPH::Fill). The player-facing name of
-// the autosolver is "auto-pick" / "автовзлом" / "Auto-Knacken" / "autootwieranie".
+// the autosolver is "auto-pick" / "автовзлом" / "automatisches Knacken" / "autootwieranie".
 
 struct FLPH_Texts
 {

@@ -5,43 +5,43 @@ LPH_NoSafePath:
   german: "Ohne Risiko für den Dietrich nicht zu öffnen"
 
 LPH_BadState:
-  german: "Das Schloss lässt sich nicht lesen"
+  german: "Schloss konnte nicht gelesen werden"
 
 LPH_HintOn:
-  german: "Hinweis an ({0})"
+  german: "Hinweis eingeblendet ({0})"
 
 LPH_HintOff:
-  german: "Hinweis aus ({0})"
+  german: "Hinweis ausgeblendet ({0})"
 
 LPH_Solving:
-  german: "Auto-Knacken…"
+  german: "Automatisches Knacken…"
 
 LPH_SolvingTime:
-  german: "Auto-Knacken… {0} s"
+  german: "Automatisches Knacken… {0} s"
 
 LPH_SolveArmed:
-  german: "Auto-Knacken wartet auf das Schloss"
+  german: "Automatisches Knacken wartet auf das Schloss"
 
 LPH_SolveStopped:
-  german: "Auto-Knacken gestoppt"
+  german: "Automatisches Knacken gestoppt"
 
 LPH_SolveUnavailable:
-  german: "Auto-Knacken nicht verfügbar"
+  german: "Automatisches Knacken nicht verfügbar"
 
 LPH_SolveOn:
-  german: "Auto-Knacken an ({0})"
+  german: "Automatisches Knacken an ({0})"
 
 LPH_SolveOff:
-  german: "Auto-Knacken aus ({0})"
+  german: "Automatisches Knacken aus ({0})"
 
 LPH_DoubleReset:
   german: "doppeltes Zurücksetzen"
 
 LPH_Thinking:
-  german: "Rechne…"
+  german: "Berechne…"
 
 LPH_Row_Tape:
-  german: "Band statt Zeilen"
+  german: "Laufband statt Zeilen"
 
 LPH_Row_Gothic:
   german: "Goldene Buchstaben"
@@ -65,7 +65,7 @@ LPH_Row_Counter:
   german: "Zähler"
 
 LPH_Row_Shake:
-  german: "Wackeln bei Fehler"
+  german: "Wackeln bei Fehlern"
 
 LPH_Row_TapeNext:
   german: "Nächste Tasten"
@@ -74,7 +74,7 @@ LPH_Row_TapeDone:
   german: "Gedrückte Tasten"
 
 LPH_Row_Slide:
-  german: "Weiches Scrollen"
+  german: "Flüssiges Scrollen"
 
 LPH_Row_Plate:
   german: "Dunkler Hintergrund"
@@ -89,7 +89,7 @@ LPH_Row_CollapseMin:
   german: "Wiederholungen zusammenfassen ab"
 
 LPH_Row_AutoPick:
-  german: "Immer Auto-Knacken"
+  german: "Immer automatisch knacken"
 
 LPH_Row_DoubleReset:
   german: "Doppeltes Zurücksetzen"

@@ -38,10 +38,10 @@ LPH_DoubleReset:
   polish: "podwójny reset"
 
 LPH_Thinking:
-  polish: "Liczę…"
+  polish: "Obliczam…"
 
 LPH_Row_Tape:
-  polish: "Taśma zamiast wierszy"
+  polish: "Pasek zamiast wierszy"
 
 LPH_Row_Gothic:
   polish: "Złote litery"
@@ -65,7 +65,7 @@ LPH_Row_Counter:
   polish: "Licznik"
 
 LPH_Row_Shake:
-  polish: "Drganie przy błędzie"
+  polish: "Wstrząs przy pomyłce"
 
 LPH_Row_TapeNext:
   polish: "Następne klawisze"
@@ -86,7 +86,7 @@ LPH_Row_MaxLines:
   polish: "Wierszy na ekranie"
 
 LPH_Row_CollapseMin:
-  polish: "Zwijaj powtórzenia od"
+  polish: "Zwijanie powtórzeń od"
 
 LPH_Row_AutoPick:
   polish: "Zawsze autootwieranie"
