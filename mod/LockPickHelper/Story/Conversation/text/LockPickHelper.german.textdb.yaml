@@ -1,0 +1,98 @@
+LPH_NotInDb:
+  german: "Schloss nicht in der Datenbank: {0}"
+
+LPH_NoSafePath:
+  german: "Ohne Risiko für den Dietrich nicht zu öffnen"
+
+LPH_BadState:
+  german: "Das Schloss lässt sich nicht lesen"
+
+LPH_HintOn:
+  german: "Hinweis an ({0})"
+
+LPH_HintOff:
+  german: "Hinweis aus ({0})"
+
+LPH_Solving:
+  german: "Auto-Knacken…"
+
+LPH_SolvingTime:
+  german: "Auto-Knacken… {0} s"
+
+LPH_SolveArmed:
+  german: "Auto-Knacken wartet auf das Schloss"
+
+LPH_SolveStopped:
+  german: "Auto-Knacken gestoppt"
+
+LPH_SolveUnavailable:
+  german: "Auto-Knacken nicht verfügbar"
+
+LPH_SolveOn:
+  german: "Auto-Knacken an ({0})"
+
+LPH_SolveOff:
+  german: "Auto-Knacken aus ({0})"
+
+LPH_DoubleReset:
+  german: "doppeltes Zurücksetzen"
+
+LPH_Thinking:
+  german: "Rechne…"
+
+LPH_Row_Tape:
+  german: "Band statt Zeilen"
+
+LPH_Row_Gothic:
+  german: "Goldene Buchstaben"
+
+LPH_Row_Icons:
+  german: "Symbole (0 auto, 1 Buchstaben, 2 Symbole)"
+
+LPH_Row_Gamepad:
+  german: "Symbolsatz (0 Spiel, 1 PS, 2 Xbox, 3 Switch)"
+
+LPH_Row_Scale:
+  german: "Größe, %"
+
+LPH_Row_OffsetX:
+  german: "Position X"
+
+LPH_Row_OffsetY:
+  german: "Position Y"
+
+LPH_Row_Counter:
+  german: "Zähler"
+
+LPH_Row_Shake:
+  german: "Wackeln bei Fehler"
+
+LPH_Row_TapeNext:
+  german: "Nächste Tasten"
+
+LPH_Row_TapeDone:
+  german: "Gedrückte Tasten"
+
+LPH_Row_Slide:
+  german: "Weiches Scrollen"
+
+LPH_Row_Plate:
+  german: "Dunkler Hintergrund"
+
+LPH_Row_PerLine:
+  german: "Tasten pro Zeile"
+
+LPH_Row_MaxLines:
+  german: "Zeilen auf dem Bildschirm"
+
+LPH_Row_CollapseMin:
+  german: "Wiederholungen zusammenfassen ab"
+
+LPH_Row_AutoPick:
+  german: "Immer Auto-Knacken"
+
+LPH_Row_DoubleReset:
+  german: "Doppeltes Zurücksetzen"
+
+LPH_Row_Timer:
+  german: "Countdown"

@@ -1,0 +1,98 @@
+LPH_NotInDb:
+  polish: "Zamka nie ma w bazie: {0}"
+
+LPH_NoSafePath:
+  polish: "Nie da się otworzyć bez ryzyka dla wytrycha"
+
+LPH_BadState:
+  polish: "Nie można odczytać zamka"
+
+LPH_HintOn:
+  polish: "Podpowiedź widoczna ({0})"
+
+LPH_HintOff:
+  polish: "Podpowiedź ukryta ({0})"
+
+LPH_Solving:
+  polish: "Autootwieranie…"
+
+LPH_SolvingTime:
+  polish: "Autootwieranie… {0} s"
+
+LPH_SolveArmed:
+  polish: "Autootwieranie czeka na zamek"
+
+LPH_SolveStopped:
+  polish: "Autootwieranie zatrzymane"
+
+LPH_SolveUnavailable:
+  polish: "Autootwieranie niedostępne"
+
+LPH_SolveOn:
+  polish: "Autootwieranie włączone ({0})"
+
+LPH_SolveOff:
+  polish: "Autootwieranie wyłączone ({0})"
+
+LPH_DoubleReset:
+  polish: "podwójny reset"
+
+LPH_Thinking:
+  polish: "Liczę…"
+
+LPH_Row_Tape:
+  polish: "Taśma zamiast wierszy"
+
+LPH_Row_Gothic:
+  polish: "Złote litery"
+
+LPH_Row_Icons:
+  polish: "Ikony (0 auto, 1 litery, 2 ikony)"
+
+LPH_Row_Gamepad:
+  polish: "Zestaw ikon (0 gra, 1 PS, 2 Xbox, 3 Switch)"
+
+LPH_Row_Scale:
+  polish: "Rozmiar, %"
+
+LPH_Row_OffsetX:
+  polish: "Pozycja X"
+
+LPH_Row_OffsetY:
+  polish: "Pozycja Y"
+
+LPH_Row_Counter:
+  polish: "Licznik"
+
+LPH_Row_Shake:
+  polish: "Drganie przy błędzie"
+
+LPH_Row_TapeNext:
+  polish: "Następne klawisze"
+
+LPH_Row_TapeDone:
+  polish: "Wciśnięte klawisze"
+
+LPH_Row_Slide:
+  polish: "Płynne przewijanie"
+
+LPH_Row_Plate:
+  polish: "Ciemne tło"
+
+LPH_Row_PerLine:
+  polish: "Klawiszy w wierszu"
+
+LPH_Row_MaxLines:
+  polish: "Wierszy na ekranie"
+
+LPH_Row_CollapseMin:
+  polish: "Zwijaj powtórzenia od"
+
+LPH_Row_AutoPick:
+  polish: "Zawsze autootwieranie"
+
+LPH_Row_DoubleReset:
+  polish: "Podwójny reset"
+
+LPH_Row_Timer:
+  polish: "Odliczanie"
