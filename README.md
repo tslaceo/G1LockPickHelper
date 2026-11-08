@@ -16,7 +16,9 @@ you, using only moves that cannot strain the pick.
   Press reset twice (Triangle / Y) and the mod picks the lock.
 - **Exact locks.** The lock layouts come from the game's own sources (the official Modkit); the connections your
   lockpicking skill removes are removed from the hint too.
-- **English and Russian**, following the game's language by default.
+- **The game's language.** English, Russian, German and Polish, whichever the game's interface is in (any other
+  language shows English). German and Polish were translated with AI: if a word is wrong, say so in an issue. A
+  translation into another language is one text file (see "Translating the mod").
 - **Settings in the game's options**, on the Game tab.
 
 ## Requirements
@@ -71,17 +73,15 @@ there is no rebinding in 2.0.
 
 ## Settings
 
-Options > the **Game** tab, the block **[Mod] LockPick Helper**: 20 rows, in this order. The game keeps them in
-`GameUserSettings.ini`. The labels are in the language of the row "Language" (0: the game's interface language); a
-change of that row shows in the menu after a save load or a restart (the table gives the English labels). The **Reset**
-button of the tab is the game's own.
+Options > the **Game** tab, the block **[Mod] LockPick Helper**: 19 rows, in this order. The game keeps them in
+`GameUserSettings.ini`. The labels are in the game's language and change with it (the table gives the English labels).
+The **Reset** button of the tab is the game's own.
 
 Settings can be changed only between lockpicking minigames: the game's pause and options cannot be opened during
 one. A change applies from the next lock.
 
 | Row | What it does | Range | Default |
 |---|---|---|---|
-| Language (0 as in the game, 1 English, 2 Русский) | The language of the hint's texts and of these labels. 0 follows the game's interface language: Russian, otherwise English | 0-2 | 0 |
 | Tape layout | On: the tape (the current key and the next ones). Off: lines (the whole sequence) | on / off | on |
 | Gold letters | On: a gold letter in a gold frame (the game's text font). Off: keys like the game's own key prompts in the minigame. Called Gothic style in 1.x | on / off | off |
 | Icons (0 auto, 1 letters, 2 icons) | 0: gamepad icons while you play with a gamepad, letters on the keyboard (and always letters when the game's "Button icons" is "Do not use"). 1: always letters. 2: always gamepad icons | 0-2 | 0 |
@@ -130,6 +130,31 @@ now. Every feature was tested in game; compatibility with other mods was not tes
   "Button icons" on Auto the hint shows Xbox icons. Set the row "Icon set" to 1 (PS), choose "PlayStation 5" in the
   game's "Button icons", or turn Steam Input off for the game (Steam > the game's Properties > Controller).
 
+## Translating the mod
+
+The mod's texts are in the game's own text database, one file per language: `Story/Conversation/text/` in the mod's
+folder (`G1R\Mods\LockPickHelper`, or the Workshop copy) holds `LockPickHelper.english.textdb.yaml` and the files of
+the other languages. The game picks the one its interface is in.
+
+To add a language:
+
+1. Copy `LockPickHelper.english.textdb.yaml` and change `english`, in the file name and in every entry, to the game's
+   name of the language: `english`, `german`, `french`, `spanish`, `italian`, `polish`, `brazilian`, `russian`,
+   `japanese` or `schinese`.
+2. Translate the texts in quotes. Keep the IDs (`LPH_...`) and `{0}`, where the mod puts a key's name or the seconds.
+3. Send the file as a pull request, and it ships with the mod. Or ship it as a mod of your own: a folder with a
+   `GothicMod.json`, the file in `Story/Conversation/text/` and a `Config/Game.ini` that mounts that folder under your
+   mod's own name (the folder's name):
+
+   ```ini
+   [/Script/AlkimiaStoryFileImport.AlkimiaLocalizationSubsystem]
+   +MountPoints=(MountPoint="/MyTranslation", Module="MyTranslation", MountPath="/Story/Conversation")
+   ```
+
+   The game merges your file with the mod's texts; no script is needed. The Modkit's example
+   [New Language Translation](https://github.com/AlkimiaInteractive/G1R-Modkit/tree/main/Examples/Example-NewLanguageTranslation)
+   is such a mod.
+
 ## Older game version (UE4SS)
 
 2.0 runs on the current game, which refuses to start with UE4SS installed. 1.x was a UE4SS mod and
@@ -140,7 +165,8 @@ source is the tag `v1.2.0` of this repository. To move from 1.x to 2.0 see "Upgr
 
 ## Build from source
 
-The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`); its tests are in
+The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`, the texts in
+`Story/Conversation/text/*.textdb.yaml` with their mount in `Config/Game.ini`); its tests are in
 `Script/LockPickHelper/UnitTests/` and stay out of the archive.
 
 - Lock database: `python tools/gen_lockgraphs.py --modkit <G1R-Modkit clone> --commit <sha> --build <Build...>`
@@ -150,6 +176,8 @@ The mod is `mod/LockPickHelper/` (`GothicMod.json`, `Script/LockPickHelper/*.as`
 - Tests of the generator: `python -m unittest tests.test_gen_lockgraphs` (from the repository root). The checks
   against the Modkit sources run when `G1R_MODKIT_DIR` points to the clone; the ones against the 1.2.0 database need
   Lua 5.4 and the tag `v1.2.0`.
+- Tests of the texts: `python -m unittest tests.test_texts` checks the YAML files against each other and against
+  `Texts.as` (the same IDs, one language per file, `{0}` where English has it, English as the code falls back to).
 - Reference data for the solver: `lua tools/oracle/golden.lua` (Lua 5.4, from the repository root; about a minute) runs
   the 1.2.0 solver (`tools/oracle/solver.lua`) over the database and rewrites `UnitTests/GoldenSolver.as`.
 - Deploy into the game: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\deploy.ps1 -GameDir "<game folder>"`

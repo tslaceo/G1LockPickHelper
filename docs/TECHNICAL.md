@@ -17,7 +17,7 @@ All script runs on the game thread; there are no locks or queues.
 | `Config.as` | the internal numbers (those of `config.lua` of 1.2.0 unchanged, and the new ones), `LPH::ModVersion`, `LPH::DebugAlways` | no |
 | `Keys.as` | `ELPH_Key` W S A D R | no |
 | `Values.as` | `FLPH_Values`: the settings as plain numbers, `Clamped`, `SameValues` | no |
-| `Texts.as` | the notes and the row labels, English and Russian | no |
+| `Texts.as` | the notes and the row labels: their Text-IDs in the game's text database, the English fallback | text database only |
 | `LockDb.as`, `LockGraphs.as` | the lock database; its generated data | no |
 | `Solver.as` | the solver | no |
 | `Tracker.as` | follows the player's presses and the plate readings, replans | no |
@@ -28,7 +28,7 @@ All script runs on the game thread; there are no locks or queues.
 | `Controller.as` | one minigame session: phases, F3/F4, notes, auto-pick, what to draw | no |
 | `Look.as` | sizes, colours, fonts of the hint | no |
 | `Log.as` | `LPH::NowMs()`, the log file | file only |
-| `Settings.as` | `ULPH_Settings`: the 20 rows of the game's options, `LPH::ReadValues()` | yes |
+| `Settings.as` | `ULPH_Settings`: the 19 rows of the game's options, `LPH::ReadValues()` | yes |
 | `Game.as` | `LPHGame::`: every read from the game (lock, skill, plates, language, icons, build) | yes |
 | `Mod.as` | `ULPH_Mod`: the game instance subsystem that owns the log, the database, the controller | yes |
 | `LockPickExtension.as` | the extension of the minigame window: lifecycle, tick, presses | yes |
@@ -36,6 +36,9 @@ All script runs on the game thread; there are no locks or queues.
 | `Hotkeys.as` | F3/F4 outside the minigame; the notes shown outside it | yes |
 | `HintWidget.as`, `ViewportLayer.as` | the UMG widgets of the hint; the mod's layer in the viewport | yes |
 | `UnitTests/` | the tests (not in the archive) | |
+
+Beside `Script/`: the texts, `Story/Conversation/text/LockPickHelper.<language>.textdb.yaml`, and `Config/Game.ini`,
+which mounts them into the game's text database.
 
 ## The minigame window
 
@@ -241,21 +244,31 @@ controller reads is the caller's `LPH::NowMs()`, so the tests keep their own clo
 
 ## Settings, language, icons
 
-- **Settings.** `ULPH_Settings : UGothicModExt_UserSettings` with `UCLASS(Config=GameUserSettings)`: 20 `FModUserSettingsBool`
+- **Settings.** `ULPH_Settings : UGothicModExt_UserSettings` with `UCLASS(Config=GameUserSettings)`: 19 `FModUserSettingsBool`
   / `FModUserSettingsInt` properties, `CategoryName` "LockPick Helper"; the game lists them on the Game tab as
   "[Mod] LockPick Helper" and keeps them in `GameUserSettings.ini` under `[/Script/Angelscript.LPH_Settings]`. The class
   name and the property names are in the players' files and must not change. The script sees only a row's `Value` /
   `bValue`; the limits are repeated in `Values.as` (`Clamped`) because a hand-edited ini can hold anything.
-  `Initialize()` gives each row a new struct with the same value and the label in the mod's language (a row has no
-  setter for its label); the game runs it at a save load or a game start, so a change of the Language row relabels the
-  menu after the next load or restart (seen at acceptance). A plain `UPROPERTY(Config) bool Debug` is no row and is
-  saved all the same.
+  A row's label is declared as `LocText("LPH_Row_<row>")`, a text of the game's text database, so the open menu
+  relabels the rows when the game's language changes. `Initialize()`, which the game runs at a save load or a game
+  start, gives a row whose ID the database does not answer its English label (`LPH::RowText`; a row has no setter for
+  its label, so each row gets a new struct with the same value). The Language row of 2.0 is gone; its line in the
+  players' files is not read. A plain `UPROPERTY(Config) bool Debug` is no row and is saved all the same.
 - **Reading.** The game keeps the values on the class default object: `ReadValues()` = `ValuesOf(ULPH_Settings.DefaultObject)`.
   `Mod.Configure()` reads them at the start of the game, at every minigame start (before `Opened`) and right before every
   F3/F4; a change is logged. The options cannot be opened during a minigame, so a change reaches the next one.
-- **Language.** "0 as in the game" is `UGothicGameUserSettings.DisplayLanguage` (`Russian` -> Russian, otherwise English);
-  `Internationalization::GetCurrentCulture()` is `en-US-POSIX` in the main menu and does not do. The texts are two
-  tables in `Texts.as`; the Modkit's own text database is for dialogues and is not used.
+- **Language.** The notes and the labels are in the game's text database (the Modkit's "Localization"):
+  `Story/Conversation/text/LockPickHelper.<language>.textdb.yaml`, one language key per file (`english`, `russian`,
+  `german`, `polish`), mounted by `Config/Game.ini`
+  (`+MountPoints=(MountPoint="/LockPickHelper", Module="LockPickHelper", MountPath="/Story/Conversation")`). The IDs are
+  `LPH_<field of FLPH_Texts>` and `LPH_Row_<field of FLPH_Labels>`. `LocText(Id).ToString()` (a global function of the
+  game's scripts) gives the string in the language of the game's interface (`UGothicGameUserSettings.DisplayLanguage`);
+  the IDs do not depend on the case; a language with no string for an ID gives the English one; an ID the database does
+  not know gives an empty string, and the mod takes the English of `Texts.as` then (`LPH::Loc`). `{0}` is filled by the
+  mod (`LPH::Fill`). `Mod.Configure()` hands the controller `LPH::GameTexts()`, so the notes follow the game's language
+  from the next Configure. A YAML of another mod with the same IDs and a mount under its own module name adds a
+  language: the game merges all the files. `tests/test_texts.py` checks that the four files have the IDs of `Texts.as`,
+  one language each, `{0}` where English has it, and that the English one says what `Texts.as` falls back to.
 - **Icons.** `UCommonInputSubsystem::Get(PC)`: `GetCurrentInputType()` (0 keyboard and mouse, 1 gamepad) every frame in
   the minigame, `GetCurrentGamepadName()` (`PS5`, `XSX`, `SWITCH`, or `Generic` before CommonUI has named the pad). The set
   follows the game's "Button icons" option, `UGothicGameUserSettings.ButtonGraphics` (0 do not use, 1 auto, 2 Xbox, 3 PS5,
@@ -270,10 +283,11 @@ every start, UTF-8 without a byte order mark (`FFileHelper::EEncodingOptions::Fo
 file into UTF-16 as soon as a line held Cyrillic). The lines wait in memory and the whole file is written again at most
 every 250 ms (`FlushIfDue()` each frame) and at the end of a minigame.
 
-The start line: the mod's version, the game build, the database's build, source and lock count, the language (setting and
-the game's), the icon settings, how F3/F4 are caught, whether debug is on. `Line()` always writes (the start, the
-settings and their changes, the lock of each minigame, auto-pick's starts and stops, warnings); `Debug()` writes only
-with debug on: every reading and press, the draws, the key catcher, the lock search.
+The start line: the mod's version, the game build, the database's build, source and lock count, the game's language
+and where the texts come from (`texts from the game's text database`, or `texts built in` when the database does not
+answer the mod's IDs: a mount that went wrong), the icon settings, how F3/F4 are caught, whether debug is on. `Line()`
+always writes (the start, the settings and their changes, the lock of each minigame, auto-pick's starts and stops,
+warnings); `Debug()` writes only with debug on: every reading and press, the draws, the key catcher, the lock search.
 
 Debug is on when `LPH::DebugAlways` (`Config.as`) is true, when the command line has `-LPHDebug`, or when the hidden
 property `Debug` is `True` in `GameUserSettings.ini`, section `[/Script/Angelscript.LPH_Settings]`. The game saves that
@@ -297,7 +311,7 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   (`UnitTests/TestRunner.as`): with `-LPHTests` on the command line, `OnWorldBeginPlay` of the main menu world runs
   `LPHTests_<Module>(ULPH_TestRun)` of every module once and writes `Saved/LockPickHelper-tests.log` (`case <name>` before
   each group, `FAIL <case>: ...` for a failure, last line `tests done: <N> passed, <M> failed`). A script error stops the
-  run with no last line; the last `case` line says where. About 1,750 checks. `-LPHTests=golden` adds the full runs of
+  run with no last line; the last `case` line says where. About 1,850 checks. `-LPHTests=golden` adds the full runs of
   the solver against the sequences of 1.2.0; `-LPHTests=defaults` also compares the rows' declared defaults with
   `FLPH_Values` (right only on a profile without the mod's section in `GameUserSettings.ini`). `-LPHPreview` shows
   the hint in the main menu on the viewport layer (for pictures). Run it with `-as-development-mode`, which shows the
@@ -305,6 +319,7 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
 - **Reference data.** `tools/oracle/solver.lua` is a byte copy of the 1.2.0 solver; `lua tools/oracle/golden.lua` runs it
   over `locks_data.lua` (every lock, skill 0-2, the start holes and a cursor) and writes `UnitTests/GoldenSolver.as`: 1206
   full cases (55 of them without a safe path) and 17 quick ones. The solver must give the same keys.
+- **The texts.** `python -m unittest tests.test_texts`: the YAML files and `Texts.as` (above, "Language").
 - **The generator.** `python -m unittest tests.test_gen_lockgraphs`: the parser on `tests/fixtures/modkit_locks_sample.as`,
   the outputs, and, with `G1R_MODKIT_DIR` set, the 416 locks of the Modkit, the lock `OC_Chest_Digger526_Lock` against what
   1.x read in game (`tests/fixtures/groundtruth.json`), the start holes of `OC_Chest_Mud_Lock`, equality with the 1.2.0

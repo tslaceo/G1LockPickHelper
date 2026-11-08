@@ -27,10 +27,13 @@ Keys: F4 shows/hides the hint; F3 auto-picks the open lock (or the one you open 
 5 seconds) and stops auto-pick. Gamepad: the hint shows the game's button icons; press
 reset twice (Triangle / Y, R R on the keyboard) to auto-pick the lock.
 
-Settings: Options > Game, the block "[Mod] LockPick Helper" (20 rows). They can be
+Settings: Options > Game, the block "[Mod] LockPick Helper" (19 rows). They can be
 changed between lockpicking minigames only: the options cannot be opened during one.
-The labels are in the language of the row Language (0: the game's language); a change
-of that row shows in the menu after a save load or a restart.
+
+Language: the game's own - English, Russian, German or Polish; any other language
+shows English. German and Polish were translated with AI: if a word is wrong, say so
+on GitHub. A translation into another language is one text file: see "Translating the
+mod" on the GitHub page.
 
 Status: not in active development (the author has finished the game and plans no new
 playthrough for now). Every feature was tested in game; compatibility with other mods
