@@ -5,7 +5,8 @@
 - The mod speaks the game's language: English, Russian, German or Polish, whichever the game's interface is in; any
   other language shows English. German and Polish are new, translated with AI (a wrong word: an issue on GitHub).
 - The row "Language" is gone, 19 rows are left: the hint and the labels follow the game's language, and the labels in
-  the open options change with it at once. The value 2.0 saved for the row in `GameUserSettings.ini` is not read.
+  the open options change with it at once. The value 2.0 saved for the row in `GameUserSettings.ini` is not read: to
+  read the mod in a language other than the game's, as that row allowed, switch the game's language.
 - The texts are in the game's own text database now (`Story/Conversation/text/*.textdb.yaml`), so a translation is one
   file and needs no code: ship it as a mod of its own or send it as a pull request (README, "Translating the mod").
 - The log's first line says the game's language and whether the texts came from the text database.

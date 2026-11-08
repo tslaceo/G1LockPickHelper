@@ -69,7 +69,7 @@ Uninstall: unsubscribe in the Workshop, or delete the folder `G1R\Mods\LockPickH
 | Reset twice (keyboard R R, gamepad Triangle / Y) | In the minigame: auto-pick the lock, like F3 (the row "Double reset" turns it off) |
 
 The D-pad of a gamepad moves the pick as it does without the mod, and the hint follows it. F3 and F4 are fixed:
-there is no rebinding in 2.0.
+there is no rebinding.
 
 ## Settings
 
@@ -110,8 +110,9 @@ now. Every feature was tested in game; compatibility with other mods was not tes
 ## Report a bug
 
 1. Attach `%LOCALAPPDATA%\G1R\Saved\LockPickHelper.log` (a new file on every start of the game). Its first line
-   tells the mod's version, the game build, the language, the icon settings and whether the detailed log is on;
-   after that come the lock of every minigame, auto-pick's starts and stops, and warnings.
+   tells the mod's version, the game build, the language, whether the texts came from the game's text database,
+   the icon settings and whether the detailed log is on; after that come the lock of every minigame, auto-pick's
+   starts and stops, and warnings.
 2. For a detailed log (every plate reading, press and redraw), close the game and, in the section
    `[/Script/Angelscript.LPH_Settings]` of `%LOCALAPPDATA%\G1R\Saved\Config\Windows\GameUserSettings.ini`, change
    `Debug=False` to `Debug=True` (the game writes that line itself, the last one of the section; if the line or the
@@ -142,9 +143,11 @@ To add a language:
    name of the language: `english`, `german`, `french`, `spanish`, `italian`, `polish`, `brazilian`, `russian`,
    `japanese` or `schinese`.
 2. Translate the texts in quotes. Keep the IDs (`LPH_...`) and `{0}`, where the mod puts a key's name or the seconds.
-3. Send the file as a pull request, and it ships with the mod. Or ship it as a mod of your own: a folder with a
-   `GothicMod.json`, the file in `Story/Conversation/text/` and a `Config/Game.ini` that mounts that folder under your
-   mod's own name (the folder's name):
+3. Send the file as a pull request, and it ships with the mod. A language the mod already has (English, Russian,
+   German, Polish) is changed only that way: a second file with the same IDs and language would compete with the
+   mod's own. A new language can also ship as a mod of your own: a folder with a `GothicMod.json`, the file in
+   `Story/Conversation/text/` and a `Config/Game.ini` that mounts that folder under your mod's own name (the folder's
+   name):
 
    ```ini
    [/Script/AlkimiaStoryFileImport.AlkimiaLocalizationSubsystem]
@@ -153,15 +156,15 @@ To add a language:
 
    The game merges your file with the mod's texts; no script is needed. The Modkit's example
    [New Language Translation](https://github.com/AlkimiaInteractive/G1R-Modkit/tree/main/Examples/Example-NewLanguageTranslation)
-   is such a mod.
+   shows the same layout; leave out its `LanguageSets` line, which adds a new language to the game's own list.
 
 ## Older game version (UE4SS)
 
-2.0 runs on the current game, which refuses to start with UE4SS installed. 1.x was a UE4SS mod and
+2.x runs on the current game, which refuses to start with UE4SS installed. 1.x was a UE4SS mod and
 stays for the Steam beta branch `previousrelease` (game build `Build83_CL174209`, with UE4SS - AngelScript Fix):
 [1.2.0 on Nexus](https://www.nexusmods.com/gothic1remake/mods/654) and the
 [v1.2.0 release on GitHub](https://github.com/tslaceo/G1LockPickHelper/releases/tag/v1.2.0). It gets no updates. Its
-source is the tag `v1.2.0` of this repository. To move from 1.x to 2.0 see "Upgrading from 1.x" under Install.
+source is the tag `v1.2.0` of this repository. To move from 1.x to 2.x see "Upgrading from 1.x" under Install.
 
 ## Build from source
 

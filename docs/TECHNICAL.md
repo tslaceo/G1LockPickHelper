@@ -1,4 +1,4 @@
-# How LockPick Helper 2.0 works
+# How LockPick Helper works
 
 Notes for modders and contributors. The mod is a package of the game's official Modkit (`mod/LockPickHelper/`) written
 in Hazelight's AngelScript for UE 5.4 ([docs](https://angelscript.hazelight.se), not the original AngelScript;
@@ -311,7 +311,7 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   (`UnitTests/TestRunner.as`): with `-LPHTests` on the command line, `OnWorldBeginPlay` of the main menu world runs
   `LPHTests_<Module>(ULPH_TestRun)` of every module once and writes `Saved/LockPickHelper-tests.log` (`case <name>` before
   each group, `FAIL <case>: ...` for a failure, last line `tests done: <N> passed, <M> failed`). A script error stops the
-  run with no last line; the last `case` line says where. About 1,850 checks. `-LPHTests=golden` adds the full runs of
+  run with no last line; the last `case` line says where. About 1,900 checks. `-LPHTests=golden` adds the full runs of
   the solver against the sequences of 1.2.0; `-LPHTests=defaults` also compares the rows' declared defaults with
   `FLPH_Values` (right only on a profile without the mod's section in `GameUserSettings.ini`). `-LPHPreview` shows
   the hint in the main menu on the viewport layer (for pictures). Run it with `-as-development-mode`, which shows the
@@ -325,7 +325,7 @@ no world object. F9 in the middle of a minigame, and in the middle of auto-pick,
   1.x read in game (`tests/fixtures/groundtruth.json`), the start holes of `OC_Chest_Mud_Lock`, equality with the 1.2.0
   database, and that the committed `LockGraphs.as` is what the generator writes.
 - Not covered by tests, checked in game: the extension, the focus catcher, the key binding, the widgets in the window
-  and in the layer.
+  and in the layer, the row labels in the options menu and how they follow the game's language.
 
 ## AngelScript pitfalls of this build
 
