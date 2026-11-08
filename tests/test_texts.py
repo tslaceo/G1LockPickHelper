@@ -1,7 +1,7 @@
 """The mod's texts in the game's text database (mod/LockPickHelper/Story/Conversation/text/*.textdb.yaml) against each
-other and against Texts.as: the same IDs everywhere, one language per file, nothing empty, {0} where English has it, and
-the English YAML saying exactly what Texts.as falls back to. Stdlib only: the YAML here is the game's simple TextDB format
-(an ID line, then `  <language>: "<text>"` lines), parsed by hand."""
+other and against Texts.as: the same IDs everywhere, one language per file, nothing empty, {0} where English has it, the
+English YAML saying exactly what Texts.as falls back to, and the Russian YAML saying what 2.0.1 said. Stdlib only: the
+YAML here is the game's simple TextDB format (an ID line, then `  <language>: "<text>"` lines), parsed by hand."""
 
 import os
 import re
@@ -17,6 +17,45 @@ YAML_SUFFIX = ".textdb.yaml"
 ID_LINE = re.compile(r"^([A-Za-z0-9_]+):\s*$")
 TEXT_LINE = re.compile(r'^\s+([A-Za-z0-9_]+):\s*"((?:[^"\\]|\\.)*)"\s*$')
 PRINTF = re.compile(r"%[A-Za-z]")
+TEXTS_TEST = os.path.join(SCRIPT_DIR, "UnitTests", "TextsTest.as")
+
+# The Russian of 2.0.1, which had it in code (TextsRu and LabelsRu of Texts.as, without the Language row). 2.1 moved it
+# into the YAML unchanged; LPHTests_TextsRu / LPHTests_LabelsRu of the in-game tests say the same.
+RUSSIAN_2_0_1 = {
+    "LPH_NotInDb": "Замка нет в базе: {0}",
+    "LPH_NoSafePath": "Без риска для отмычки не открыть",
+    "LPH_BadState": "Не удалось прочитать замок",
+    "LPH_HintOn": "Подсказка видна ({0})",
+    "LPH_HintOff": "Подсказка скрыта ({0})",
+    "LPH_Solving": "Автовзлом…",
+    "LPH_SolvingTime": "Автовзлом… {0} с",
+    "LPH_SolveArmed": "Автовзлом ждёт замок",
+    "LPH_SolveStopped": "Автовзлом остановлен",
+    "LPH_SolveUnavailable": "Автовзлом недоступен",
+    "LPH_SolveOn": "Автовзлом включён ({0})",
+    "LPH_SolveOff": "Автовзлом выключен ({0})",
+    "LPH_DoubleReset": "двойной сброс",
+    "LPH_Thinking": "Считаю…",
+    "LPH_Row_Tape": "Лента вместо строк",
+    "LPH_Row_Gothic": "Золотые буквы",
+    "LPH_Row_Icons": "Значки (0 авто, 1 буквы, 2 значки)",
+    "LPH_Row_Gamepad": "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)",
+    "LPH_Row_Scale": "Размер, %",
+    "LPH_Row_OffsetX": "Положение по X",
+    "LPH_Row_OffsetY": "Положение по Y",
+    "LPH_Row_Counter": "Счётчик",
+    "LPH_Row_Shake": "Тряска при промахе",
+    "LPH_Row_TapeNext": "Следующих клавиш",
+    "LPH_Row_TapeDone": "Нажатых клавиш",
+    "LPH_Row_Slide": "Плавная прокрутка",
+    "LPH_Row_Plate": "Тёмный фон",
+    "LPH_Row_PerLine": "Клавиш в строке",
+    "LPH_Row_MaxLines": "Строк на экране",
+    "LPH_Row_CollapseMin": "Сжимать повторы от",
+    "LPH_Row_AutoPick": "Автовзлом всегда",
+    "LPH_Row_DoubleReset": "Двойной сброс",
+    "LPH_Row_Timer": "Таймер",
+}
 
 
 def unescape(text):
@@ -66,10 +105,11 @@ def texts_as():
     return read_bytes(os.path.join(SCRIPT_DIR, "Texts.as")).decode("utf-8")
 
 
-def function_body(source, name):
-    m = re.search(r"\b" + name + r"\(\)\s*\{(.*?)\n\t\}", source, re.S)
+def function_body(source, name, indent="\t"):
+    """The body of `name()`: a function of a namespace ends at a tab and `}`, a global one (indent "") at `}`."""
+    m = re.search(r"\b" + name + r"\(\)\s*\{(.*?)\n" + indent + r"\}", source, re.S)
     if not m:
-        raise AssertionError(f"Texts.as has no {name}()")
+        raise AssertionError(f"no {name}()")
     return m.group(1)
 
 
@@ -80,10 +120,10 @@ def struct_fields(source, name):
     return re.findall(r"^\s*FString (\w+);", m.group(1), re.M)
 
 
-def assigned_strings(source, function, var):
+def assigned_strings(source, function, var, indent="\t"):
     """[(field, text)] of `<var>.<field> = "<text>";` in the function, in order."""
     return [(f, unescape(t)) for f, t in
-            re.findall(r"\b" + var + r'\.(\w+) = "((?:[^"\\]|\\.)*)";', function_body(source, function))]
+            re.findall(r"\b" + var + r'\.(\w+) = "((?:[^"\\]|\\.)*)";', function_body(source, function, indent))]
 
 
 def loc_pairs(source, function, var):
@@ -182,6 +222,22 @@ class YamlTest(unittest.TestCase):
     def test_english_is_the_fallback_of_the_code(self):
         english = {text_id: texts["english"] for text_id, texts in load_yaml("english").items()}
         self.assertEqual(english, code_english())
+
+    def test_russian_is_the_russian_of_2_0_1(self):
+        russian = {text_id: texts["russian"] for text_id, texts in load_yaml("russian").items()}
+        self.assertEqual(list(russian), list(RUSSIAN_2_0_1), "the IDs, in order")
+        for text_id, text in RUSSIAN_2_0_1.items():
+            self.assertEqual(russian[text_id], text, text_id)
+
+    def test_the_in_game_russian_fixtures_say_the_same(self):
+        """LPHTests_TextsRu / LPHTests_LabelsRu (UnitTests/TextsTest.as), which the in-game run compares with what the
+        database gives when the game is in Russian."""
+        source = read_bytes(TEXTS_TEST).decode("utf-8")
+        fixtures = {}
+        for function, var, prefix in (("LPHTests_TextsRu", "X", "LPH_"), ("LPHTests_LabelsRu", "L", "LPH_Row_")):
+            for field, text in assigned_strings(source, function, var, indent=""):
+                fixtures[prefix + field] = text
+        self.assertEqual(fixtures, RUSSIAN_2_0_1)
 
 
 class SettingsTest(unittest.TestCase):
