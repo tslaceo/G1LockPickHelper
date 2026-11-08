@@ -20,7 +20,7 @@ void LPHTests_GlueLogText(ULPH_TestRun T)
 	T.Begin("Glue: the log keeps Cyrillic");
 	ULPH_Log Probe = Cast<ULPH_Log>(NewObject(T, ULPH_Log::StaticClass()));
 	Probe.Open("LockPickHelper-tests-utf8.log");
-	FString Text = LPH::Fill(LPH::Texts(ELPH_Lang::Ru).SolvingTime, "12");
+	FString Text = LPH::Fill(LPHTests_TextsRu().SolvingTime, "12");
 	Probe.Line(Text);
 	Probe.Flush();
 	FString Back;

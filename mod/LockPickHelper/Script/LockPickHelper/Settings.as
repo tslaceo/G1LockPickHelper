@@ -1,8 +1,9 @@
 // The mod's rows in the game's options ("Game" tab, block "[Mod] LockPick Helper"). The game keeps them in
 // GameUserSettings.ini under [/Script/Angelscript.LPH_Settings]: the class name and the property names are part of the
-// player's files and must not change. The labels are set in Initialize, in the language of LPH::LangFor; the game runs
-// Initialize at a save load or at a game start, so a change of the Language row shows in the menu only after a save load
-// or a restart (checked in game at acceptance).
+// player's files and must not change. A label is the text of "LPH_Row_<row>" in the game's text database (Texts.as), so it
+// follows the game's language in the open menu; Initialize puts the English of LPH::LabelsEn in when the database has
+// nothing for a row. The Language row of 2.0 is gone: the mod speaks the game's language. Its line in the players' files
+// is left alone (nothing reads it).
 // The rest of the mod reads LPH::ReadValues().
 //
 // The defaults and the limits below repeat FLPH_Values / LPH::Clamped (Values.as): the script cannot read DefaultValue,
@@ -14,30 +15,22 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	default CategoryName = FText::FromString("LockPick Helper");
 
 	UPROPERTY(Config)
-	FModUserSettingsInt Language = FModUserSettingsInt(
-		Value = 0,
-		DefaultValue = 0,
-		DisplayText = FText::FromString("Language (0 as in the game, 1 English, 2 Русский)"),
-		MinValue = 0,
-		MaxValue = 2);
-
-	UPROPERTY(Config)
 	FModUserSettingsBool Tape = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Tape layout"));
+		DisplayText = LocText("LPH_Row_Tape"));
 
 	UPROPERTY(Config)
 	FModUserSettingsBool Gothic = FModUserSettingsBool(
 		Value = false,
 		DefaultValue = false,
-		DisplayText = FText::FromString("Gold letters"));
+		DisplayText = LocText("LPH_Row_Gothic"));
 
 	UPROPERTY(Config)
 	FModUserSettingsInt Icons = FModUserSettingsInt(
 		Value = 0,
 		DefaultValue = 0,
-		DisplayText = FText::FromString("Icons (0 auto, 1 letters, 2 icons)"),
+		DisplayText = LocText("LPH_Row_Icons"),
 		MinValue = 0,
 		MaxValue = 2);
 
@@ -45,7 +38,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt Gamepad = FModUserSettingsInt(
 		Value = 0,
 		DefaultValue = 0,
-		DisplayText = FText::FromString("Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)"),
+		DisplayText = LocText("LPH_Row_Gamepad"),
 		MinValue = 0,
 		MaxValue = 3);
 
@@ -53,7 +46,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt Scale = FModUserSettingsInt(
 		Value = 100,
 		DefaultValue = 100,
-		DisplayText = FText::FromString("Size, %"),
+		DisplayText = LocText("LPH_Row_Scale"),
 		MinValue = 50,
 		MaxValue = 200);
 
@@ -61,7 +54,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt OffsetX = FModUserSettingsInt(
 		Value = -760,
 		DefaultValue = -760,
-		DisplayText = FText::FromString("Position X"),
+		DisplayText = LocText("LPH_Row_OffsetX"),
 		MinValue = -3000,
 		MaxValue = 3000);
 
@@ -69,7 +62,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt OffsetY = FModUserSettingsInt(
 		Value = 0,
 		DefaultValue = 0,
-		DisplayText = FText::FromString("Position Y"),
+		DisplayText = LocText("LPH_Row_OffsetY"),
 		MinValue = -2000,
 		MaxValue = 2000);
 
@@ -77,19 +70,19 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsBool Counter = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Counter"));
+		DisplayText = LocText("LPH_Row_Counter"));
 
 	UPROPERTY(Config)
 	FModUserSettingsBool Shake = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Shake on a miss"));
+		DisplayText = LocText("LPH_Row_Shake"));
 
 	UPROPERTY(Config)
 	FModUserSettingsInt TapeNext = FModUserSettingsInt(
 		Value = 5,
 		DefaultValue = 5,
-		DisplayText = FText::FromString("Upcoming keys"),
+		DisplayText = LocText("LPH_Row_TapeNext"),
 		MinValue = 1,
 		MaxValue = 10);
 
@@ -97,7 +90,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt TapeDone = FModUserSettingsInt(
 		Value = 3,
 		DefaultValue = 3,
-		DisplayText = FText::FromString("Pressed keys"),
+		DisplayText = LocText("LPH_Row_TapeDone"),
 		MinValue = 0,
 		MaxValue = 6);
 
@@ -105,19 +98,19 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsBool Slide = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Smooth scroll"));
+		DisplayText = LocText("LPH_Row_Slide"));
 
 	UPROPERTY(Config)
 	FModUserSettingsBool Plate = FModUserSettingsBool(
 		Value = false,
 		DefaultValue = false,
-		DisplayText = FText::FromString("Dark background"));
+		DisplayText = LocText("LPH_Row_Plate"));
 
 	UPROPERTY(Config)
 	FModUserSettingsInt PerLine = FModUserSettingsInt(
 		Value = 16,
 		DefaultValue = 16,
-		DisplayText = FText::FromString("Keys per line"),
+		DisplayText = LocText("LPH_Row_PerLine"),
 		MinValue = 4,
 		MaxValue = 40);
 
@@ -125,7 +118,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt MaxLines = FModUserSettingsInt(
 		Value = 6,
 		DefaultValue = 6,
-		DisplayText = FText::FromString("Lines on screen"),
+		DisplayText = LocText("LPH_Row_MaxLines"),
 		MinValue = 1,
 		MaxValue = 12);
 
@@ -133,7 +126,7 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsInt CollapseMin = FModUserSettingsInt(
 		Value = 3,
 		DefaultValue = 3,
-		DisplayText = FText::FromString("Fold repeats from"),
+		DisplayText = LocText("LPH_Row_CollapseMin"),
 		MinValue = 0,
 		MaxValue = 20);
 
@@ -141,156 +134,138 @@ class ULPH_Settings : UGothicModExt_UserSettings
 	FModUserSettingsBool AutoPick = FModUserSettingsBool(
 		Value = false,
 		DefaultValue = false,
-		DisplayText = FText::FromString("Always auto-pick"));
+		DisplayText = LocText("LPH_Row_AutoPick"));
 
 	UPROPERTY(Config)
 	FModUserSettingsBool DoubleReset = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Double reset"));
+		DisplayText = LocText("LPH_Row_DoubleReset"));
 
 	UPROPERTY(Config)
 	FModUserSettingsBool Timer = FModUserSettingsBool(
 		Value = true,
 		DefaultValue = true,
-		DisplayText = FText::FromString("Countdown"));
+		DisplayText = LocText("LPH_Row_Timer"));
 
 	// Not a row: saved in GameUserSettings.ini, never shown in the menu. Whoever asks for a bug report sets it by hand.
 	UPROPERTY(Config)
 	bool Debug = false;
 
-	// Gives every row its label in the player's language (a row has no way to change only its label: each one is
-	// assigned a new struct with the value it has now). The game calls it at a save load or at a game start, not when the
-	// Language row changes: the new language shows in the menu after the next load or restart. In the test runs it had not
-	// touched the class default object by the time the main menu world started, so a test cannot see it work: look at the
-	// options menu itself.
+	// Gives a row whose Text-ID the text database does not answer its English label (a row has no way to change only its
+	// label: each one is assigned a new struct with the value it has now). The game calls it at a save load or at a game
+	// start. When the database answers, every row keeps the text of its Text-ID, which follows the game's language.
 	UFUNCTION(BlueprintOverride)
 	void Initialize()
 	{
 		FLPH_Values D;
-		FLPH_Labels L = LPH::Labels(LPH::LangFor(Language.Value, LPH::GameDisplayLanguage()));
+		FLPH_Labels L = LPH::LabelsEn();
 
-		Language = FModUserSettingsInt(
-			Value = Language.Value,
-			DefaultValue = D.Language,
-			DisplayText = FText::FromString(L.Language),
-			MinValue = 0,
-			MaxValue = 2);
 		Tape = FModUserSettingsBool(
 			Value = Tape.bValue,
 			DefaultValue = D.bTape,
-			DisplayText = FText::FromString(L.Tape));
+			DisplayText = LPH::RowText("LPH_Row_Tape", L.Tape));
 		Gothic = FModUserSettingsBool(
 			Value = Gothic.bValue,
 			DefaultValue = D.bGothic,
-			DisplayText = FText::FromString(L.Gothic));
+			DisplayText = LPH::RowText("LPH_Row_Gothic", L.Gothic));
 		Icons = FModUserSettingsInt(
 			Value = Icons.Value,
 			DefaultValue = D.Icons,
-			DisplayText = FText::FromString(L.Icons),
+			DisplayText = LPH::RowText("LPH_Row_Icons", L.Icons),
 			MinValue = 0,
 			MaxValue = 2);
 		Gamepad = FModUserSettingsInt(
 			Value = Gamepad.Value,
 			DefaultValue = D.Gamepad,
-			DisplayText = FText::FromString(L.Gamepad),
+			DisplayText = LPH::RowText("LPH_Row_Gamepad", L.Gamepad),
 			MinValue = 0,
 			MaxValue = 3);
 		Scale = FModUserSettingsInt(
 			Value = Scale.Value,
 			DefaultValue = D.Scale,
-			DisplayText = FText::FromString(L.Scale),
+			DisplayText = LPH::RowText("LPH_Row_Scale", L.Scale),
 			MinValue = 50,
 			MaxValue = 200);
 		OffsetX = FModUserSettingsInt(
 			Value = OffsetX.Value,
 			DefaultValue = D.OffsetX,
-			DisplayText = FText::FromString(L.OffsetX),
+			DisplayText = LPH::RowText("LPH_Row_OffsetX", L.OffsetX),
 			MinValue = -3000,
 			MaxValue = 3000);
 		OffsetY = FModUserSettingsInt(
 			Value = OffsetY.Value,
 			DefaultValue = D.OffsetY,
-			DisplayText = FText::FromString(L.OffsetY),
+			DisplayText = LPH::RowText("LPH_Row_OffsetY", L.OffsetY),
 			MinValue = -2000,
 			MaxValue = 2000);
 		Counter = FModUserSettingsBool(
 			Value = Counter.bValue,
 			DefaultValue = D.bCounter,
-			DisplayText = FText::FromString(L.Counter));
+			DisplayText = LPH::RowText("LPH_Row_Counter", L.Counter));
 		Shake = FModUserSettingsBool(
 			Value = Shake.bValue,
 			DefaultValue = D.bShake,
-			DisplayText = FText::FromString(L.Shake));
+			DisplayText = LPH::RowText("LPH_Row_Shake", L.Shake));
 		TapeNext = FModUserSettingsInt(
 			Value = TapeNext.Value,
 			DefaultValue = D.TapeNext,
-			DisplayText = FText::FromString(L.TapeNext),
+			DisplayText = LPH::RowText("LPH_Row_TapeNext", L.TapeNext),
 			MinValue = 1,
 			MaxValue = 10);
 		TapeDone = FModUserSettingsInt(
 			Value = TapeDone.Value,
 			DefaultValue = D.TapeDone,
-			DisplayText = FText::FromString(L.TapeDone),
+			DisplayText = LPH::RowText("LPH_Row_TapeDone", L.TapeDone),
 			MinValue = 0,
 			MaxValue = 6);
 		Slide = FModUserSettingsBool(
 			Value = Slide.bValue,
 			DefaultValue = D.bSlide,
-			DisplayText = FText::FromString(L.Slide));
+			DisplayText = LPH::RowText("LPH_Row_Slide", L.Slide));
 		Plate = FModUserSettingsBool(
 			Value = Plate.bValue,
 			DefaultValue = D.bPlate,
-			DisplayText = FText::FromString(L.Plate));
+			DisplayText = LPH::RowText("LPH_Row_Plate", L.Plate));
 		PerLine = FModUserSettingsInt(
 			Value = PerLine.Value,
 			DefaultValue = D.PerLine,
-			DisplayText = FText::FromString(L.PerLine),
+			DisplayText = LPH::RowText("LPH_Row_PerLine", L.PerLine),
 			MinValue = 4,
 			MaxValue = 40);
 		MaxLines = FModUserSettingsInt(
 			Value = MaxLines.Value,
 			DefaultValue = D.MaxLines,
-			DisplayText = FText::FromString(L.MaxLines),
+			DisplayText = LPH::RowText("LPH_Row_MaxLines", L.MaxLines),
 			MinValue = 1,
 			MaxValue = 12);
 		CollapseMin = FModUserSettingsInt(
 			Value = CollapseMin.Value,
 			DefaultValue = D.CollapseMin,
-			DisplayText = FText::FromString(L.CollapseMin),
+			DisplayText = LPH::RowText("LPH_Row_CollapseMin", L.CollapseMin),
 			MinValue = 0,
 			MaxValue = 20);
 		AutoPick = FModUserSettingsBool(
 			Value = AutoPick.bValue,
 			DefaultValue = D.bAutoPick,
-			DisplayText = FText::FromString(L.AutoPick));
+			DisplayText = LPH::RowText("LPH_Row_AutoPick", L.AutoPick));
 		DoubleReset = FModUserSettingsBool(
 			Value = DoubleReset.bValue,
 			DefaultValue = D.bDoubleReset,
-			DisplayText = FText::FromString(L.DoubleReset));
+			DisplayText = LPH::RowText("LPH_Row_DoubleReset", L.DoubleReset));
 		Timer = FModUserSettingsBool(
 			Value = Timer.bValue,
 			DefaultValue = D.bTimer,
-			DisplayText = FText::FromString(L.Timer));
+			DisplayText = LPH::RowText("LPH_Row_Timer", L.Timer));
 	}
 }
 
 namespace LPH
 {
-	// The language of the game's own interface (Options > Language); NAME_None when the game's settings are not there.
-	FName GameDisplayLanguage()
-	{
-		UGothicGameUserSettings Game = Cast<UGothicGameUserSettings>(UGameUserSettings::GetGameUserSettings());
-		if (Game == nullptr)
-			return NAME_None;
-		return Game.DisplayLanguage;
-	}
-
 	// The rows of one settings object as FLPH_Values, brought into the limits.
 	FLPH_Values ValuesOf(const ULPH_Settings Settings)
 	{
 		FLPH_Values V;
-		V.Language = Settings.Language.Value;
 		V.bTape = Settings.Tape.bValue;
 		V.bGothic = Settings.Gothic.bValue;
 		V.Icons = Settings.Icons.Value;

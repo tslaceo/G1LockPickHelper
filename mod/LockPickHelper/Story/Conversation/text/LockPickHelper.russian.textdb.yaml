@@ -1,0 +1,98 @@
+LPH_NotInDb:
+  russian: "Замка нет в базе: {0}"
+
+LPH_NoSafePath:
+  russian: "Без риска для отмычки не открыть"
+
+LPH_BadState:
+  russian: "Не удалось прочитать замок"
+
+LPH_HintOn:
+  russian: "Подсказка видна ({0})"
+
+LPH_HintOff:
+  russian: "Подсказка скрыта ({0})"
+
+LPH_Solving:
+  russian: "Автовзлом…"
+
+LPH_SolvingTime:
+  russian: "Автовзлом… {0} с"
+
+LPH_SolveArmed:
+  russian: "Автовзлом ждёт замок"
+
+LPH_SolveStopped:
+  russian: "Автовзлом остановлен"
+
+LPH_SolveUnavailable:
+  russian: "Автовзлом недоступен"
+
+LPH_SolveOn:
+  russian: "Автовзлом включён ({0})"
+
+LPH_SolveOff:
+  russian: "Автовзлом выключен ({0})"
+
+LPH_DoubleReset:
+  russian: "двойной сброс"
+
+LPH_Thinking:
+  russian: "Считаю…"
+
+LPH_Row_Tape:
+  russian: "Лента вместо строк"
+
+LPH_Row_Gothic:
+  russian: "Золотые буквы"
+
+LPH_Row_Icons:
+  russian: "Значки (0 авто, 1 буквы, 2 значки)"
+
+LPH_Row_Gamepad:
+  russian: "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)"
+
+LPH_Row_Scale:
+  russian: "Размер, %"
+
+LPH_Row_OffsetX:
+  russian: "Положение по X"
+
+LPH_Row_OffsetY:
+  russian: "Положение по Y"
+
+LPH_Row_Counter:
+  russian: "Счётчик"
+
+LPH_Row_Shake:
+  russian: "Тряска при промахе"
+
+LPH_Row_TapeNext:
+  russian: "Следующих клавиш"
+
+LPH_Row_TapeDone:
+  russian: "Нажатых клавиш"
+
+LPH_Row_Slide:
+  russian: "Плавная прокрутка"
+
+LPH_Row_Plate:
+  russian: "Тёмный фон"
+
+LPH_Row_PerLine:
+  russian: "Клавиш в строке"
+
+LPH_Row_MaxLines:
+  russian: "Строк на экране"
+
+LPH_Row_CollapseMin:
+  russian: "Сжимать повторы от"
+
+LPH_Row_AutoPick:
+  russian: "Автовзлом всегда"
+
+LPH_Row_DoubleReset:
+  russian: "Двойной сброс"
+
+LPH_Row_Timer:
+  russian: "Таймер"

@@ -4,7 +4,6 @@
 
 struct FLPH_Values
 {
-	int Language = 0; // 0 as in the game, 1 English, 2 Russian
 	bool bTape = true; // tape instead of lines
 	bool bGothic = false; // "Gold letters" (old name in the ini): a gold letter in a gold frame, not the plain key
 	int Icons = 0; // 0 auto (by device), 1 letters, 2 gamepad icons
@@ -33,7 +32,6 @@ namespace LPH
 	FLPH_Values Clamped(FLPH_Values Values)
 	{
 		FLPH_Values Result = Values;
-		Result.Language = Math::Clamp(Values.Language, 0, 2);
 		Result.Icons = Math::Clamp(Values.Icons, 0, 2);
 		Result.Gamepad = Math::Clamp(Values.Gamepad, 0, 3);
 		Result.Scale = Math::Clamp(Values.Scale, 50, 200);
@@ -51,7 +49,7 @@ namespace LPH
 	// FLPH_Values goes here too.
 	bool SameValues(const FLPH_Values& A, const FLPH_Values& B)
 	{
-		return A.Language == B.Language && A.bTape == B.bTape && A.bGothic == B.bGothic && A.Icons == B.Icons
+		return A.bTape == B.bTape && A.bGothic == B.bGothic && A.Icons == B.Icons
 			&& A.Gamepad == B.Gamepad && A.Scale == B.Scale && A.OffsetX == B.OffsetX && A.OffsetY == B.OffsetY
 			&& A.bCounter == B.bCounter && A.bShake == B.bShake && A.TapeNext == B.TapeNext && A.TapeDone == B.TapeDone
 			&& A.bSlide == B.bSlide && A.bPlate == B.bPlate && A.PerLine == B.PerLine && A.MaxLines == B.MaxLines

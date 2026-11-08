@@ -4,7 +4,7 @@
 //   the tape, plain style, on the dark plate              | the lines, plain style
 //   the tape, gold letters, on the plate, auto-pick's text | the lines, gold letters
 //   the tape with Xbox icons, on the plate                 | the lines with PlayStation icons
-//   a message (Russian), on the plate                      | the lines with Switch icons, gold letters, on the plate
+//   a message (the game's language), on the plate         | the lines with Switch icons, gold letters, on the plate
 // The first tape is shown twice - one press and one miss before the SAMPLE, then the SAMPLE on the first frame (nothing
 // ticks while the startup logos play, about 15 s after BeginPlay) - so it slides and shakes once; the log has the offsets
 // of those frames. Saved/LockPickHelper-preview.log has `preview shown` once everything is on the screen (the logos still
@@ -105,12 +105,12 @@ class ULPH_PreviewWorld : UScriptWorldSubsystem
 		FLPH_Values Gothic = PreviewValues(true, true, true, -1000, -90);
 		Gothic.bCounter = false;
 		FLPH_HintModel Auto = LPH::Tape(Sample, Gothic.TapeNext, Gothic.TapeDone, Letters);
-		Auto.Counter = LPH::Fill(LPH::TextsRu().SolvingTime, "12");
+		Auto.Counter = LPH::Fill(LPH::GameTexts().SolvingTime, "12");
 		Auto.bCounterAlways = true;
 		NewHint(Gothic, ELPH_IconSet::Letters).ShowHint(Auto, Now);
 		FLPH_HintModel Tape = LPH::Tape(Sample, Defaults.TapeNext, Defaults.TapeDone, Letters);
 		AddHint(true, false, true, -1000, 160, ELPH_IconSet::Xbox).ShowHint(Tape, Now);
-		FString NotInDb = LPH::Fill(LPH::TextsRu().NotInDb, "BC_Chest_04_Lock");
+		FString NotInDb = LPH::Fill(LPH::GameTexts().NotInDb, "BC_Chest_04_Lock");
 		AddHint(true, false, true, -1000, 380, ELPH_IconSet::Letters).ShowMessage(NotInDb);
 
 		// The right column: the lines.

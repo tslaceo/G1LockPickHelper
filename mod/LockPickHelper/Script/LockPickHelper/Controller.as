@@ -28,7 +28,7 @@
 // The glue, every frame of an open minigame: Tick (with the plates read when WantsReading), then TakeKey (and its
 // Broadcast), then DisplaySig - and Display only when that changed. Opened/LockFound/NoLock/Closed, Solve (F3), ToggleHint
 // (F4) and PlayerKey come as they happen; Configure comes at mod start, before every Opened, and right before every Solve
-// and ToggleHint outside a minigame (the settings and the language must be current there).
+// and ToggleHint outside a minigame (the settings and the texts must be current there).
 
 // One reading of the minigame's plates.
 struct FLPH_Reading
@@ -124,8 +124,7 @@ class ULPH_Controller : UObject
 
 	// Configure.
 	private FLPH_Values Values;
-	private ELPH_Lang Lang = ELPH_Lang::En;
-	private FLPH_Texts Texts;
+	private FLPH_Texts Texts; // the notes, in the game's language (the glue's LPH::GameTexts)
 	private TArray<FString> Labels; // what the hint writes for W, S, A, D (empty: the letters)
 	private int Version = 0; // grows with every Configure that changes something
 	private int Icons = 0; // the icon set the hint draws (SetIcons)
@@ -169,23 +168,22 @@ class ULPH_Controller : UObject
 	{
 		Db = InDb;
 		ModLog = InLog;
-		Texts = LPH::Texts(ELPH_Lang::En);
+		Texts = LPH::TextsEn();
 		Auto = Cast<ULPH_AutoSolve>(NewObject(this, ULPH_AutoSolve::StaticClass()));
 		Auto.Init(LPH::SolveWsGapMs, LPH::SolveTimeoutMs, LPH::SolveMaxReplans);
 	}
 
-	// The player's settings, the language of the texts and the labels of W, S, A, D. They must be current whenever the
+	// The player's settings, the texts of the notes and the labels of W, S, A, D. They must be current whenever the
 	// controller reads them, so the glue calls this at mod start, at every minigame start before Opened (the auto-pick
 	// setting arms the session there), and right before every Solve and ToggleHint outside a minigame (F3 there reads
-	// the auto-pick setting; the notes are worded in this language). It may come at any other time too: the same values,
-	// language and labels change nothing (the Sig stays, nothing is redrawn); new ones draw a shown hint again (Version
-	// grows). A message already shown keeps its words until it ends. The debug log follows bDebug.
-	void Configure(FLPH_Values InValues, ELPH_Lang InLang, const TArray<FString>& InLabels)
+	// the auto-pick setting; the notes are worded in the game's language of that moment). It may come at any other time
+	// too: the same values, texts and labels change nothing (the Sig stays, nothing is redrawn); new ones draw a shown
+	// hint again (Version grows). A message already shown keeps its words until it ends. The debug log follows bDebug.
+	void Configure(FLPH_Values InValues, const FLPH_Texts& InTexts, const TArray<FString>& InLabels)
 	{
-		bool bSame = LPH::SameValues(InValues, Values) && InLang == Lang && SameLabels(InLabels);
+		bool bSame = LPH::SameValues(InValues, Values) && LPH::SameTexts(InTexts, Texts) && SameLabels(InLabels);
 		Values = InValues;
-		Lang = InLang;
-		Texts = LPH::Texts(InLang);
+		Texts = InTexts;
 		Labels = InLabels;
 		if (!bSame)
 			Version++;

@@ -1,42 +1,46 @@
-// Texts.as, Values.as, Settings.as: the choice of the language, the texts and the labels of both languages (every string
-// is checked letter by letter against lang/en.lua and lang/ru.lua of 1.2.0, with %s and %d turned into {0}), the
-// settings struct with its defaults and limits, and the reading of the rows. The rows themselves (DefaultValue, the
-// limits, the labels) cannot be read back by a script, so what ends up in the game's menu is checked by eye (Task 12).
+// Texts.as, Values.as, Settings.as: the English texts and labels (the fallback; every string is checked letter by letter
+// against lang/en.lua of 1.2.0, with %s and %d turned into {0}), what the game's text database gives for the mod's IDs in
+// the language of the run, the settings struct with its defaults and limits, and the reading of the rows. The rows
+// themselves (DefaultValue, the limits, the labels) cannot be read back by a script, so what ends up in the game's menu
+// is checked by eye (Task 12). The strings of the other languages are in the YAML files and are checked by
+// tests/test_texts.py.
 // The tests do not depend on what the player has set in the options: a test-made settings object starts as a copy of the
 // class default object (the player's values), so every case writes the values it needs first. The two checks that do read
 // the player's state (the rows' declared defaults against FLPH_Values) run only with `-LPHTests=defaults`, on a clean profile.
 
-void LPHTests_TextsLang(ULPH_TestRun T, int Setting, FName Display, ELPH_Lang Expected, FString What)
+// The Russian notes of 2.0.1 (TextsRu of 2.0.1, which had them in code): test data for the controller's tests, which need
+// notes other than the English ones whatever the game's language is.
+FLPH_Texts LPHTests_TextsRu()
 {
-	T.EqualInt(int(LPH::LangFor(Setting, Display)), int(Expected), What);
-}
-
-void LPHTests_TextsLangFor(ULPH_TestRun T)
-{
-	T.Begin("Texts: LangFor");
-	LPHTests_TextsLang(T, 0, n"Russian", ELPH_Lang::Ru, "auto, the game in Russian");
-	LPHTests_TextsLang(T, 0, n"English", ELPH_Lang::En, "auto, the game in English");
-	LPHTests_TextsLang(T, 0, n"German", ELPH_Lang::En, "auto, the game in German (no Russian texts for it)");
-	LPHTests_TextsLang(T, 1, n"Russian", ELPH_Lang::En, "English chosen, the game in Russian");
-	LPHTests_TextsLang(T, 2, n"English", ELPH_Lang::Ru, "Russian chosen, the game in English");
-	LPHTests_TextsLang(T, 2, n"German", ELPH_Lang::Ru, "Russian chosen, the game in German");
-	LPHTests_TextsLang(T, 1, n"English", ELPH_Lang::En, "English chosen, the game in English");
-	LPHTests_TextsLang(T, 0, NAME_None, ELPH_Lang::En, "auto, no game settings");
-	LPHTests_TextsLang(T, 2, NAME_None, ELPH_Lang::Ru, "Russian chosen, no game settings");
-	LPHTests_TextsLang(T, 0, n"russian", ELPH_Lang::Ru, "names do not depend on the case");
-	LPHTests_TextsLang(T, 7, n"Russian", ELPH_Lang::Ru, "a setting out of range counts as auto (Russian game)");
-	LPHTests_TextsLang(T, -3, n"English", ELPH_Lang::En, "a setting out of range counts as auto (English game)");
+	FLPH_Texts X;
+	X.NotInDb = "Замка нет в базе: {0}";
+	X.NoSafePath = "Без риска для отмычки не открыть";
+	X.BadState = "Не удалось прочитать замок";
+	X.HintOn = "Подсказка видна ({0})";
+	X.HintOff = "Подсказка скрыта ({0})";
+	X.Solving = "Автовзлом…";
+	X.SolvingTime = "Автовзлом… {0} с";
+	X.SolveArmed = "Автовзлом ждёт замок";
+	X.SolveStopped = "Автовзлом остановлен";
+	X.SolveUnavailable = "Автовзлом недоступен";
+	X.SolveOn = "Автовзлом включён ({0})";
+	X.SolveOff = "Автовзлом выключен ({0})";
+	X.DoubleReset = "двойной сброс";
+	X.Thinking = "Считаю…";
+	return X;
 }
 
 void LPHTests_TextsFill(ULPH_TestRun T)
 {
 	T.Begin("Texts: Fill");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::Ru).SolvingTime, "12"), "Автовзлом… 12 с", "ru solving time");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::En).NotInDb, "X"), "Lock not in the database: X", "en lock not in the database");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::En).HintOn, "F4"), "Hint shown (F4)", "en hint on");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::Ru).HintOff, "F4"), "Подсказка скрыта (F4)", "ru hint off");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::En).SolveOn, LPH::Texts(ELPH_Lang::En).DoubleReset), "Auto-pick on (double reset)", "en auto-pick on by the double reset");
-	T.EqualStr(LPH::Fill(LPH::Texts(ELPH_Lang::Ru).SolveOff, LPH::Texts(ELPH_Lang::Ru).DoubleReset), "Автовзлом выключен (двойной сброс)", "ru auto-pick off by the double reset");
+	FLPH_Texts En = LPH::TextsEn();
+	FLPH_Texts Ru = LPHTests_TextsRu();
+	T.EqualStr(LPH::Fill(Ru.SolvingTime, "12"), "Автовзлом… 12 с", "ru solving time");
+	T.EqualStr(LPH::Fill(En.NotInDb, "X"), "Lock not in the database: X", "en lock not in the database");
+	T.EqualStr(LPH::Fill(En.HintOn, "F4"), "Hint shown (F4)", "en hint on");
+	T.EqualStr(LPH::Fill(Ru.HintOff, "F4"), "Подсказка скрыта (F4)", "ru hint off");
+	T.EqualStr(LPH::Fill(En.SolveOn, En.DoubleReset), "Auto-pick on (double reset)", "en auto-pick on by the double reset");
+	T.EqualStr(LPH::Fill(Ru.SolveOff, Ru.DoubleReset), "Автовзлом выключен (двойной сброс)", "ru auto-pick off by the double reset");
 	T.EqualStr(LPH::Fill("no placeholder", "X"), "no placeholder", "a template without {0} stays as it is");
 	T.EqualStr(LPH::Fill("a {0} b", ""), "a  b", "an empty value");
 }
@@ -84,7 +88,7 @@ TArray<FString> LPHTests_TextsFieldNames()
 void LPHTests_TextsStrings(ULPH_TestRun T)
 {
 	T.Begin("Texts: every string of en");
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 	T.EqualStr(En.NotInDb, "Lock not in the database: {0}", "NotInDb");
 	T.EqualStr(En.NoSafePath, "Can't open without risking the pick", "NoSafePath");
 	T.EqualStr(En.BadState, "Can't read the lock", "BadState");
@@ -100,44 +104,133 @@ void LPHTests_TextsStrings(ULPH_TestRun T)
 	T.EqualStr(En.DoubleReset, "double reset", "DoubleReset");
 	T.EqualStr(En.Thinking, "Thinking…", "Thinking");
 
-	T.Begin("Texts: every string of ru");
-	FLPH_Texts Ru = LPH::Texts(ELPH_Lang::Ru);
-	T.EqualStr(Ru.NotInDb, "Замка нет в базе: {0}", "NotInDb");
-	T.EqualStr(Ru.NoSafePath, "Без риска для отмычки не открыть", "NoSafePath");
-	T.EqualStr(Ru.BadState, "Не удалось прочитать замок", "BadState");
-	T.EqualStr(Ru.HintOn, "Подсказка видна ({0})", "HintOn");
-	T.EqualStr(Ru.HintOff, "Подсказка скрыта ({0})", "HintOff");
-	T.EqualStr(Ru.Solving, "Автовзлом…", "Solving");
-	T.EqualStr(Ru.SolvingTime, "Автовзлом… {0} с", "SolvingTime");
-	T.EqualStr(Ru.SolveArmed, "Автовзлом ждёт замок", "SolveArmed");
-	T.EqualStr(Ru.SolveStopped, "Автовзлом остановлен", "SolveStopped");
-	T.EqualStr(Ru.SolveUnavailable, "Автовзлом недоступен", "SolveUnavailable");
-	T.EqualStr(Ru.SolveOn, "Автовзлом включён ({0})", "SolveOn");
-	T.EqualStr(Ru.SolveOff, "Автовзлом выключен ({0})", "SolveOff");
-	T.EqualStr(Ru.DoubleReset, "двойной сброс", "DoubleReset");
-	T.EqualStr(Ru.Thinking, "Считаю…", "Thinking");
-
-	// The rules that hold for any language: nothing empty, no leftover printf specifiers, {0} in the same strings.
-	T.Begin("Texts: no empty strings, same placeholders");
+	// The rules that hold for any language: nothing empty, no leftover printf specifiers, {0} in the same strings. The
+	// game's texts are those of the run's language (or the English fallback, field by field).
+	T.Begin("Texts: no empty strings, same placeholders (en, the ru test data, the game's)");
 	TArray<FString> Names = LPHTests_TextsFieldNames();
 	TArray<FString> InEn = LPHTests_TextsFields(En);
-	TArray<FString> InRu = LPHTests_TextsFields(Ru);
+	TArray<FString> InRu = LPHTests_TextsFields(LPHTests_TextsRu());
+	TArray<FString> InGame = LPHTests_TextsFields(LPH::GameTexts());
 	T.EqualInt(InEn.Num(), Names.Num(), "en fields listed");
 	T.EqualInt(InRu.Num(), Names.Num(), "ru fields listed");
-	for (int i = 0; i < Names.Num() && i < InEn.Num() && i < InRu.Num(); i++)
+	T.EqualInt(InGame.Num(), Names.Num(), "the game's fields listed");
+	for (int i = 0; i < Names.Num() && i < InEn.Num() && i < InRu.Num() && i < InGame.Num(); i++)
 	{
 		T.True(!InEn[i].IsEmpty(), "en " + Names[i] + " is not empty");
 		T.True(!InRu[i].IsEmpty(), "ru " + Names[i] + " is not empty");
-		T.True(!InEn[i].Contains("%") && !InRu[i].Contains("%"), Names[i] + " has no %s or %d left");
-		T.True(InEn[i].Contains("{0}") == InRu[i].Contains("{0}"), Names[i] + " has {0} in both languages or in neither");
+		T.True(!InGame[i].IsEmpty(), "the game's " + Names[i] + " is not empty");
+		T.True(!InEn[i].Contains("%") && !InRu[i].Contains("%") && !InGame[i].Contains("%"), Names[i] + " has no %s or %d left");
+		T.True(InEn[i].Contains("{0}") == InRu[i].Contains("{0}"), Names[i] + " has {0} in en and ru or in neither");
+		T.True(InEn[i].Contains("{0}") == InGame[i].Contains("{0}"), Names[i] + " has {0} in en and the game's or in neither");
 	}
+}
+
+// The text database: the run mounts the mod's YAML (Config/Game.ini), so it answers the mod's IDs; an ID it does not know
+// gives the fallback.
+void LPHTests_TextsDatabase(ULPH_TestRun T)
+{
+	T.Begin("Texts: the game's text database");
+	T.True(LPH::TextsInDatabase(), "the database answers the mod's IDs (the YAML is mounted)");
+	T.True(!LocText("lph_thinking").ToString().IsEmpty(), "the IDs do not depend on the case");
+	T.EqualStr(LPH::Loc("LPH_NoSuchText", "fallback"), "fallback", "Loc of an unknown ID: the fallback");
+	T.EqualStr(LPH::RowText("LPH_Row_NoSuchRow", "fallback").ToString(), "fallback", "RowText of an unknown ID: the fallback");
+	T.EqualStr(LPH::Loc("LPH_Thinking", "fallback"), LPH::GameTexts().Thinking, "Loc of a known ID: its text");
+	T.EqualStr(LPH::RowText("LPH_Row_Tape", "fallback").ToString(), LPH::GameLabels().Tape, "RowText of a known ID: its text");
+	if (T.Output != nullptr)
+	{
+		FName Language = LPHGame::DisplayLanguage();
+		FString Thinking = LPH::GameTexts().Thinking;
+		FString Tape = LPH::GameLabels().Tape;
+		T.Output.Line(f"texts: game language {Language}, Thinking = " + Thinking + ", Tape = " + Tape);
+	}
+}
+
+// The names of the notes in which two sets differ, e.g. " HintOn Thinking"; empty when they are the same.
+FString LPHTests_TextsDiff(FLPH_Texts A, FLPH_Texts B)
+{
+	TArray<FString> Names = LPHTests_TextsFieldNames();
+	TArray<FString> InA = LPHTests_TextsFields(A);
+	TArray<FString> InB = LPHTests_TextsFields(B);
+	FString D = "";
+	for (int i = 0; i < Names.Num() && i < InA.Num() && i < InB.Num(); i++)
+	{
+		if (InA[i] != InB[i])
+			D += " " + Names[i];
+	}
+	return D;
+}
+
+// The English notes with note Field (0..13, in the order of FLPH_Texts) changed; any other Field: the English notes.
+FLPH_Texts LPHTests_TextsOneOff(int Field)
+{
+	FLPH_Texts X = LPH::TextsEn();
+	if (Field == 0) X.NotInDb += "!";
+	if (Field == 1) X.NoSafePath += "!";
+	if (Field == 2) X.BadState += "!";
+	if (Field == 3) X.HintOn += "!";
+	if (Field == 4) X.HintOff += "!";
+	if (Field == 5) X.Solving += "!";
+	if (Field == 6) X.SolvingTime += "!";
+	if (Field == 7) X.SolveArmed += "!";
+	if (Field == 8) X.SolveStopped += "!";
+	if (Field == 9) X.SolveUnavailable += "!";
+	if (Field == 10) X.SolveOn += "!";
+	if (Field == 11) X.SolveOff += "!";
+	if (Field == 12) X.DoubleReset += "!";
+	if (Field == 13) X.Thinking += "!";
+	return X;
+}
+
+void LPHTests_TextsSame(ULPH_TestRun T)
+{
+	T.Begin("Texts: SameTexts sees every field");
+	FLPH_Texts En = LPH::TextsEn();
+	T.True(LPH::SameTexts(En, LPH::TextsEn()), "en twice");
+	T.True(LPH::SameTexts(LPHTests_TextsRu(), LPHTests_TextsRu()), "ru twice");
+	T.True(!LPH::SameTexts(En, LPHTests_TextsRu()), "en and ru");
+	int Fields = 0;
+	for (int Field = 0; Field < 30; Field++)
+	{
+		FLPH_Texts X = LPHTests_TextsOneOff(Field);
+		FString What = LPHTests_TextsDiff(En, X);
+		if (What.IsEmpty())
+			continue;
+		Fields++;
+		T.True(!LPH::SameTexts(En, X), "another" + What);
+		T.True(!LPH::SameTexts(X, En), "another" + What + " (the other way round)");
+	}
+	T.EqualInt(Fields, 14, "(every note changed once)");
+}
+
+TArray<FString> LPHTests_LabelsFields(FLPH_Labels L)
+{
+	TArray<FString> F;
+	F.Add(L.Tape);
+	F.Add(L.Gothic);
+	F.Add(L.Icons);
+	F.Add(L.Gamepad);
+	F.Add(L.Scale);
+	F.Add(L.OffsetX);
+	F.Add(L.OffsetY);
+	F.Add(L.Counter);
+	F.Add(L.Shake);
+	F.Add(L.TapeNext);
+	F.Add(L.TapeDone);
+	F.Add(L.Slide);
+	F.Add(L.Plate);
+	F.Add(L.PerLine);
+	F.Add(L.MaxLines);
+	F.Add(L.CollapseMin);
+	F.Add(L.AutoPick);
+	F.Add(L.DoubleReset);
+	F.Add(L.Timer);
+	return F;
 }
 
 void LPHTests_TextsLabels(ULPH_TestRun T)
 {
 	T.Begin("Labels: every row of en");
-	FLPH_Labels En = LPH::Labels(ELPH_Lang::En);
-	T.EqualStr(En.Language, "Language (0 as in the game, 1 English, 2 Русский)", "Language");
+	FLPH_Labels En = LPH::LabelsEn();
 	T.EqualStr(En.Tape, "Tape layout", "Tape");
 	T.EqualStr(En.Gothic, "Gold letters", "Gothic");
 	T.EqualStr(En.Icons, "Icons (0 auto, 1 letters, 2 icons)", "Icons");
@@ -158,35 +251,25 @@ void LPHTests_TextsLabels(ULPH_TestRun T)
 	T.EqualStr(En.DoubleReset, "Double reset", "DoubleReset");
 	T.EqualStr(En.Timer, "Countdown", "Timer");
 
-	T.Begin("Labels: every row of ru");
-	FLPH_Labels Ru = LPH::Labels(ELPH_Lang::Ru);
-	T.EqualStr(Ru.Language, "Язык (0 авто, 1 English, 2 Русский)", "Language");
-	T.EqualStr(Ru.Tape, "Лента вместо строк", "Tape");
-	T.EqualStr(Ru.Gothic, "Золотые буквы", "Gothic");
-	T.EqualStr(Ru.Icons, "Значки (0 авто, 1 буквы, 2 значки)", "Icons");
-	T.EqualStr(Ru.Gamepad, "Набор (0 игра, 1 PS, 2 Xbox, 3 Switch)", "Gamepad");
-	T.EqualStr(Ru.Scale, "Размер, %", "Scale");
-	T.EqualStr(Ru.OffsetX, "Положение по X", "OffsetX");
-	T.EqualStr(Ru.OffsetY, "Положение по Y", "OffsetY");
-	T.EqualStr(Ru.Counter, "Счётчик", "Counter");
-	T.EqualStr(Ru.Shake, "Тряска при промахе", "Shake");
-	T.EqualStr(Ru.TapeNext, "Следующих клавиш", "TapeNext");
-	T.EqualStr(Ru.TapeDone, "Нажатых клавиш", "TapeDone");
-	T.EqualStr(Ru.Slide, "Плавная прокрутка", "Slide");
-	T.EqualStr(Ru.Plate, "Тёмный фон", "Plate");
-	T.EqualStr(Ru.PerLine, "Клавиш в строке", "PerLine");
-	T.EqualStr(Ru.MaxLines, "Строк на экране", "MaxLines");
-	T.EqualStr(Ru.CollapseMin, "Сжимать повторы от", "CollapseMin");
-	T.EqualStr(Ru.AutoPick, "Автовзлом всегда", "AutoPick");
-	T.EqualStr(Ru.DoubleReset, "Двойной сброс", "DoubleReset");
-	T.EqualStr(Ru.Timer, "Таймер", "Timer");
+	// The labels have no {0}; "Size, %" has a % of its own.
+	T.Begin("Labels: the game's labels, none empty, {0} as in en");
+	TArray<FString> InEn = LPHTests_LabelsFields(En);
+	TArray<FString> InGame = LPHTests_LabelsFields(LPH::GameLabels());
+	T.EqualInt(InEn.Num(), 19, "en rows listed");
+	T.EqualInt(InGame.Num(), InEn.Num(), "the game's rows listed");
+	for (int i = 0; i < InEn.Num() && i < InGame.Num(); i++)
+	{
+		FString Row = f"row {i}";
+		T.True(!InEn[i].IsEmpty(), "en " + Row + " is not empty");
+		T.True(!InGame[i].IsEmpty(), "the game's " + Row + " is not empty");
+		T.True(InEn[i].Contains("{0}") == InGame[i].Contains("{0}"), Row + " has {0} in en and the game's or in neither");
+	}
 }
 
 // The names of the fields in which two value structs differ, e.g. " Scale bTape"; empty when they are the same.
 FString LPHTests_ValuesDiff(FLPH_Values A, FLPH_Values B)
 {
 	FString D = "";
-	if (A.Language != B.Language) D += " Language";
 	if (A.bTape != B.bTape) D += " bTape";
 	if (A.bGothic != B.bGothic) D += " bGothic";
 	if (A.Icons != B.Icons) D += " Icons";
@@ -214,7 +297,6 @@ FString LPHTests_ValuesDiff(FLPH_Values A, FLPH_Values B)
 FLPH_Values LPHTests_ValuesBrief()
 {
 	FLPH_Values V;
-	V.Language = 0;
 	V.bTape = true;
 	V.bGothic = false;
 	V.Icons = 0;
@@ -253,12 +335,11 @@ void LPHTests_ValuesFlip(ULPH_Settings S, FLPH_Values& V, int Index)
 	else if (Index == 9) { S.Debug = !S.Debug; V.bDebug = !V.bDebug; }
 }
 
-// Writes all 21 fields of V into the rows of a settings object (and Debug). A test-made object starts as a copy of the class
+// Writes all 20 fields of V into the rows of a settings object (and Debug). A test-made object starts as a copy of the class
 // default object, i.e. of what the player has set (see the checks on the clean profile), so every case that needs known values
 // writes them first and does not rely on the object's own.
 void LPHTests_ValuesApply(ULPH_Settings S, FLPH_Values V)
 {
-	S.Language.Value = V.Language;
 	S.Tape.bValue = V.bTape;
 	S.Gothic.bValue = V.bGothic;
 	S.Icons.Value = V.Icons;
@@ -289,12 +370,10 @@ bool LPHTests_Bit(int Code, int Pass)
 }
 
 // In-range values, the numbers all different from each other and from their defaults, the ten switches set by their codes
-// (Tape 0, Gothic 1, Counter 2, Shake 3, Slide 4, Plate 5, AutoPick 6, DoubleReset 7, Timer 8, Debug 9). Pass 0 chooses
-// Russian for the labels, the other passes English.
+// (Tape 0, Gothic 1, Counter 2, Shake 3, Slide 4, Plate 5, AutoPick 6, DoubleReset 7, Timer 8, Debug 9).
 FLPH_Values LPHTests_ValuesDistinct(int Pass)
 {
 	FLPH_Values V = LPHTests_ValuesBrief();
-	V.Language = Pass == 0 ? 2 : 1;
 	V.Icons = Pass == 0 ? 1 : 2;
 	V.Gamepad = 3;
 	V.TapeDone = 4;
@@ -318,31 +397,30 @@ FLPH_Values LPHTests_ValuesDistinct(int Pass)
 	return V;
 }
 
-// The defaults with field Field (0..20, in the order of FLPH_Values) changed; any other Field: the defaults.
+// The defaults with field Field (0..19, in the order of FLPH_Values) changed; any other Field: the defaults.
 FLPH_Values LPHTests_ValuesOneOff(int Field)
 {
 	FLPH_Values V;
-	if (Field == 0) V.Language = 2;
-	if (Field == 1) V.bTape = !V.bTape;
-	if (Field == 2) V.bGothic = !V.bGothic;
-	if (Field == 3) V.Icons = 2;
-	if (Field == 4) V.Gamepad = 3;
-	if (Field == 5) V.Scale = 150;
-	if (Field == 6) V.OffsetX = -123;
-	if (Field == 7) V.OffsetY = 456;
-	if (Field == 8) V.bCounter = !V.bCounter;
-	if (Field == 9) V.bShake = !V.bShake;
-	if (Field == 10) V.TapeNext = 7;
-	if (Field == 11) V.TapeDone = 4;
-	if (Field == 12) V.bSlide = !V.bSlide;
-	if (Field == 13) V.bPlate = !V.bPlate;
-	if (Field == 14) V.PerLine = 21;
-	if (Field == 15) V.MaxLines = 9;
-	if (Field == 16) V.CollapseMin = 5;
-	if (Field == 17) V.bAutoPick = !V.bAutoPick;
-	if (Field == 18) V.bDoubleReset = !V.bDoubleReset;
-	if (Field == 19) V.bTimer = !V.bTimer;
-	if (Field == 20) V.bDebug = !V.bDebug;
+	if (Field == 0) V.bTape = !V.bTape;
+	if (Field == 1) V.bGothic = !V.bGothic;
+	if (Field == 2) V.Icons = 2;
+	if (Field == 3) V.Gamepad = 3;
+	if (Field == 4) V.Scale = 150;
+	if (Field == 5) V.OffsetX = -123;
+	if (Field == 6) V.OffsetY = 456;
+	if (Field == 7) V.bCounter = !V.bCounter;
+	if (Field == 8) V.bShake = !V.bShake;
+	if (Field == 9) V.TapeNext = 7;
+	if (Field == 10) V.TapeDone = 4;
+	if (Field == 11) V.bSlide = !V.bSlide;
+	if (Field == 12) V.bPlate = !V.bPlate;
+	if (Field == 13) V.PerLine = 21;
+	if (Field == 14) V.MaxLines = 9;
+	if (Field == 15) V.CollapseMin = 5;
+	if (Field == 16) V.bAutoPick = !V.bAutoPick;
+	if (Field == 17) V.bDoubleReset = !V.bDoubleReset;
+	if (Field == 18) V.bTimer = !V.bTimer;
+	if (Field == 19) V.bDebug = !V.bDebug;
 	return V;
 }
 
@@ -363,7 +441,7 @@ void LPHTests_ValuesSame(ULPH_TestRun T)
 		T.True(!LPH::SameValues(Defaults, V), "another" + What);
 		T.True(!LPH::SameValues(V, Defaults), "another" + What + " (the other way round)");
 	}
-	T.EqualInt(Fields, 21, "(every field of LPHTests_ValuesDiff changed once)");
+	T.EqualInt(Fields, 20, "(every field of LPHTests_ValuesDiff changed once)");
 }
 
 void LPHTests_ValuesDefaults(ULPH_TestRun T)
@@ -416,8 +494,6 @@ void LPHTests_ValuesMapping(ULPH_TestRun T)
 
 	// All the numbers at once, every one different from the others and from its default.
 	FLPH_Values V = LPHTests_ValuesBrief();
-	S.Language.Value = 1;
-	V.Language = 1;
 	S.Icons.Value = 2;
 	V.Icons = 2;
 	S.Gamepad.Value = 3;
@@ -446,7 +522,6 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 	T.Begin("Values: Clamped");
 	// Below the limits.
 	FLPH_Values Low;
-	Low.Language = -5;
 	Low.Icons = -1;
 	Low.Gamepad = -1;
 	Low.Scale = -1;
@@ -458,7 +533,6 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 	Low.MaxLines = 0;
 	Low.CollapseMin = -2;
 	FLPH_Values LowWant;
-	LowWant.Language = 0;
 	LowWant.Icons = 0;
 	LowWant.Gamepad = 0;
 	LowWant.Scale = 50;
@@ -475,7 +549,6 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 
 	// Above the limits.
 	FLPH_Values High;
-	High.Language = 99;
 	High.Icons = 99;
 	High.Gamepad = 99;
 	High.Scale = 9999;
@@ -487,7 +560,6 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 	High.MaxLines = 99;
 	High.CollapseMin = 99;
 	FLPH_Values HighWant;
-	HighWant.Language = 2;
 	HighWant.Icons = 2;
 	HighWant.Gamepad = 3;
 	HighWant.Scale = 200;
@@ -515,7 +587,7 @@ void LPHTests_ValuesClamp(ULPH_TestRun T)
 // Initialize relabels every row by assigning it a new struct: it must give each row back its own value. A slip in one of
 // the twenty hand-written blocks (a row that reads another row's value) would swap the player's settings every time the
 // menu is built. Four objects, each with the switches set by LPHTests_Bit, so that any swap of two switches shows in one
-// of them; the labels of both languages are built (pass 0 asks for Russian).
+// of them. The labels come from the game's text database (the English fallback for an ID it does not answer).
 void LPHTests_SettingsInitialize(ULPH_TestRun T)
 {
 	T.Begin("Settings: Initialize keeps the values of the rows");
@@ -539,9 +611,10 @@ void LPHTests_SettingsInitialize(ULPH_TestRun T)
 
 void LPHTests_Texts(ULPH_TestRun T)
 {
-	LPHTests_TextsLangFor(T);
 	LPHTests_TextsFill(T);
 	LPHTests_TextsStrings(T);
+	LPHTests_TextsDatabase(T);
+	LPHTests_TextsSame(T);
 	LPHTests_TextsLabels(T);
 	LPHTests_ValuesDefaults(T);
 	LPHTests_ValuesMapping(T);

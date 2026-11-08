@@ -1,0 +1,102 @@
+# LockPick Helper's texts in English (the game shows these in a language the mod has no texts for).
+# To translate the mod: copy this file, change "english" in the file name and in every entry to the game's name
+# of the language, translate the strings (keep {0}). See "Translating the mod" in README.md on GitHub.
+
+LPH_NotInDb:
+  english: "Lock not in the database: {0}"
+
+LPH_NoSafePath:
+  english: "Can't open without risking the pick"
+
+LPH_BadState:
+  english: "Can't read the lock"
+
+LPH_HintOn:
+  english: "Hint shown ({0})"
+
+LPH_HintOff:
+  english: "Hint hidden ({0})"
+
+LPH_Solving:
+  english: "Auto-picking…"
+
+LPH_SolvingTime:
+  english: "Auto-picking… {0} s"
+
+LPH_SolveArmed:
+  english: "Auto-pick: waiting for the lock"
+
+LPH_SolveStopped:
+  english: "Auto-pick stopped"
+
+LPH_SolveUnavailable:
+  english: "Auto-pick unavailable"
+
+LPH_SolveOn:
+  english: "Auto-pick on ({0})"
+
+LPH_SolveOff:
+  english: "Auto-pick off ({0})"
+
+LPH_DoubleReset:
+  english: "double reset"
+
+LPH_Thinking:
+  english: "Thinking…"
+
+LPH_Row_Tape:
+  english: "Tape layout"
+
+LPH_Row_Gothic:
+  english: "Gold letters"
+
+LPH_Row_Icons:
+  english: "Icons (0 auto, 1 letters, 2 icons)"
+
+LPH_Row_Gamepad:
+  english: "Icon set (0 game, 1 PS, 2 Xbox, 3 Switch)"
+
+LPH_Row_Scale:
+  english: "Size, %"
+
+LPH_Row_OffsetX:
+  english: "Position X"
+
+LPH_Row_OffsetY:
+  english: "Position Y"
+
+LPH_Row_Counter:
+  english: "Counter"
+
+LPH_Row_Shake:
+  english: "Shake on a miss"
+
+LPH_Row_TapeNext:
+  english: "Upcoming keys"
+
+LPH_Row_TapeDone:
+  english: "Pressed keys"
+
+LPH_Row_Slide:
+  english: "Smooth scroll"
+
+LPH_Row_Plate:
+  english: "Dark background"
+
+LPH_Row_PerLine:
+  english: "Keys per line"
+
+LPH_Row_MaxLines:
+  english: "Lines on screen"
+
+LPH_Row_CollapseMin:
+  english: "Fold repeats from"
+
+LPH_Row_AutoPick:
+  english: "Always auto-pick"
+
+LPH_Row_DoubleReset:
+  english: "Double reset"
+
+LPH_Row_Timer:
+  english: "Countdown"

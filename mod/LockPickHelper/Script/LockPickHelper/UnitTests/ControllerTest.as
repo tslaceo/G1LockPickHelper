@@ -316,7 +316,7 @@ ULPH_CtlRig LPHTests_CtlRig(UObject Outer, ULPH_LockDb Db, FLPH_Values Values)
 	Rig.Log = Cast<ULPH_Log>(NewObject(Rig, ULPH_Log::StaticClass())); // not opened: keeps nothing
 	Rig.Ctl.Init(Db, Rig.Log);
 	TArray<FString> Letters;
-	Rig.Ctl.Configure(Values, ELPH_Lang::En, Letters);
+	Rig.Ctl.Configure(Values, LPH::TextsEn(), Letters);
 	Rig.Game = Cast<ULPH_CtlGame>(NewObject(Rig, ULPH_CtlGame::StaticClass()));
 	return Rig;
 }
@@ -644,8 +644,8 @@ void LPHTests_ControllerPresses(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Thre
 // unlocked chest or door ... shows no note", the tracker's NoSafePath, "closing the minigame hides the hint".
 void LPHTests_ControllerNoHint(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
-	FLPH_Texts Ru = LPH::Texts(ELPH_Lang::Ru);
+	FLPH_Texts En = LPH::TextsEn();
+	FLPH_Texts Ru = LPHTests_TextsRu();
 	TArray<FString> Letters;
 
 	T.Begin("Controller 09 a lock that is not in the database: a message with its name");
@@ -659,7 +659,7 @@ void LPHTests_ControllerNoHint(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(En.NotInDb, "Nope_Lock"), "the message stays");
 	T.EqualInt(Rig.Reads, 0, "no plates read");
 	Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines());
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters);
 	Rig.Open(n"Nope_Lock", 0.0, nullptr, Start);
 	Rig.Run(100);
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(Ru.NotInDb, "Nope_Lock"), "in Russian");
@@ -718,7 +718,7 @@ void LPHTests_ControllerNoHint(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three
 // 1.x: "toggle key hides and shows the hint", "a toggle outside a minigame shows the note and then hides it".
 void LPHTests_ControllerToggle(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 
 	T.Begin("Controller 14 F4 hides and shows the hint, with a note for ToggleNoteMs");
 	ULPH_CtlRig Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines());
@@ -780,30 +780,30 @@ void LPHTests_ControllerSig(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, c
 	Rig.Run(800);
 	T.EqualStr(Rig.Shown.Sig, Sig, "the plates confirming the press change nothing");
 	TArray<FString> Same;
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::En, Same);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPH::TextsEn(), Same);
 	Rig.Frame();
-	T.EqualStr(Rig.Shown.Sig, Sig, "Configure with the same values, language and labels changes nothing");
+	T.EqualStr(Rig.Shown.Sig, Sig, "Configure with the same values, texts and labels changes nothing");
 	T.EqualInt(Rig.Ctl.ModelBuilds, Builds + 1, "and builds no model");
 	FLPH_Values Other = LPHTests_CtlLines();
 	Other.CollapseMin = 5;
-	Rig.Ctl.Configure(Other, ELPH_Lang::En, Same);
+	Rig.Ctl.Configure(Other, LPH::TextsEn(), Same);
 	Rig.Frame();
 	T.True(Rig.Shown.Sig != Sig, "Configure with another value changes the Sig");
 	Sig = Rig.Shown.Sig;
-	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Same);
+	Rig.Ctl.Configure(Other, LPHTests_TextsRu(), Same);
 	Rig.Frame();
-	T.True(Rig.Shown.Sig != Sig, "another language changes it");
+	T.True(Rig.Shown.Sig != Sig, "other texts change it");
 	Sig = Rig.Shown.Sig;
 	TArray<FString> Named;
 	Named.Add("Up");
 	Named.Add("Down");
 	Named.Add("Left");
 	Named.Add("Right");
-	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Named);
+	Rig.Ctl.Configure(Other, LPHTests_TextsRu(), Named);
 	Rig.Frame();
 	T.True(Rig.Shown.Sig != Sig, "other labels change it");
 	Sig = Rig.Shown.Sig;
-	Rig.Ctl.Configure(Other, ELPH_Lang::Ru, Named);
+	Rig.Ctl.Configure(Other, LPHTests_TextsRu(), Named);
 	Rig.Frame();
 	T.EqualStr(Rig.Shown.Sig, Sig, "the same again does not");
 	Rig.Ctl.SetIcons(1);
@@ -834,7 +834,7 @@ void LPHTests_ControllerSig(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, c
 		&& Rig.Shown.Hint.Cells[Tape.TapeDone].Role == ELPH_Role::Current;
 	T.True(bCurrentAfterDone, "the current key after the done cells");
 	T.EqualStr(LPHTests_CtlPlan(Rig.Shown), Plan.Mid(0, Tape.TapeNext + 1), "the current key and the next ones");
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::En, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPH::TextsEn(), Letters);
 	Rig.Frame();
 	T.True(Rig.Shown.Hint.bLines, "lines after Configure");
 	T.EqualStr(LPHTests_CtlPlan(Rig.Shown), Plan, "the whole plan");
@@ -846,7 +846,7 @@ void LPHTests_ControllerSig(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, c
 	Words.Add("Down");
 	Words.Add("Left");
 	Words.Add("Right");
-	Rig.Ctl.Configure(Short, ELPH_Lang::En, Words);
+	Rig.Ctl.Configure(Short, LPH::TextsEn(), Words);
 	Rig.Frame();
 	T.EqualInt(Rig.Shown.Hint.Cells.Num(), 4, "a shorter tape");
 	ELPH_Key Key2 = ELPH_Key::R;
@@ -893,7 +893,7 @@ void LPHTests_ControllerCache(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 // 2.0: Thinking while a 7-plate lock of the real database prepares, and the same lock again from the cache.
 void LPHTests_ControllerSeven(ULPH_TestRun T)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 	ULPH_LockDb Real = LPHTests_MakeLockDb(T);
 	LPH_RegisterLockGraphs(Real);
 	// OC_Chest_Kirgo_Lock, skill 0, cursor 0: the reference keys of the 1.2.0 solver (GoldenSolver.as).
@@ -948,7 +948,7 @@ void LPHTests_ControllerSeven(ULPH_TestRun T)
 // with a short note only", "F3 again with the hint hidden notes the stop".
 void LPHTests_ControllerSolve(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 	FString Plan = LPHTests_Plan(Three, Start, 0);
 	int Total = Plan.Len();
 
@@ -1052,7 +1052,7 @@ void LPHTests_ControllerSolve(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 // one; F3 twice goes back to the setting", "F3 outside a minigame with the hint hidden notes the wait".
 void LPHTests_ControllerEarly(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 
 	T.Begin("Controller 26 F3 outside a minigame arms the one that opens within SolveEarlyMs");
 	ULPH_CtlRig Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines());
@@ -1135,12 +1135,12 @@ void LPHTests_ControllerEarly(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 
 	// main_test.lua 1.2.0 "with [solve] auto F3 outside a minigame skips the next one", with the setting switched on after
 	// the last Configure: the glue configures right before F3 and F4 outside a minigame.
-	T.Begin("Controller 45 Configure right before F3/F4 outside a minigame: the setting and the language of that moment");
-	FLPH_Texts Ru = LPH::Texts(ELPH_Lang::Ru);
+	T.Begin("Controller 45 Configure right before F3/F4 outside a minigame: the setting and the texts of that moment");
+	FLPH_Texts Ru = LPHTests_TextsRu();
 	TArray<FString> Letters;
 	Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines()); // auto-pick off, English
 	Rig.Run(100);
-	Rig.Ctl.Configure(LPHTests_CtlAlways(), ELPH_Lang::Ru, Letters); // since then: auto-pick always, Russian
+	Rig.Ctl.Configure(LPHTests_CtlAlways(), LPHTests_TextsRu(), Letters); // since then: auto-pick always, Russian
 	Rig.Solve();
 	Rig.Frame();
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(Ru.SolveOff, "F3"), "F3: the next one is skipped (in Russian)");
@@ -1155,30 +1155,30 @@ void LPHTests_ControllerEarly(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 	T.EqualStr(LPHTests_CtlAuto(Rig), "armed", "the one after it is armed, as set");
 	Rig.Close();
 	Rig.Run(LPH::ToggleNoteMs);
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters); // auto-pick off again
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters); // auto-pick off again
 	Rig.Ctl.ToggleHint(Rig.Now);
 	Rig.Frame();
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + LPH::Fill(Ru.HintOff, "F4"), "F4: the note in Russian");
 	FString Sig = Rig.Shown.Sig;
 	int Redraws = Rig.Redraws;
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters);
 	Rig.Frame();
 	T.EqualStr(Rig.Shown.Sig, Sig, "the same Configure again: the note's Sig stays");
 	T.EqualInt(Rig.Redraws, Redraws, "nothing to redraw");
 	Rig.Run(LPH::ToggleNoteMs);
 	Rig.Ctl.ToggleHint(Rig.Now);
 	Rig.Run(LPH::ToggleNoteMs);
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters);
 	Rig.Solve();
 	Rig.Frame();
 	T.EqualStr(LPHTests_CtlKind(Rig.Shown), "message: " + Ru.SolveArmed, "F3 with auto-pick off: the wait for the next one");
 	Sig = Rig.Shown.Sig;
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters);
 	Rig.Frame();
 	T.EqualStr(Rig.Shown.Sig, Sig, "the same Configure during the wait: the Sig stays");
 	FLPH_Values NoTimer = LPHTests_CtlLines();
 	NoTimer.bTimer = false;
-	Rig.Ctl.Configure(NoTimer, ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(NoTimer, LPHTests_TextsRu(), Letters);
 	Rig.Frame();
 	T.True(Rig.Shown.Sig != Sig, "another value: a new Sig");
 }
@@ -1189,7 +1189,7 @@ void LPHTests_ControllerEarly(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 // Focus 5), the minigame closed in the middle of auto-pick (Review Focus 1).
 void LPHTests_ControllerStops(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 	FString Plan = LPHTests_Plan(Three, Start, 0);
 	int Total = Plan.Len();
 
@@ -1352,7 +1352,7 @@ void LPHTests_ControllerStops(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three,
 // pair", "a double reset with the hint hidden notes it".
 void LPHTests_ControllerDoubleReset(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 
 	T.Begin("Controller 35 two resets within DoubleResetMs start the autosolver; it opens the lock");
 	ULPH_CtlRig Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines());
@@ -1429,8 +1429,8 @@ void LPHTests_ControllerDoubleReset(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver 
 // "the autosolver's text shows even with the counter off".
 void LPHTests_ControllerCountdown(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
-	FLPH_Texts Ru = LPH::Texts(ELPH_Lang::Ru);
+	FLPH_Texts En = LPH::TextsEn();
+	FLPH_Texts Ru = LPHTests_TextsRu();
 	FString Plan = LPHTests_Plan(Three, Start, 0);
 	TArray<FString> Letters;
 
@@ -1444,7 +1444,7 @@ void LPHTests_ControllerCountdown(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Th
 	Rig.Solve();
 	Rig.Frame();
 	T.EqualStr(Rig.Shown.Hint.Counter, LPH::Fill(En.SolvingTime, "1"), "A W D: 1 s");
-	Rig.Ctl.Configure(LPHTests_CtlLines(), ELPH_Lang::Ru, Letters);
+	Rig.Ctl.Configure(LPHTests_CtlLines(), LPHTests_TextsRu(), Letters);
 	Rig.Frame();
 	T.EqualStr(Rig.Shown.Hint.Counter, LPH::Fill(Ru.SolvingTime, "1"), "in Russian");
 	Rig = LPHTests_CtlRig(T, Db, LPHTests_CtlLines());
@@ -1501,7 +1501,7 @@ void LPHTests_ControllerCountdown(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Th
 // autosolver's message before Thinking.
 void LPHTests_ControllerNoAuto(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 	FString NotInDb = "message: " + LPH::Fill(En.NotInDb, "Nope_Lock");
 
 	T.Begin("Controller 41 F3 with no hint or on the open lock: auto-pick unavailable");
@@ -1588,7 +1588,7 @@ void LPHTests_ControllerNoAuto(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three
 // DisplaySig (what the glue compares every frame) against Display().Sig.
 void LPHTests_ControllerDisplaySig(ULPH_TestRun T, ULPH_LockDb Db, ULPH_Solver Three, const TArray<int>& Start)
 {
-	FLPH_Texts En = LPH::Texts(ELPH_Lang::En);
+	FLPH_Texts En = LPH::TextsEn();
 
 	T.Begin("Controller 44 DisplaySig is the Sig of Display (hint, notes, auto-pick, the wait, hidden) and builds no model");
 	FLPH_Values Tape; // the defaults: tape, timer

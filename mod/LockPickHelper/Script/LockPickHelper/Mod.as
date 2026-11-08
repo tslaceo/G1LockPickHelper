@@ -49,17 +49,10 @@ namespace LPH
 		return "letters";
 	}
 
-	FString LangText(ELPH_Lang Lang)
-	{
-		if (Lang == ELPH_Lang::Ru)
-			return "ru";
-		return "en";
-	}
-
 	// The settings in one line of the log.
 	FString ValuesText(const FLPH_Values& V)
 	{
-		FString Text = f"language {V.Language}, tape {V.bTape}, gothic {V.bGothic}, icons {V.Icons}, gamepad {V.Gamepad}";
+		FString Text = f"tape {V.bTape}, gothic {V.bGothic}, icons {V.Icons}, gamepad {V.Gamepad}";
 		Text += f", size {V.Scale}, position {V.OffsetX} {V.OffsetY}, counter {V.bCounter}, shake {V.bShake}";
 		Text += f", tape next {V.TapeNext} done {V.TapeDone}, slide {V.bSlide}, plate {V.bPlate}";
 		Text += f", lines {V.PerLine}x{V.MaxLines}, fold from {V.CollapseMin}, auto-pick always {V.bAutoPick}";
@@ -79,17 +72,15 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 	UPROPERTY()
 	ULPH_Controller Controller;
 
-	// The settings of the last Configure (bDebug on when the debug lines are forced: LPH::DebugAlways or -LPHDebug), and
-	// the language of the texts.
+	// The settings of the last Configure (bDebug on when the debug lines are forced: LPH::DebugAlways or -LPHDebug).
 	FLPH_Values Values;
-	ELPH_Lang Lang = ELPH_Lang::En;
 
 	// The minigame's window is open (its extension says so): the notes are drawn there, not on the viewport layer.
 	bool bMinigameOpen = false;
 
 	private bool bConfigured = false;
 	private FString DebugWhy; // why the debug lines are on whatever the setting ("" when they follow it)
-	private FName GameLanguage;
+	private FName GameLanguage; // the game's interface language at the last Configure: the texts are in it
 
 	// The icon set (FollowIcons) and what it was decided from.
 	private bool bIconsKnown = false;
@@ -129,27 +120,25 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 		}
 	}
 
-	// The settings and the language now, to the controller (also returned, for the hint widget). The game's input is read
-	// again at the next FollowIcons. A change is logged.
+	// The settings and the texts in the game's language now, to the controller (also returned, for the hint widget). The
+	// game's input is read again at the next FollowIcons. A change is logged.
 	FLPH_Values Configure()
 	{
 		FLPH_Values V = LPH::ReadValues();
 		if (!DebugWhy.IsEmpty())
 			V.bDebug = true;
 		FName Game = LPHGame::DisplayLanguage();
-		ELPH_Lang NewLang = LPH::LangFor(V.Language, Game);
 		bool bChanged = !bConfigured || !LPH::SameValues(V, Values);
-		bool bLangChanged = bConfigured && (NewLang != Lang || Game != GameLanguage);
+		bool bLangChanged = bConfigured && Game != GameLanguage;
 		Values = V;
-		Lang = NewLang;
 		GameLanguage = Game;
 		TArray<FString> Letters; // no labels: the hint writes W, S, A, D (the game has no keys of its own for the minigame)
-		Controller.Configure(V, NewLang, Letters);
+		Controller.Configure(V, LPH::GameTexts(), Letters);
 		IconsReadMs = LPH::NeverMs;
 		if (bConfigured && bChanged)
 			ModLog.Line("settings: " + LPH::ValuesText(V));
 		if (bLangChanged)
-			ModLog.Line(f"language {LPH::LangText(NewLang)} (setting {V.Language}, game {Game})");
+			ModLog.Line(f"language {Game}");
 		bConfigured = true;
 		return V;
 	}
@@ -266,7 +255,7 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 		FString BuildText = Build;
 		if (Build.IsEmpty())
 			BuildText = "unknown";
-		FString LangName = LPH::LangText(Lang);
+		FString TextsFrom = LPH::TextsInDatabase() ? "texts from the game's text database" : "texts built in (English: the game's text database does not answer the mod's IDs)";
 		FString DebugText = "off";
 		if (Values.bDebug && DebugWhy.IsEmpty())
 			DebugText = "on";
@@ -275,7 +264,7 @@ class ULPH_Mod : UScriptGameInstanceSubsystem
 		int Graphics = LPHGame::ButtonGraphics();
 		int Locks = Db.Num();
 		FString Head = f"LockPick Helper {LPH::ModVersion}: game {BuildText}, lock database {LPH::LocksBuild} ({LPH::LocksSource}, {Locks} locks)";
-		Head += f", language {LangName} (setting {Values.Language}, game {GameLanguage}), icons {Values.Icons}/{Values.Gamepad} (button icons {Graphics})";
+		Head += f", language {GameLanguage}, {TextsFrom}, icons {Values.Icons}/{Values.Gamepad} (button icons {Graphics})";
 		Head += f", F3/F4 by key binding and key catcher, debug {DebugText}";
 		ModLog.Line(Head);
 		ModLog.Line("settings: " + LPH::ValuesText(Values));
