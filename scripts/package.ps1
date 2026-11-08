@@ -1,8 +1,9 @@
 # Builds the release archive: out\LockPickHelper-<version>.zip, to be extracted into the game folder (the one that
 # contains G1R), as the 1.x archives were.
 # Inside: G1R/Mods/LockPickHelper/ with GothicMod.json, Script\LockPickHelper\ (without UnitTests\, the in-game tests),
-# README.txt and LICENSE.txt - so that G1R\Mods\LockPickHelper\GothicMod.json exists after extracting, and the two texts
-# stay in the mod's own folder instead of among the other mods'.
+# Story\Conversation\text\ (the texts, one YAML per language) with Config\Game.ini (their mount), README.txt and
+# LICENSE.txt - so that G1R\Mods\LockPickHelper\GothicMod.json exists after extracting, and the two texts stay in the
+# mod's own folder instead of among the other mods'.
 # Only what git tracks goes in (git ls-files mod/LockPickHelper, minus UnitTests/), and it refuses to pack while
 # mod\LockPickHelper has an uncommitted change or an untracked file: nothing unreviewed, no scratch .as, reaches players.
 # The version comes from GothicMod.json (modVersion); LPH::ModVersion in Config.as and README.txt must name the same one.
@@ -72,13 +73,14 @@ foreach ($text in @("README.txt", "LICENSE.txt")) {
 # What goes in is checked, not assumed: the files a mod needs, nothing of the tests, nothing that is not text.
 foreach ($needed in @("GothicMod.json", "README.txt", "LICENSE.txt", "Script\LockPickHelper\Controller.as",
         "Script\LockPickHelper\Mod.as", "Script\LockPickHelper\LockGraphs.as", "Script\LockPickHelper\Settings.as",
-        "Script\LockPickHelper\LockPickExtension.as")) {
+        "Script\LockPickHelper\LockPickExtension.as", "Script\LockPickHelper\Texts.as", "Config\Game.ini",
+        "Story\Conversation\text\LockPickHelper.english.textdb.yaml")) {
     if (-not (Test-Path (Join-Path $target $needed))) { throw "The package has no $needed" }
 }
 $skipped = @(Get-ChildItem $target -Recurse -Directory | Where-Object { $_.Name -in @("UnitTests", "Test", "Tests", "Dev") })
 if ($skipped) { throw "The package holds a tests folder: $($skipped.FullName -join ', ')" }
-$strange = @(Get-ChildItem $target -Recurse -File | Where-Object { $_.Extension -notin @(".as", ".json", ".txt") })
-if ($strange) { throw "The package holds files that are not .as, .json or .txt: $($strange.FullName -join ', ')" }
+$strange = @(Get-ChildItem $target -Recurse -File | Where-Object { $_.Extension -notin @(".as", ".json", ".txt", ".yaml", ".ini") })
+if ($strange) { throw "The package holds files that are not .as, .json, .txt, .yaml or .ini: $($strange.FullName -join ', ')" }
 
 # Entries with forward slashes (Compress-Archive in Windows PowerShell writes backslashes).
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
