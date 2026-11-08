@@ -17,8 +17,8 @@ you, using only moves that cannot strain the pick.
 - **Exact locks.** The lock layouts come from the game's own sources (the official Modkit); the connections your
   lockpicking skill removes are removed from the hint too.
 - **The game's language.** English, Russian, German and Polish, whichever the game's interface is in (any other
-  language shows English). German and Polish were translated with AI: if a word is wrong, say so in an issue. A
-  translation into another language is one text file (see "Translating the mod").
+  language shows English). German and Polish have not been checked by a native speaker: if a word is wrong, say so
+  in an issue. A translation into another language is one text file (see "Translating the mod").
 - **Settings in the game's options**, on the Game tab.
 
 ## Requirements

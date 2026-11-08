@@ -3,7 +3,8 @@
 ## 2.1.0
 
 - The mod speaks the game's language: English, Russian, German or Polish, whichever the game's interface is in; any
-  other language shows English. German and Polish are new, translated with AI (a wrong word: an issue on GitHub).
+  other language shows English. German and Polish are new; no native speaker has checked them yet (a wrong word: an
+  issue on GitHub).
 - The row "Language" is gone, 19 rows are left: the hint and the labels follow the game's language, and the labels in
   the open options change with it at once. The value 2.0 saved for the row in `GameUserSettings.ini` is not read: to
   read the mod in a language other than the game's, as that row allowed, switch the game's language.

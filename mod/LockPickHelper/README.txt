@@ -31,9 +31,9 @@ Settings: Options > Game, the block "[Mod] LockPick Helper" (19 rows). They can 
 changed between lockpicking minigames only: the options cannot be opened during one.
 
 Language: the game's own - English, Russian, German or Polish; any other language
-shows English. German and Polish were translated with AI: if a word is wrong, say so
-on GitHub. A translation into another language is one text file: see "Translating the
-mod" on the GitHub page.
+shows English. German and Polish have not been checked by a native speaker: if a word
+is wrong, say so on GitHub. A translation into another language is one text file: see
+"Translating the mod" on the GitHub page.
 
 Status: not in active development (the author has finished the game and plans no new
 playthrough for now). Every feature was tested in game; compatibility with other mods
