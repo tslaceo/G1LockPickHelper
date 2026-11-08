@@ -70,11 +70,12 @@ foreach ($text in @("README.txt", "LICENSE.txt")) {
     [System.IO.File]::WriteAllText($path, ($raw -replace "`r?`n", "`r`n"), (New-Object System.Text.UTF8Encoding($false)))
 }
 
-# What goes in is checked, not assumed: the files a mod needs, nothing of the tests, nothing that is not text.
+# What goes in is checked, not assumed: the files a mod needs (the texts of every language: without one the game would
+# show English in it, silently), nothing of the tests, nothing that is not text.
+$texts = @("english", "russian", "german", "polish") | ForEach-Object { "Story\Conversation\text\LockPickHelper.$_.textdb.yaml" }
 foreach ($needed in @("GothicMod.json", "README.txt", "LICENSE.txt", "Script\LockPickHelper\Controller.as",
         "Script\LockPickHelper\Mod.as", "Script\LockPickHelper\LockGraphs.as", "Script\LockPickHelper\Settings.as",
-        "Script\LockPickHelper\LockPickExtension.as", "Script\LockPickHelper\Texts.as", "Config\Game.ini",
-        "Story\Conversation\text\LockPickHelper.english.textdb.yaml")) {
+        "Script\LockPickHelper\LockPickExtension.as", "Script\LockPickHelper\Texts.as", "Config\Game.ini") + $texts) {
     if (-not (Test-Path (Join-Path $target $needed))) { throw "The package has no $needed" }
 }
 $skipped = @(Get-ChildItem $target -Recurse -Directory | Where-Object { $_.Name -in @("UnitTests", "Test", "Tests", "Dev") })
